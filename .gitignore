@@ -1,0 +1,10 @@
+*.orig
+*.o
+main
+infer-out
+record.txt
+.cache
+.deps
+*.diff
+.ccls-cache/
+compile_commands.json

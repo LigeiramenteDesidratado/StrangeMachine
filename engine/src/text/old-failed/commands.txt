@@ -1,0 +1,5 @@
+./fontbm --background-color 0,0,0 --font-size 18 --chars 32-122 --data-format xml --font-file /usr/share/fonts/TTF/go/Go-Mono.ttf --output font
+
+convert font_0.png -set colorspace Gray -separate -average font_0.png
+
+python3 bmfont2c.py
