@@ -80,7 +80,7 @@ void player_do(player_s *player, float dt) {
 
   // Get the left/right/forward/backward.
   // They are mapped to the A,S,D,W keys.
-  // The keyboard value will always be either -1, 0 or 1
+  // The keyboard value will always be -1, 0 or 1
   vec3 input = vec3_new(
       (float)(input_scan_key(SDL_SCANCODE_A) + -input_scan_key(SDL_SCANCODE_D)),
       0.f,
