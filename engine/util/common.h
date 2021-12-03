@@ -13,6 +13,9 @@
 
 #include "glad/glad.h"
 #include "logc/log.h"
+#include "stb_ds/stb_ds.h"
+#include "stb/stb_image.h"
+#include "cgltf/cgltf.h"
 
 #include "math/mat4.h"
 #include "math/quat.h"
