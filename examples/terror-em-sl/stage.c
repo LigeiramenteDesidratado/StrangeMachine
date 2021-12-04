@@ -1,12 +1,13 @@
-#include "input/input.h"
+#include "util/common.h"
+
 #include "scene/scene.h"
 #include "scene/world/center.h"
-#include "shader/shader.h"
-#include "shader_program.h"
-#include "shader/camera.h"
-#include "shader/camera_p.h"
-#include "shader/uniform.h"
-#include "util/common.h"
+#include "smCamera.h"
+#include "smCameraP.h"
+#include "smInput.h"
+#include "smShader.h"
+#include "smShaderProgram.h"
+#include "smUniform.h"
 
 typedef struct {
 
@@ -35,9 +36,8 @@ status_v stage_ctor(stage_s *stage) {
     return fail;
   }
 
-  camera_init(vec3_new(0.0f, 3.0f, 8.0f),
-                   vec3_new(0.0f, 2.0f, 0.0f), vec3_new(0.0f, 1.0f, 0.0f),
-                   THIRD_PERSON_EX5, PERSPECTIVE_EX4);
+  camera_init(vec3_new(0.0f, 3.0f, 8.0f), vec3_new(0.0f, 2.0f, 0.0f),
+              vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON_EX5, PERSPECTIVE_EX4);
 
   return ok;
 }
@@ -82,7 +82,6 @@ void stage_do(stage_s *stage, float dt) {
 void stage_draw(stage_s *stage, float aspect_ratio) {
   assert(stage != NULL);
 
-
   if (input_scan_key_lock(SDL_SCANCODE_J))
     camera_set_projection(PERSPECTIVE_EX4);
 
@@ -93,28 +92,38 @@ void stage_draw(stage_s *stage, float aspect_ratio) {
   mat4 view = camera_get_view();
 
   shader_bind(SHADERS[STATIC_SHADER_EX7]);
-  uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "view"), view);
-  uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "projection"), projection);
+  uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "view"),
+                    view);
+  uniform_set_value(
+      glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "projection"),
+      projection);
   shader_unbind();
 
   shader_bind(SHADERS[SKINNED_SHADER_EX7]);
-  uniform_set_value(glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "view"), view);
-  uniform_set_value(glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "projection"), projection);
+  uniform_set_value(glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "view"),
+                    view);
+  uniform_set_value(
+      glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "projection"),
+      projection);
   shader_unbind();
 
   shader_bind(SHADERS[TEXT_SHADER_EX7]);
-  mat4 ui = mat4_ortho(0.0f, 800.0f,  600.0f, 0.0f, -0.1f, 100.0f);
-  /* uniform_set_value(glGetUniformLocation(SHADERS[TEXT_SHADER_EX7], "view"), view); */
-  uniform_set_value(glGetUniformLocation(SHADERS[TEXT_SHADER_EX7], "projection"), ui);
+  mat4 ui = mat4_ortho(0.0f, 800.0f, 600.0f, 0.0f, -0.1f, 100.0f);
+  /* uniform_set_value(glGetUniformLocation(SHADERS[TEXT_SHADER_EX7], "view"),
+   * view); */
+  uniform_set_value(
+      glGetUniformLocation(SHADERS[TEXT_SHADER_EX7], "projection"), ui);
   shader_unbind();
 
   shader_bind(SHADERS[DEBUG_SHADER_EX7]);
-  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "view"), view);
-  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "projection"), projection);
+  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "view"),
+                    view);
+  uniform_set_value(
+      glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "projection"),
+      projection);
   shader_unbind();
 
   scene_draw(stage->scene);
-
 }
 
 static void __stage_build_scene(stage_s *stage) {

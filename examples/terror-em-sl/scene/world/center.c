@@ -1,11 +1,12 @@
-#include "model/model.h"
+#include "util/common.h"
+
 #include "player.h"
 #include "scene/scene.h"
-#include "physics/physics.h"
 #include "scene/scene_p.h"
-#include "shader/shader.h"
-#include "shader_program.h"
-#include "util/common.h"
+#include "smModel.h"
+#include "smPhysics.h"
+#include "smShader.h"
+#include "smShaderProgram.h"
 
 static void __one_do(void *ptr, float dt);
 static void __one_draw(void *ptr);
@@ -51,9 +52,9 @@ status_v center_ctor(center_s *center, SCENE_EX6 id) {
   }
   center->world = model;
 
-
   struct physics_s *terrain = physics_new();
-  if (!physics_terrain_ctor(terrain, vec3_zero(), *model_get_meshes(center->world))) {
+  if (!physics_terrain_ctor(terrain, vec3_zero(),
+                            *model_get_meshes(center->world))) {
     return false;
   }
   center->terrain = terrain;
@@ -96,5 +97,5 @@ static vec3 __one_get_look_at(void *ptr) {
   assert(ptr != NULL);
   center_s *center = (center_s *)ptr;
 
-  return  player_get_position(center->player);
+  return player_get_position(center->player);
 }

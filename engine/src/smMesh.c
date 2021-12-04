@@ -1,5 +1,6 @@
 #include "smMesh.h"
 #include "util/bitmask.h"
+#include "smDebug.h"
 #include "util/common.h"
 
 const struct mesh_attrs mesh_attr_locs = {

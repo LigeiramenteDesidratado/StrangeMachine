@@ -1,13 +1,14 @@
-#include "input/input.h"
-#include "model/skinned_model.h"
-#include "shader/shader.h"
-#include "shader/uniform.h"
-#include "shader_program.h"
-#include "physics/physics.h"
-#include "shader/camera.h"
-#include "debug/debug.h"
-#include "text/text.h"
 #include "util/common.h"
+
+#include "smCamera.h"
+#include "smDebug.h"
+#include "smInput.h"
+#include "smPhysics.h"
+#include "smShader.h"
+#include "smShaderProgram.h"
+#include "smSkinnedModel.h"
+#include "smText.h"
+#include "smUniform.h"
 
 typedef uint8_t STATE_EX8;
 #define IDLE_EX8 ((STATE_EX8)0x00)
@@ -15,14 +16,14 @@ typedef uint8_t STATE_EX8;
 #define RUN_EX8 ((STATE_EX8)0x02)
 
 string state_str[3] = {
-  "idle",
-  "walk",
-  "run.001",
+    "idle",
+    "walk",
+    "run.001",
 };
 
 typedef struct {
   struct skinned_model_s *model;
-  struct physics_s* physics;
+  struct physics_s *physics;
   transform_s transform;
   STATE_EX8 state;
 
@@ -64,8 +65,6 @@ void player_dtor(player_s *player) {
   physics_dtor(player->physics);
 
   free(player);
-
-
 }
 
 mat4 player_get_transformation_mat4(player_s *player) {
@@ -84,7 +83,8 @@ void player_do(player_s *player, float dt) {
   vec3 input = vec3_new(
       (float)(input_scan_key(SDL_SCANCODE_A) + -input_scan_key(SDL_SCANCODE_D)),
       0.f,
-      (float)(input_scan_key(SDL_SCANCODE_W) + -input_scan_key(SDL_SCANCODE_S)));
+      (float)(input_scan_key(SDL_SCANCODE_W) +
+              -input_scan_key(SDL_SCANCODE_S)));
 
   vec3 direction = vec3_norm(input);
   float dir_len = vec3_len(direction);
@@ -96,7 +96,6 @@ void player_do(player_s *player, float dt) {
 
     direction =
         vec3_add(vec3_scale(fwd, direction.z), vec3_scale(right, direction.x));
-
 
     direction = vec3_norm(direction);
     float yaw = atan2f(direction.x, direction.z);
@@ -123,12 +122,16 @@ void player_do(player_s *player, float dt) {
   physics_step();
   player->transform.position = physics_get_pos(player->physics);
 
-  /* player->transform.position = vec3_add(player->transform.position, moveamount); */
+  /* player->transform.position = vec3_add(player->transform.position,
+   * moveamount); */
 
   if (!skinned_model_set_animation(player->model, state_str[player->state]))
     log_error("invalid animation name: %s", state_str[player->state]);
 
-  /* text_draw(vec2_new(10, 50), 800- 10, vec3_new(6.0f, 0.9f, 0.0f), "Player\ndirection: %.2f\nvelocity: %.2f\nlocation: %.2f, %.2f, %.2f", vec3_len(direction), vec3_len(velocity), player->transform.position.x, player->transform.position.y, player->transform.position.z); */
+  /* text_draw(vec2_new(10, 50), 800- 10, vec3_new(6.0f, 0.9f, 0.0f),
+   * "Player\ndirection: %.2f\nvelocity: %.2f\nlocation: %.2f, %.2f, %.2f",
+   * vec3_len(direction), vec3_len(velocity), player->transform.position.x,
+   * player->transform.position.y, player->transform.position.z); */
 }
 
 void player_draw(player_s *player) {
@@ -149,7 +152,7 @@ void player_draw_debug(player_s *player) {
   debug_draw_capsule(c);
 }
 
-vec3 player_get_position(player_s* player) {
+vec3 player_get_position(player_s *player) {
   assert(player != NULL);
 
   return player->transform.position;

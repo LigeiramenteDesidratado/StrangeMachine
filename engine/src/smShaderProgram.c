@@ -1,6 +1,7 @@
+#include "util/common.h"
+
 #include "smShaderProgram.h"
 #include "smShader.h"
-#include "util/common.h"
 #include "smSkinnedMesh.h"
 #include "smMesh.h"
 #include "smText.h"
@@ -10,8 +11,8 @@ GLuint SHADERS[4];
 void shaders_init(void) {
 
   GLuint static_shader = 0;
-  if (!shader_ctor(&static_shader, "engine/src/shader/glsl/static.vs",
-                   "engine/src/shader/glsl/static.fs")) {
+  if (!shader_ctor(&static_shader, "engine/src/glsl/static.vs",
+                   "engine/src/glsl/static.fs")) {
     log_error("failed to create a new static shader");
     exit(1);
   }
@@ -24,8 +25,8 @@ void shaders_init(void) {
     exit(1);
 
   GLuint skinned_shader = 0;
-  if (!shader_ctor(&skinned_shader, "engine/src/shader/glsl/skinned.vs",
-                   "engine/src/shader/glsl/skinned.fs")) {
+  if (!shader_ctor(&skinned_shader, "engine/src/glsl/skinned.vs",
+                   "engine/src/glsl/skinned.fs")) {
     log_error("failed to create a new skinned shader");
     exit(1);
   }
@@ -40,7 +41,7 @@ void shaders_init(void) {
     exit(1);
 
   GLuint text_shader = 0;
-  if (!shader_ctor(&text_shader, "engine/src/shader/glsl/text.vs", "engine/src/shader/glsl/text.fs")) {
+  if (!shader_ctor(&text_shader, "engine/src/glsl/text.vs", "engine/src/glsl/text.fs")) {
     log_error("failed to create a new text shader");
     exit(1);
   }
@@ -53,7 +54,7 @@ void shaders_init(void) {
     exit(1);
 
   GLuint debug_shader = 0;
-  if (!shader_ctor(&debug_shader, "engine/src/shader/glsl/debug.vs", "engine/src/shader/glsl/debug.fs")) {
+  if (!shader_ctor(&debug_shader, "engine/src/glsl/debug.vs", "engine/src/glsl/debug.fs")) {
     log_error("failed to create a new debug shader");
     exit(1);
   }

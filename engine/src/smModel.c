@@ -1,8 +1,13 @@
-#include "smMesh.h"
-#include "smTexture.h"
 #include "util/bitmask.h"
 #include "util/common.h"
 #include <SDL2/SDL_timer.h>
+
+#include "smMesh.h"
+#include "smOBJLoader.h"
+#include "smShader.h"
+#include "smShaderProgram.h"
+#include "smTexture.h"
+#include "smUniform.h"
 
 typedef struct {
 
@@ -76,11 +81,10 @@ void model_do(model_s *model) {
 
   /* static int angle = 0; */
   /* if (angle++ >= 360) */
-    /* angle = 0; */
-
+  /* angle = 0; */
 
   /* model->transform.rotation = */
-      /* quat_angle_axis(angle * DEG2RAD, vec3_new(0.0f, 1.0f, 0.0f)); */
+  /* quat_angle_axis(angle * DEG2RAD, vec3_new(0.0f, 1.0f, 0.0f)); */
   /* model->transform.position.x += 0.5f; */
 }
 
@@ -89,9 +93,11 @@ void model_draw(const model_s *const model) {
   shader_bind(SHADERS[STATIC_SHADER_EX7]);
 
   mat4 md = transform_to_mat4(model->transform);
-  uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "model"), md);
+  uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "model"),
+                    md);
 
-  texture_set(&model->texture, glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "tex0"), 0);
+  texture_set(&model->texture,
+              glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "tex0"), 0);
 
   uint8_t flags = 0;
   MASK_SET(flags, 1 << mesh_attr_locs.position);
@@ -111,7 +117,6 @@ void model_draw(const model_s *const model) {
   for (size_t i = 0; i < arrlenu(model->meshes); ++i) {
     mesh_draw_debug(&model->meshes[i]);
   };
-
 }
 
 static status_v string_suffix(const string str, const string suffix) {
@@ -130,7 +135,4 @@ static status_v string_suffix(const string str, const string suffix) {
   return fail;
 }
 
-mesh_s** model_get_meshes(model_s *model) {
-
-  return &model->meshes;
-}
+mesh_s **model_get_meshes(model_s *model) { return &model->meshes; }

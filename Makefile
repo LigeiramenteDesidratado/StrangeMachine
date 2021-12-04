@@ -22,7 +22,7 @@ DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 $(shell mkdir -p $(dir $(OBJS)))
 $(shell mkdir -p $(dir $(DEPFILES)))
 
-INCLUDE= -I ./engine/include/ -I ./engine/ -I ./engine/src/ -I ./game/
+INCLUDE= -I ./engine/include/ -I ./engine/ -I ./engine/src/ -I ./examples/terror-em-sl/
 
 TARGET = main
 
