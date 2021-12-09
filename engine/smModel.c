@@ -1,6 +1,5 @@
 #include "util/bitmask.h"
 #include "util/common.h"
-#include <SDL2/SDL_timer.h>
 
 #include "smMesh.h"
 #include "smOBJLoader.h"

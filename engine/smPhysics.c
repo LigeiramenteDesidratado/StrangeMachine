@@ -250,7 +250,7 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
   //	This is to avoid sliding down slopes and easier traversing of
   // slopes/stairs 	Unlike normal character motion collision, surface
   // sliding is not computed
-  physics->gravity = vec3_add(physics->gravity, vec3_new(0, -GRAVITY * 0.1f, 0));
+  physics->gravity = vec3_add(physics->gravity, vec3_new(0, -GRAVITY * 0.3f, 0));
 
   for (uint8_t i = 0; i < ccd_max; ++i) {
 
