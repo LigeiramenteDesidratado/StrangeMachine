@@ -1,7 +1,9 @@
 #ifndef SM_SHAPES_H
 #define SM_SHAPES_H
 
-#include "util/common.h"
+#include <stdbool.h>
+
+#include "math/vec3.h"
 
 typedef struct {
   vec3 center;

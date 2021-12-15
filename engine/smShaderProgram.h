@@ -1,7 +1,8 @@
 #ifndef SHADER_PROGRAM
 #define SHADER_PROGRAM
 
-#include "util/common.h"
+#include <stdint.h>
+#include "glad/glad.h"
 
 typedef uint8_t SHADERS_EX7;
 #define STATIC_SHADER_EX7 ((SHADERS_EX7)0x00)

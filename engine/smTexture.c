@@ -1,19 +1,18 @@
 #include "smTexture.h"
-
 #include "util/common.h"
 
-status_v __texture_load(texture_s *texture, const string path);
+bool __texture_load(texture_s *texture, const char* path);
 
 // Constructor
-status_v texture_ctor(texture_s *texture, const string path) {
+bool texture_ctor(texture_s *texture, const char* path) {
 
   assert(texture != NULL);
 
   glGenTextures(1, &texture->texture);
   if (!__texture_load(texture, path))
-    return fail;
+    return false;
 
-  return ok;
+  return true;
 }
 
 // Destructor
@@ -23,8 +22,7 @@ void texture_dtor(texture_s *texture) {
   glDeleteTextures(1, &texture->texture);
 }
 
-void texture_set(texture_s const *texture, uint32_t uniform,
-                 uint32_t tex_index) {
+void texture_set(texture_s const *texture, int32_t uniform, int32_t tex_index) {
   assert(texture != NULL);
 
   glActiveTexture(GL_TEXTURE0 + tex_index);
@@ -39,7 +37,7 @@ void texture_unset(uint32_t tex_index) {
   glActiveTexture(GL_TEXTURE0);
 }
 
-status_v __texture_load(texture_s *texture, const string path) {
+bool __texture_load(texture_s *texture, const char* path) {
   assert(texture != NULL);
 
   int32_t width, height, channels;
@@ -47,7 +45,7 @@ status_v __texture_load(texture_s *texture, const string path) {
   unsigned char *data = stbi_load(path, &width, &height, &channels, 4);
   if (data == NULL) {
     log_error("[%s] failed to load image", path);
-    return fail;
+    return false;
   }
   log_info("[%s] image successfully loaded", path);
 
@@ -69,5 +67,5 @@ status_v __texture_load(texture_s *texture, const string path) {
   texture->height = height;
   texture->channels = channels;
 
-  return ok;
+  return true;
 }

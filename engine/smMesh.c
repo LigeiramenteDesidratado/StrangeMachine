@@ -7,35 +7,35 @@ const struct mesh_attrs mesh_attr_locs = {
     .position = 1, .tex_coord = 2, .normal = 3};
 
 // Constructor
-status_v mesh_ctor(mesh_s *mesh) {
+bool mesh_ctor(mesh_s *mesh) {
 
   assert(mesh != NULL);
 
   mesh->vertex.position_attr = attribute_new();
   if (!attribute_ctor(&mesh->vertex.position_attr, VEC3_EX1))
-    return fail;
+    return false;
 
   mesh->vertex.uv_attr = attribute_new();
   if (!attribute_ctor(&mesh->vertex.uv_attr, VEC2_EX1))
-    return fail;
+    return false;
 
   mesh->vertex.normal_attr = attribute_new();
   if (!attribute_ctor(&mesh->vertex.normal_attr, VEC3_EX1))
-    return fail;
+    return false;
 
   mesh->debug_attr = attribute_new();
   if (!attribute_ctor(&mesh->debug_attr, VEC3_EX1))
-    return fail;
+    return false;
 
   mesh->debug_color_attr = attribute_new();
   if (!attribute_ctor(&mesh->debug_color_attr, VEC3_EX1))
-    return fail;
+    return false;
 
   /* mesh->index_buffer = index_buffer_new(); */
   /* if (!index_buffer_ctor(&mesh->index_buffer)) */
   /* return fail; */
 
-  return ok;
+  return true;
 }
 
 // Destructor

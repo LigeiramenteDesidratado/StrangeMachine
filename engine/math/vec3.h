@@ -1,8 +1,9 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#include "scalar.h"
 #include <stdbool.h>
+
+#include "scalar.h"
 
 typedef struct {
   union {

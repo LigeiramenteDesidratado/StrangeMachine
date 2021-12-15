@@ -51,7 +51,7 @@ void text_init(void) {
   TEXT.color = NULL;
 
   texture_s texture = texture_new();
-  if (!texture_ctor(&texture, "engine/src/smFonts.png")) {
+  if (!texture_ctor(&texture, "engine/smFonts.png")) {
     exit(1);
   }
   TEXT.texture = texture;

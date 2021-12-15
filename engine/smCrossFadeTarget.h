@@ -3,7 +3,6 @@
 
 #include "smClip.h"
 #include "smPose.h"
-#include "util/common.h"
 
 typedef struct {
   struct clip_s *clip;
@@ -16,8 +15,6 @@ typedef struct {
 
 #define cross_fade_target_new() ((cross_fade_target_s){0})
 
-status_v cross_fade_target_ctor(cross_fade_target_s *cross_fade_target,
-                                struct clip_s *target, pose_s *pose,
-                                float duration);
+bool cross_fade_target_ctor(cross_fade_target_s *cross_fade_target, struct clip_s *target, pose_s *pose, float duration);
 
 #endif // SM_CROSS_FADE_TARGET_H

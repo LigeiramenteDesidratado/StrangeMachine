@@ -87,20 +87,20 @@ physics_s *physics_new(void) {
 }
 
 // Sphere Constructor
-status_v physics_sphere_ctor(physics_s *physics, vec3 pos, float radius) {
+bool physics_sphere_ctor(physics_s *physics, vec3 pos, float radius) {
 
   assert(physics != NULL);
   assert(radius > 0);
 
   if (++entity.count == INT8_MAX) {
     --entity.count;
-    return fail;
+    return false;
   }
 
   if (physics->entity_type != EMPTY_EX0 || physics->__id != 0) {
     --entity.count;
     log_warn("NON EMPTY PHYSICS BODY!\n");
-    return fail;
+    return false;
   }
   physics->__id = entity.count;
   physics->entity_type = SPHERE_EX0;
@@ -110,10 +110,10 @@ status_v physics_sphere_ctor(physics_s *physics, vec3 pos, float radius) {
 
   entity.bodies[entity.count] = physics;
 
-  return ok;
+  return true;
 }
 
-status_v physics_capsule_ctor(physics_s *physics, vec3 pos, float radius,
+bool physics_capsule_ctor(physics_s *physics, vec3 pos, float radius,
                               float height) {
 
   assert(physics != NULL);
@@ -122,13 +122,13 @@ status_v physics_capsule_ctor(physics_s *physics, vec3 pos, float radius,
 
   if (++entity.count == INT8_MAX) {
     --entity.count;
-    return fail;
+    return false;
   }
 
   if (physics->entity_type != EMPTY_EX0 || physics->__id != 0) {
     --entity.count;
     log_warn("NON EMPTY PHYSICS BODY!\n");
-    return fail;
+    return false;
   }
   physics->__id = entity.count;
   physics->entity_type = CAPSULE_EX0;
@@ -140,21 +140,21 @@ status_v physics_capsule_ctor(physics_s *physics, vec3 pos, float radius,
 
   entity.bodies[entity.count] = physics;
 
-  return ok;
+  return true;
 }
 
-status_v physics_terrain_ctor(physics_s *physics, vec3 pos,
+bool physics_terrain_ctor(physics_s *physics, vec3 pos,
                               mesh_s *terrain_model) {
 
   if (++entity.count == INT8_MAX) {
     --entity.count;
-    return fail;
+    return false;
   }
 
   if (physics->entity_type != EMPTY_EX0 || physics->__id != 0) {
     --entity.count;
     log_warn("NON EMPTY PHYSICS BODY!\n");
-    return fail;
+    return false;
   }
   physics->__id = entity.count;
   physics->entity_type = MESH_EX0;
@@ -164,7 +164,7 @@ status_v physics_terrain_ctor(physics_s *physics, vec3 pos,
 
   entity.bodies[entity.count] = physics;
 
-  return ok;
+  return true;
 }
 
 // Destructor

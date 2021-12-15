@@ -10,10 +10,16 @@ This is a early-stage game engine for creating ps1 like games
  - Refactoring & Documentation & Memory leaks fix
  - Multithread and integrate it with ECS (?)
  - Decent cross-platform build system
+ - Batch rendering
+ - Sound system
 
 # Dependencies (only linux for now)
   - SDL2
   - C library math.h
 
 # Build (only linux for now)
-  Type make twice
+  ```sh
+  mkdir build && cd build
+  cmake -D CMAKE_BUILD_TYPE=Debug -D BUILD_EXAMPLES=ON  ..
+  cmake --build .
+  ```

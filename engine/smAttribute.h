@@ -1,7 +1,14 @@
 #ifndef SM_ATTRIBUTE_H
 #define SM_ATTRIBUTE_H
 
-#include "util/common.h"
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "glad/glad.h"
+
+#include "math/vec2.h"
+#include "math/vec3.h"
+#include "math/vec4.h"
 
 // ENUM X ID
 typedef unsigned char EX1;
@@ -15,7 +22,7 @@ typedef unsigned char EX1;
 typedef struct {
   // vertex buffer objects
   GLuint vbo;
-  GLuint length;
+  size_t length;
   EX1 kind;
 
 } attribute_s;
@@ -23,14 +30,14 @@ typedef struct {
 #define attribute_new() ((attribute_s){.vbo = 0, .length = 0, .kind = 0})
 
 // Constructor
-status_v attribute_ctor(attribute_s *attribute, EX1 kind);
+bool attribute_ctor(attribute_s *attribute, EX1 kind);
 
 // Destructor
 void attribute_dtor(attribute_s *attribute);
 
 #define DECLARE_ATTRIBUTE_SET(X)                                               \
   void attribute_set_##X(attribute_s *const attribute,                         \
-                         const X *const input_array, uint32_t array_length,    \
+                         const X *const input_array, size_t array_length,    \
                          GLenum usage);
 
 DECLARE_ATTRIBUTE_SET(int)

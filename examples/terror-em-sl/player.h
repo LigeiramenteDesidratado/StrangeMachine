@@ -1,14 +1,16 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "util/common.h"
+#include "stdbool.h"
+#include "math/vec3.h"
+#include "math/mat4.h"
 
 struct player_s;
 
 struct player_s *player_new(void);
 
 // Constructor
-status_v player_ctor(struct player_s* player);
+bool player_ctor(struct player_s* player);
 
 // Destructor
 void player_dtor(struct player_s* player);

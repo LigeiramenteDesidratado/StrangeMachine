@@ -1,4 +1,3 @@
-
 #include "smCameraP.h"
 #include "smInput.h"
 #include "util/common.h"
@@ -26,11 +25,11 @@ typedef struct {
 
 } camera_s;
 
-camera_s CAMERA;
+static camera_s CAMERA = {0};
 
 bool is_first = true;
-camera_s last_third_person_camera = {0};
-camera_s last_free_camera = {0};
+static camera_s last_third_person_camera = {0};
+static camera_s last_free_camera = {0};
 
 void camera_update_vectors(float dt);
 
@@ -104,8 +103,8 @@ void camera_do(float dt) {
     float offset_y = input_get_y_rel_mouse();
 
     if (offset_x != 0 || offset_y != 0) {
-      CAMERA.angle.yaw += offset_x * 11.3 * dt;
-      CAMERA.angle.pitch -= offset_y * 11.3 * dt;
+      CAMERA.angle.yaw += offset_x * 11.3f * dt;
+      CAMERA.angle.pitch -= offset_y * 11.3f * dt;
 
       if (CAMERA.angle.pitch > 80.0f)
         CAMERA.angle.pitch = 80.0f;
@@ -223,7 +222,7 @@ mat4 camera_get_projection_matrix(float aspect_ratio) {
   } else  {
 
     // https://stackoverflow.com/a/55009832
-    float ratio_size_per_depth = atan(DEG2RAD*(CAMERA.fovy / 2.0f)) * 2.0f;
+    float ratio_size_per_depth = atanf(DEG2RAD*(CAMERA.fovy / 2.0f)) * 2.0f;
     float distance = vec3_len(vec3_sub(CAMERA.target, CAMERA.position));
 
     float size_y = ratio_size_per_depth * distance;

@@ -1,7 +1,7 @@
 #ifndef SM_CAMERA_P_H
 #define SM_CAMERA_P_H
 
-#include "util/common.h"
+#include <stdint.h>
 
 typedef uint8_t PROJECTION_EX4;
 #define PERSPECTIVE_EX4 ((PROJECTION_EX4)0x01)

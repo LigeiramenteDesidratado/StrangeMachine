@@ -10,7 +10,7 @@ struct controller_s;
 struct controller_s *controller_new(void);
 
 // Constructor
-status_v controller_ctor(struct controller_s *controller,
+bool controller_ctor(struct controller_s *controller,
                          struct skeleton_s *skeleton);
 
 // Destructor

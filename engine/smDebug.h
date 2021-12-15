@@ -1,10 +1,11 @@
 #ifndef SM_DEBUG_H
 #define SM_DEBUG_H
 
-#include "util/common.h"
+#include <stdbool.h>
+
 #include "smShapes.h"
 
-status_v debug_init(void);
+bool debug_init(void);
 
 void debug_tear_down(void);
 

@@ -5,7 +5,7 @@ SRCS=$(shell find . -type f -name '*.c')
 
 FLAGS = $(CV) -Wall -Wextra -pedantic -g3 -o3 -flto -pipe \
 		-fvisibility=hidden -fcf-protection=full \
-		-Werror=format-security -Wfloat-conversion \
+		-Werror=format-security -Wconversion \
 		-Werror=implicit-function-declaration -Wbad-function-cast
 
 MACROS = -DLOG_USE_COLOR #-DNDEBUG

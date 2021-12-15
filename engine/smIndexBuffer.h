@@ -1,7 +1,9 @@
 #ifndef SM_INDEX_BUFFER_H
 #define SM_INDEX_BUFFER_H
 
-#include "util/common.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include "glad/glad.h"
 
 // An index buffer allows you to render a model using indexed geometry. Think of
 // a human model; almost all triangles in the mesh will be connected. This means

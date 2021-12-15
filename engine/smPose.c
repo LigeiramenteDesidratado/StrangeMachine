@@ -28,7 +28,7 @@ void pose_resize(pose_s *pose, size_t size) {
   }
 }
 
-int32_t pose_get_parent(const pose_s *const pose, uint32_t index) {
+int32_t pose_get_parent(const pose_s *const pose, size_t index) {
   assert(pose != NULL);
   assert(index < arrlenu(pose->joints));
   return pose->parents[index];

@@ -1,11 +1,15 @@
 #ifndef SM_COLLISION_H
 #define SM_COLLISION_H
 
+#include <math.h>
+#include <assert.h>
+
+#include "stb_ds/stb_ds.h"
+
 #include "smMesh.h"
 #include "smShapes.h"
-#include "util/common.h"
-
 #include "smDebug.h"
+
 
 #define FLT_EPSILON 1.192092896e-07
 
@@ -338,9 +342,9 @@ void collision_check_capsule_mesh(capsule_s c, mesh_s *mesh, intersect_result_s 
         /* DrawSphere(reference_point, 0.1, GREEN); */
         /* DrawLine3D(t.p0, Vector3Add(t.p0, N), RED); */
         /* DrawSphere(t.p0, 0.1, ORANGE); */
-        debug_draw_line(t.p0, t.p1, vec3_new(1, .6, .3));
-        debug_draw_line(t.p1, t.p2, vec3_new(1, .6, .3));
-        debug_draw_line(t.p2, t.p0, vec3_new(1, .6, .3));
+        debug_draw_line(t.p0, t.p1, vec3_new(1.0f, .6f, .3f));
+        debug_draw_line(t.p1, t.p2, vec3_new(1.0f, .6f, .3f));
+        debug_draw_line(t.p2, t.p0, vec3_new(1.0f, .6f, .3f));
 
       return;
     }

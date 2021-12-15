@@ -1,5 +1,7 @@
-#include "util/common.h"
+#include <assert.h>
+#include <stdio.h>
 
+#include "math/transform.h"
 #include "smCamera.h"
 #include "smDebug.h"
 #include "smInput.h"
@@ -15,7 +17,7 @@ typedef uint8_t STATE_EX8;
 #define WALK_EX8 ((STATE_EX8)0x01)
 #define RUN_EX8 ((STATE_EX8)0x02)
 
-string state_str[3] = {
+char* state_str[3] = {
     "idle",
     "walk",
     "run.001",
@@ -37,11 +39,11 @@ player_s *player_new(void) {
   return player;
 }
 
-status_v player_ctor(player_s *player) {
+bool player_ctor(player_s *player) {
 
   struct skinned_model_s *model = skinned_model_new();
   if (!skinned_model_ctor(model, "goth.glb", "goth.png")) {
-    return fail;
+    return false;
   }
   player->model = model;
 
@@ -49,12 +51,12 @@ status_v player_ctor(player_s *player) {
   player->state = IDLE_EX8;
 
   struct physics_s *physics = physics_new();
-  if (!physics_capsule_ctor(physics, vec3_new(0.0f, 9.0f, 0.0f), 0.9, 5.3)) {
-    return fail;
+  if (!physics_capsule_ctor(physics, vec3_new(0.0f, 9.0f, 0.0f), 0.9f, 5.3f)) {
+    return false;
   }
   player->physics = physics;
 
-  return ok;
+  return true;
 }
 
 void player_dtor(player_s *player) {
@@ -114,7 +116,7 @@ void player_do(player_s *player, float dt) {
     player->state = RUN_EX8;
   }
 
-  physics_add_force(player->physics, vec3_scale(direction, 1.1 * sprint));
+  physics_add_force(player->physics, vec3_scale(direction, 1.1f * sprint));
 
   physics_apply_force(player->physics);
   /* vec3 velocity = vec3_scale(direction, 4 * sprint); */
@@ -126,7 +128,7 @@ void player_do(player_s *player, float dt) {
    * moveamount); */
 
   if (!skinned_model_set_animation(player->model, state_str[player->state]))
-    log_error("invalid animation name: %s", state_str[player->state]);
+    printf("invalid animation name: %s", state_str[player->state]);
 
   /* text_draw(vec2_new(10, 50), 800- 10, vec3_new(6.0f, 0.9f, 0.0f),
    * "Player\ndirection: %.2f\nvelocity: %.2f\nlocation: %.2f, %.2f, %.2f",

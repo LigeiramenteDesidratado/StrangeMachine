@@ -1,11 +1,12 @@
 #ifndef MAT4_H
 #define MAT4_H
 
+#include <stdio.h>
+#include <stdbool.h>
+
 #include "scalar.h"
-#include "stdbool.h"
 #include "vec3.h"
 #include "vec4.h"
-#include <stdio.h>
 
 typedef struct {
   union {

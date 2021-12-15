@@ -1,8 +1,14 @@
 #ifndef SM_TRACK_H
 #define SM_TRACK_H
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
 #include "smInterpolation.h"
-#include "util/common.h"
+
+#include "math/vec3.h"
+#include "math/quat.h"
 
 typedef unsigned char TRACK_KIND_EX2;
 #define SCALAR_EX2 ((TRACK_KIND_EX2)0x01)

@@ -17,17 +17,17 @@ typedef struct {
 
 debug_s DEBUG = {0};
 
-status_v debug_init() {
+bool debug_init() {
 
   DEBUG.position_attr = attribute_new();
   if (!attribute_ctor(&DEBUG.position_attr, VEC3_EX1))
-    return fail;
+    return false;
 
   DEBUG.color_attr = attribute_new();
   if (!attribute_ctor(&DEBUG.color_attr, VEC3_EX1))
-    return fail;
+    return false;
 
-  return ok;
+  return true;
 }
 
 void debug_tear_down(void) {

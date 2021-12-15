@@ -3,9 +3,9 @@
 
 #include "util/common.h"
 
-string read_file(const string filename) {
+char* read_file(const char* filename) {
 
-  string text = NULL;
+  char* text = NULL;
 
   if (filename != NULL) {
 
@@ -17,11 +17,11 @@ string read_file(const string filename) {
       // text mode causes carriage return-linefeed translation...
       // ...but using fseek() should return correct byte-offset
       fseek(f, 0, SEEK_END);
-      uint64_t size = ftell(f);
+      uint64_t size = (uint64_t)ftell(f);
       fseek(f, 0, SEEK_SET);
 
       if (size > 0) {
-        text = (string)malloc((size + 1) * sizeof(char));
+        text = (char*)malloc((size + 1) * sizeof(char));
 
         uint64_t count = fread(text, sizeof(char), size, f);
         // WARNING: \r\n is converted to \n on reading, so,
@@ -29,7 +29,7 @@ string read_file(const string filename) {
         if (count < size)
           text = realloc(text, count + 1);
 
-        // Zero-terminate the string
+        // Zero-terminate the char*
         text[count] = '\0';
 
         log_info("[%s] text file loaded successfully", filename);

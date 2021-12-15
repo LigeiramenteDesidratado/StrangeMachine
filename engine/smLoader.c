@@ -6,3 +6,6 @@
 
 #define CGLTF_IMPLEMENTATION
 #include "cgltf/cgltf.h"
+
+// Ugly but works
+#include "logc/log.c"

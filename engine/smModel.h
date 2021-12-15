@@ -1,7 +1,8 @@
 #ifndef SM_MODEL_H
 #define SM_MODEL_H
 
-#include "util/common.h"
+#include <stdbool.h>
+
 #include "smMesh.h"
 
 struct model_s;
@@ -10,8 +11,7 @@ struct model_s;
 struct model_s *model_new(void);
 
 // Constructor
-status_v model_ctor(struct model_s *model, const string obj_path,
-                    const string texture_path);
+bool model_ctor(struct model_s *model, const char* obj_path, const char* texture_path);
 
 // Destructor
 void model_dtor(struct model_s *model);

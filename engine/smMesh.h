@@ -1,8 +1,6 @@
 #ifndef SM_MESH_H
 #define SM_MESH_H
 
-#include "util/common.h"
-
 #include "smVertex.h"
 #include "smAttribute.h"
 #include "smIndexBuffer.h"
@@ -35,7 +33,7 @@ typedef struct {
 
 #define mesh_new() ((mesh_s){0})
 
-status_v mesh_ctor(mesh_s *mesh);
+bool mesh_ctor(mesh_s *mesh);
 void mesh_dtor(mesh_s *mesh);
 void mesh_draw(mesh_s *mesh);
 void mesh_update_gl_buffers(mesh_s *mesh);

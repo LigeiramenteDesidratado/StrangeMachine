@@ -1,9 +1,10 @@
+#include <stdbool.h>
 
 #include "smCrossFadeTarget.h"
 #include "util/common.h"
 
 // Constructor
-status_v cross_fade_target_ctor(cross_fade_target_s *cross_fade_target,
+bool cross_fade_target_ctor(cross_fade_target_s *cross_fade_target,
                                 struct clip_s *target, pose_s *pose,
                                 float duration) {
 

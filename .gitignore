@@ -8,3 +8,4 @@ record.txt
 *.diff
 .ccls-cache/
 compile_commands.json
+build/

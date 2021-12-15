@@ -1,8 +1,7 @@
 #ifndef SCENE_DEFS_H
 #define SCENE_DEFS_H
 
-#include "util/common.h"
-
+#include <stdint.h>
 typedef uint32_t SCENE_EX6;
 #define EMPTY_EX6 ((SCENE_EX6)0x01)
 #define MENU_EX6 ((SCENE_EX6)0x02)

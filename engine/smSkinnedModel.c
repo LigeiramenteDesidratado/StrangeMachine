@@ -36,8 +36,8 @@ skinned_model_s *skinned_model_new(void) {
   return skinned_model;
 }
 
-status_v skinned_model_ctor(skinned_model_s *skinned_model,
-                            const string gltf_path, const string texture_path) {
+bool skinned_model_ctor(skinned_model_s *skinned_model,
+                            const char* gltf_path, const char* texture_path) {
 
   assert(skinned_model != NULL);
 
@@ -60,12 +60,12 @@ status_v skinned_model_ctor(skinned_model_s *skinned_model,
   skinned_model->texture = texture_new();
   if (!texture_ctor(&skinned_model->texture, texture_path)) {
     log_error("failed to construct texture");
-    return fail;
+    return false;
   }
 
   struct controller_s *control = controller_new();
   if (!controller_ctor(control, skinned_model->skeleton))
-    return fail;
+    return false;
   skinned_model->fade_controller = control;
 
   controller_play(skinned_model->fade_controller, skinned_model->clips[0]);
@@ -77,7 +77,7 @@ status_v skinned_model_ctor(skinned_model_s *skinned_model,
   skinned_model->next_clip = 0;
   skinned_model->current_clip = 0;
 
-  return ok;
+  return true;
 }
 
 void skinned_model_dtor(skinned_model_s *skinned_model) {
@@ -166,17 +166,17 @@ void skinned_model_draw(skinned_model_s *skinned_model) {
   shader_unbind();
 }
 
-status_v skinned_model_set_animation(skinned_model_s *skinned_model,
-                                     const string animation) {
+bool skinned_model_set_animation(skinned_model_s *skinned_model,
+                                     const char* animation) {
 
   for (unsigned int i = 0; i < arrlenu(skinned_model->clips); ++i) {
     if (strcmp(clip_get_name(skinned_model->clips[i]), animation) == 0) {
       skinned_model->next_clip = i;
-      return ok;
+      return true;
     }
   }
 
-  return fail;
+  return false;
 }
 
 void next_animation(skinned_model_s *sample) {

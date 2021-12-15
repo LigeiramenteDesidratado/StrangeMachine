@@ -25,14 +25,14 @@ skeleton_s *skeleton_new(void) {
 }
 
 // Constructor
-status_v skeleton_ctor(skeleton_s *skeleton, pose_s *rest, pose_s *bind,
+bool skeleton_ctor(skeleton_s *skeleton, pose_s *rest, pose_s *bind,
                        const char **const names) {
 
   assert(skeleton != NULL);
 
   skeleton_set(skeleton, rest, bind, names);
 
-  return ok;
+  return true;
 }
 
 // Destructor

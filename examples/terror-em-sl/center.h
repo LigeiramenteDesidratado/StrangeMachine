@@ -1,8 +1,7 @@
 #ifndef CENTER_H
 #define CENTER_H
 
-#include "util/common.h"
-#include "scene/scene.h"
+#include "scene.h"
 
 struct center_s;
 

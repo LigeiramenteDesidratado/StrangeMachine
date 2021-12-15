@@ -1,8 +1,8 @@
 #ifndef STAGE_H
 #define STAGE_H
 
-#include "scene/scene.h"
-#include "util/common.h"
+#include "scene.h"
+#include "math/mat4.h"
 
 struct stage_s;
 

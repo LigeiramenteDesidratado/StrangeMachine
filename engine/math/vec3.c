@@ -3,7 +3,7 @@
 
 #include "vec3.h"
 
-// Quake III algorithm
+// Quake III algorithm for fast inverse square root
 float rev_sqrt(float number) {
   long i;
   float x2, y;

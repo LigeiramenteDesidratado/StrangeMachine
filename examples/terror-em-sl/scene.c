@@ -1,5 +1,7 @@
 #include "scene_p.h"
-#include "util/common.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
 
 void __scene_do(void *this_ptr, float dt) {
   /* scene_t* scene = (scene_t*)this_ptr; */

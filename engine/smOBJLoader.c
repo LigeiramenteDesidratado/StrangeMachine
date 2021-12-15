@@ -1,20 +1,20 @@
 #include "smMesh.h"
 #include "util/common.h"
 
-status_v obj_loader_load(mesh_s **meshes, const string path) {
+bool obj_loader_load(mesh_s **meshes, const char* path) {
 
   FILE *fp;
   fp = fopen(path, "r");
   if (fp == NULL) {
     log_error("[%s] failed to open obj file", path);
-    return fail;
+    return false;
   }
 
   size_t objects = 0;
   size_t iv_len = 0, iu_len = 0, in_len = 0;
   size_t tmp_v_len = 0, tmp_uv_len = 0, tmp_n_len = 0;
 
-  string _line = NULL, line = NULL;
+  char* _line = NULL, *line = NULL;
   size_t len = 0;
   ssize_t read;
   while ((read = getline(&_line, &len, fp)) != -1) {
@@ -157,5 +157,5 @@ status_v obj_loader_load(mesh_s **meshes, const string path) {
   arrfree(iu);
   arrfree(in);
 
-  return ok;
+  return true;
 }

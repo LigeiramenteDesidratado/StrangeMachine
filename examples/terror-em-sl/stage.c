@@ -1,7 +1,7 @@
-#include "util/common.h"
+#include <assert.h>
 
-#include "scene/scene.h"
-#include "scene/world/center.h"
+#include "scene.h"
+#include "center.h"
 #include "smCamera.h"
 #include "smCameraP.h"
 #include "smInput.h"
@@ -26,20 +26,20 @@ stage_s *stage_new(void) {
   return stage;
 }
 
-status_v stage_ctor(stage_s *stage) {
+bool stage_ctor(stage_s *stage) {
 
   assert(stage);
 
   stage->next_scene = CENTER_EX6;
   stage->scene = (struct scene_s *)center_new();
   if (!center_ctor((struct center_s *)stage->scene, CENTER_EX6)) {
-    return fail;
+    return false;
   }
 
   camera_init(vec3_new(0.0f, 3.0f, 8.0f), vec3_new(0.0f, 2.0f, 0.0f),
               vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON_EX5, PERSPECTIVE_EX4);
 
-  return ok;
+  return true;
 }
 
 void stage_dtor(stage_s *stage) {
@@ -69,7 +69,7 @@ void stage_do(stage_s *stage, float dt) {
     camera_set_mode(THIRD_PERSON_EX5);
 
   vec3 loc = scene_get_look_at(stage->scene);
-  loc.y += 4.5;
+  loc.y += 4.5f;
   camera_set_target(loc);
 
   MODE_EX5 cam_mode = camera_get_mode();

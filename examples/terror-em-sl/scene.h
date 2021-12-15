@@ -2,7 +2,7 @@
 #define SCENE_H
 
 #include "scene_defs.h"
-#include "util/common.h"
+#include "math/vec3.h"
 
 // Foward declaration
 struct scene_s;

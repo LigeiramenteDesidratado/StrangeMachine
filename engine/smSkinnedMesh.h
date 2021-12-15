@@ -1,9 +1,14 @@
 #ifndef SM_SKINNED_MESH_H
 #define SM_SKINNED_MESH_H
 
-#include "util/common.h"
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "smVertex.h"
 #include "smIndexBuffer.h"
+
+#include "math/mat4.h"
+#include "math/vec4.h"
 
 // NOTE: in case of change make sure to update the src/shader/glsl/static.vs as
 // well
@@ -48,7 +53,7 @@ typedef struct {
 #define skinned_mesh_new() ((skinned_mesh_s) {0})
 
 // Constructor
-status_v skinned_mesh_ctor(skinned_mesh_s *mesh);
+bool skinned_mesh_ctor(skinned_mesh_s *mesh);
 
 // Destructor
 void skinned_mesh_dtor(skinned_mesh_s *mesh);

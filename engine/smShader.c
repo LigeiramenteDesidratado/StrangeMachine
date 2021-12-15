@@ -3,25 +3,25 @@
 #include "util/file.h"
 
 // private helper functions
-static GLuint shader_compile_vert(string vertex);
-static GLuint shader_compile_frag(string fragment);
-static status_v shader_link(GLuint shader, GLuint vertex, GLuint fragment);
+static GLuint shader_compile_vert(char* vertex);
+static GLuint shader_compile_frag(char* fragment);
+static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment);
 
 // Constructor
-status_v shader_ctor(GLuint *shader, const string vs, const string fs) {
+bool shader_ctor(GLuint *shader, const char* vs, const char* fs) {
 
   assert(shader != NULL);
   assert(vs != NULL);
   assert(fs != NULL);
 
-  string v_source = read_file(vs);
+  char* v_source = read_file(vs);
   if (!v_source)
-    return fail;
+    return false;
 
-  string f_source = read_file(fs);
+  char* f_source = read_file(fs);
   if (!f_source) {
     free(v_source);
-    return fail;
+    return false;
   }
 
   GLuint vert = shader_compile_vert(v_source);
@@ -31,16 +31,16 @@ status_v shader_ctor(GLuint *shader, const string vs, const string fs) {
   free(f_source);
 
   if (!vert || !frag)
-    return fail;
+    return false;
 
   *shader = glCreateProgram();
 
   if (!shader_link(*shader, vert, frag)) {
     glDeleteProgram(*shader);
-    return fail;
+    return false;
   }
 
-  return ok;
+  return true;
 }
 
 // Destructor
@@ -50,12 +50,12 @@ void shader_bind(GLuint shader) { glUseProgram(shader); }
 
 void shader_unbind() { glUseProgram(0); }
 
-void shader_bind_attrib_loc(GLuint shader, uint32_t loc, const string name) {
+void shader_bind_attrib_loc(GLuint shader, uint32_t loc, const char* name) {
 
   glBindAttribLocation(shader, loc, name);
 }
 
-status_v shader_relink_program(GLuint shader) {
+bool shader_relink_program(GLuint shader) {
 
   glLinkProgram(shader);
 
@@ -66,14 +66,14 @@ status_v shader_relink_program(GLuint shader) {
     glGetShaderInfoLog(shader, 2 * 512, NULL, info_log);
     log_error("shader relinking failed.\n\t%s", info_log);
 
-    return fail;
+    return false;
   }
 
   log_info("relinked shaders successfully");
-  return ok;
+  return true;
 }
 
-static GLuint shader_compile_vert(string vertex) {
+static GLuint shader_compile_vert(char* vertex) {
 
   GLuint v = glCreateShader(GL_VERTEX_SHADER);
   const char *v_source = vertex;
@@ -93,7 +93,7 @@ static GLuint shader_compile_vert(string vertex) {
   return v;
 }
 
-static GLuint shader_compile_frag(string fragment) {
+static GLuint shader_compile_frag(char* fragment) {
 
   GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
   const char *f_source = fragment;
@@ -113,7 +113,7 @@ static GLuint shader_compile_frag(string fragment) {
   return f;
 }
 
-static status_v shader_link(GLuint shader, GLuint vertex, GLuint fragment) {
+static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment) {
 
   glAttachShader(shader, vertex);
   glAttachShader(shader, fragment);
@@ -128,7 +128,7 @@ static status_v shader_link(GLuint shader, GLuint vertex, GLuint fragment) {
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    return fail;
+    return false;
   }
 
   log_info("compiled and linked shaders successfully");
@@ -136,5 +136,5 @@ static status_v shader_link(GLuint shader, GLuint vertex, GLuint fragment) {
   glDeleteShader(vertex);
   glDeleteShader(fragment);
 
-  return ok;
+  return true;
 }

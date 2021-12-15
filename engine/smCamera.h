@@ -1,8 +1,10 @@
 #ifndef SM_CAMERA_H
 #define SM_CAMERA_H
 
-#include "util/common.h"
 #include "smCameraP.h"
+
+#include "math/mat4.h"
+#include "math/vec3.h"
 
 struct camera_s;
 

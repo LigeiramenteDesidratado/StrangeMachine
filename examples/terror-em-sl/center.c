@@ -1,8 +1,10 @@
-#include "util/common.h"
+#include <stdlib.h>
+#include <assert.h>
+#include <stdbool.h>
 
 #include "player.h"
-#include "scene/scene.h"
-#include "scene/scene_p.h"
+#include "scene.h"
+#include "scene_p.h"
 #include "smModel.h"
 #include "smPhysics.h"
 #include "smShader.h"
@@ -33,7 +35,7 @@ center_s *center_new(void) {
   return center;
 }
 
-status_v center_ctor(center_s *center, SCENE_EX6 id) {
+bool center_ctor(center_s *center, SCENE_EX6 id) {
 
   scene_ctor((struct scene_s *)center, id);
   center->scene.scene_do = __one_do;
@@ -42,13 +44,13 @@ status_v center_ctor(center_s *center, SCENE_EX6 id) {
 
   struct player_s *player = player_new();
   if (!player_ctor(player)) {
-    return fail;
+    return false;
   }
   center->player = player;
 
   struct model_s *model = model_new();
   if (!model_ctor(model, "plane.obj", "ps1.png")) {
-    return fail;
+    return false;
   }
   center->world = model;
 
@@ -58,7 +60,7 @@ status_v center_ctor(center_s *center, SCENE_EX6 id) {
     return false;
   }
   center->terrain = terrain;
-  return ok;
+  return true;
 }
 
 void center_dtor(center_s *center) {

@@ -1,7 +1,9 @@
 #ifndef SM_CLIP_H
 #define SM_CLIP_H
 
-#include "util/common.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 #include "smPose.h"
 #include "smTransformTrack.h"

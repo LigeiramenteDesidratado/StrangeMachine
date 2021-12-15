@@ -1,8 +1,8 @@
 #ifndef SM_INPUT_H
 #define SM_INPUT_H
 
-#include "util/common.h"
 #include <SDL2/SDL_events.h>
+#include <stdbool.h>
 
 void input_init(void);
 void input_do(SDL_Event *e);

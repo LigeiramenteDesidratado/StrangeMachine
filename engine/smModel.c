@@ -17,7 +17,7 @@ typedef struct {
 
 } model_s;
 
-static status_v string_suffix(const string str, const string suffix);
+static bool string_suffix(const char* str, const char* suffix);
 
 model_s *model_new(void) {
   model_s *model = calloc(1, sizeof(model_s));
@@ -27,8 +27,8 @@ model_s *model_new(void) {
   return model;
 }
 
-status_v model_ctor(model_s *model, const string obj_path,
-                    const string texture_path) {
+bool model_ctor(model_s *model, const char* obj_path,
+                    const char* texture_path) {
 
   assert(model != NULL);
   assert(obj_path != NULL);
@@ -37,17 +37,17 @@ status_v model_ctor(model_s *model, const string obj_path,
   if (string_suffix(obj_path, ".obj")) {
     if (!obj_loader_load(&model->meshes, obj_path)) {
       log_error("[%s] failed to load and parse object");
-      return fail;
+      return false;
     }
   } else {
     log_error("file format not supported");
-    return fail;
+    return false;
   }
 
   for (uint32_t i = 0; i < arrlenu(model->meshes); ++i) {
     if (!mesh_ctor(&model->meshes[i])) {
       log_error("failed to construct model");
-      return fail;
+      return false;
     }
 
     mesh_update_gl_buffers(&model->meshes[i]);
@@ -58,10 +58,10 @@ status_v model_ctor(model_s *model, const string obj_path,
   model->texture = texture_new();
   if (!texture_ctor(&model->texture, texture_path)) {
     log_error("failed to construct texture");
-    return fail;
+    return false;
   }
 
-  return ok;
+  return true;
 }
 
 void model_dtor(model_s *model) {
@@ -118,20 +118,20 @@ void model_draw(const model_s *const model) {
   };
 }
 
-static status_v string_suffix(const string str, const string suffix) {
+static bool string_suffix(const char* str, const char* suffix) {
   if (!str || !suffix)
-    return fail;
+    return false;
 
   size_t lenstr = strlen(str);
   size_t lensuffix = strlen(suffix);
 
   if (lensuffix > lenstr)
-    return fail;
+    return false;
 
   if (strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0)
-    return ok;
+    return true;
 
-  return fail;
+  return false;
 }
 
 mesh_s **model_get_meshes(model_s *model) { return &model->meshes; }

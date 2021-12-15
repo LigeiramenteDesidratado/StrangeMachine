@@ -1,8 +1,8 @@
 #ifndef SCENE_P_H
 #define SCENE_P_H
 
-#include "util/common.h"
 #include "scene_defs.h"
+#include "math/vec3.h"
 
 
 // Polymorphic behavior functions

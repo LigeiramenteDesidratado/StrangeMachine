@@ -1,7 +1,7 @@
 #include "smAttribute.h"
 #include "util/common.h"
 
-status_v attribute_ctor(attribute_s *attribute, EX1 kind) {
+bool attribute_ctor(attribute_s *attribute, EX1 kind) {
 
   assert(attribute != NULL);
 
@@ -9,7 +9,7 @@ status_v attribute_ctor(attribute_s *attribute, EX1 kind) {
   attribute->length = 0;
   attribute->kind = kind;
 
-  return ok;
+  return true;
 }
 
 void attribute_dtor(attribute_s *attribute) {
@@ -20,14 +20,14 @@ void attribute_dtor(attribute_s *attribute) {
 
 #define DEFINE_ATTRIBUTE_SET(X)                                                \
   void attribute_set_##X(attribute_s *const attribute,                         \
-                         const X *const input_array, uint32_t array_length,    \
+                         const X *const input_array, size_t array_length,      \
                          GLenum usage) {                                       \
     assert(attribute != NULL);                                                 \
     attribute->length = array_length;                                          \
     size_t size = sizeof(X);                                                   \
     glBindBuffer(GL_ARRAY_BUFFER, attribute->vbo);                             \
-    glBufferData(GL_ARRAY_BUFFER, size * attribute->length, input_array,       \
-                 usage);                                                       \
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(size * attribute->length),      \
+                 input_array, usage);                                          \
     glBindBuffer(GL_ARRAY_BUFFER, 0);                                          \
   }
 

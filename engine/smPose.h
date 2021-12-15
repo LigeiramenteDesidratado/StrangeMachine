@@ -1,7 +1,8 @@
 #ifndef SM_POSE_H
 #define SM_POSE_H
 
-#include "util/common.h"
+#include "math/transform.h"
+#include <stdint.h>
 
 typedef struct {
   transform_s *joints;
@@ -16,7 +17,7 @@ void pose_dtor(pose_s *pose);
 
 void pose_resize(pose_s *pose, size_t size);
 void pose_copy(pose_s * dest, const pose_s * const src);
-int32_t pose_get_parent(const pose_s *const pose, uint32_t index);
+int32_t pose_get_parent(const pose_s *const pose, size_t index);
 void pose_set_parent(pose_s *pose, uint32_t index, int parent);
 transform_s pose_get_local_transform(const pose_s *const pose, uint32_t index);
 void pose_set_local_transform(pose_s *pose, uint32_t index,

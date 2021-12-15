@@ -25,10 +25,4 @@
 #include "math/vec3.h"
 #include "math/vec4.h"
 
-typedef char *string;
-
-typedef unsigned char status_v;
-#define fail ((status_v)0)
-#define ok ((status_v)1)
-
 #endif // UTIL_COMMON_H

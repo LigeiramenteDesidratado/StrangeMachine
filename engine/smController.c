@@ -25,14 +25,14 @@ controller_s *controller_new(void) {
 }
 
 // Constructor
-status_v controller_ctor(controller_s *controller,
+bool controller_ctor(controller_s *controller,
                          struct skeleton_s *skeleton) {
 
   assert(controller != NULL);
   assert(skeleton != NULL);
 
   controller_skeleton_set(controller, skeleton);
-  return ok;
+  return true;
 }
 
 // Destructor

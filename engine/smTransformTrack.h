@@ -1,8 +1,13 @@
 #ifndef SM_RANSFORM_TRACK_H
 #define SM_RANSFORM_TRACK_H
 
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "glad/glad.h"
+
+#include "math/transform.h"
 #include "smTrack.h"
-#include "util/common.h"
 
 typedef struct {
   uint32_t id;

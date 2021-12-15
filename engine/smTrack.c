@@ -116,9 +116,9 @@ quat track_sample_quat(track_s *track, float time, bool looping) {
 void track_resize_sampled_frames(track_s *track, size_t size) {
   assert(track != NULL);
 
-  size_t old_length = arrlen(track->sampled_frames);
+  size_t old_length = arrlenu(track->sampled_frames);
   arrsetlen(track->sampled_frames, size);
-  size_t new_length = arrlen(track->sampled_frames);
+  size_t new_length = arrlenu(track->sampled_frames);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->sampled_frames[old_length + i] = 0;
@@ -130,9 +130,9 @@ void track_resize_frame(track_s *track, size_t size) {
 
   assert(track != NULL);
 
-  size_t old_length = arrlen(track->frames);
+  size_t old_length = arrlenu(track->frames);
   arrsetlen(track->frames, size);
-  size_t new_length = arrlen(track->frames);
+  size_t new_length = arrlenu(track->frames);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->frames[old_length + i] = frame_zero();
@@ -147,9 +147,9 @@ void track_resize_frame_in(track_s *track, size_t size, uint32_t frame_index) {
     return;
   }
 
-  size_t old_length = arrlen(track->frames[frame_index].in);
+  size_t old_length = arrlenu(track->frames[frame_index].in);
   arrsetlen(track->frames[frame_index].in, size);
-  size_t new_length = arrlen(track->frames[frame_index].in);
+  size_t new_length = arrlenu(track->frames[frame_index].in);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->frames[frame_index].in[old_length + i] = 0.0f;
@@ -164,9 +164,9 @@ void track_resize_frame_out(track_s *track, size_t size, uint32_t frame_index) {
     return;
   }
 
-  size_t old_length = arrlen(track->frames[frame_index].out);
+  size_t old_length = arrlenu(track->frames[frame_index].out);
   arrsetlen(track->frames[frame_index].out, size);
-  size_t new_length = arrlen(track->frames[frame_index].out);
+  size_t new_length = arrlenu(track->frames[frame_index].out);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->frames[frame_index].out[old_length + i] = 0.0f;
@@ -181,9 +181,9 @@ void track_resize_frame_value(track_s *track, size_t size,
     return;
   }
 
-  size_t old_length = arrlen(track->frames[frame_index].value);
+  size_t old_length = arrlenu(track->frames[frame_index].value);
   arrsetlen(track->frames[frame_index].value, size);
-  size_t new_length = arrlen(track->frames[frame_index].value);
+  size_t new_length = arrlenu(track->frames[frame_index].value);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->frames[frame_index].value[old_length + i] = 0.0f;
@@ -298,7 +298,7 @@ int32_t track_frame_index(track_s *track, float time, bool looping) {
   if (index >= arrlenu(track->sampled_frames)) {
     /* log_debug("index (%d) is gt array length (%lu)", index, */
               /* arrlenu(track->sampled_frames)); */
-    return track->sampled_frames[arrlenu(track->sampled_frames) - 1];
+    return (int32_t)track->sampled_frames[arrlenu(track->sampled_frames) - 1];
     // return -1;
   }
 

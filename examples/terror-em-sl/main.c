@@ -1,5 +1,3 @@
-#include "util/common.h"
-
 #include "smAttribute.h"
 #include "smIndexBuffer.h"
 #include "smTexture.h"
@@ -31,7 +29,7 @@ int main(int argc, char *argv[]) {
   (void)argv;
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    log_error("failed to initialize SDL: %s", SDL_GetError());
+    printf("failed to initialize SDL: %s\n", SDL_GetError());
     exit(1);
   }
 
@@ -41,7 +39,7 @@ int main(int argc, char *argv[]) {
                        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL |
                            SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_MOUSE_GRABBED);
   if (window == NULL) {
-    log_error("failed to create SDL window: %s", SDL_GetError());
+    printf("failed to create SDL window: %s\n", SDL_GetError());
     exit(1);
   }
 
@@ -51,20 +49,20 @@ int main(int argc, char *argv[]) {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   gc = SDL_GL_CreateContext(window);
   if (gc == NULL) {
-    log_error("failed to create OpengGL ctx: %s", SDL_GetError());
+    printf("failed to create OpengGL ctx: %s\n", SDL_GetError());
     exit(1);
   }
 
   if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
-    log_error("failed to initialize OpengGL ctx: %s", SDL_GetError());
+    printf("failed to initialize OpengGL ctx: %s\n", SDL_GetError());
     exit(1);
   }
 
   GLint n_attrs;
   glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attrs);
-  log_info("GL Renderer: %s", glGetString(GL_RENDERER));
-  log_info("GL Version: %s", glGetString(GL_VERSION));
-  log_info("GL MAX_VERTEX_ATTRIBS: %d", n_attrs);
+  printf("GL Renderer: %s\n", glGetString(GL_RENDERER));
+  printf("GL Version: %s\n", glGetString(GL_VERSION));
+  printf("GL MAX_VERTEX_ATTRIBS: %d\n", n_attrs);
 
   SDL_SetRelativeMouseMode(SDL_TRUE);
   // Use v-sync
@@ -113,7 +111,7 @@ int main(int argc, char *argv[]) {
     glViewport(0, 0, win_width, win_height);
 
     // 12/255, 12/255 12/255, 1.0f
-    glClearColor(0.047, 0.047, 0.047, 1.0f);
+    glClearColor(0.047f, 0.047f, 0.047f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     stage_do(stage, dt);
