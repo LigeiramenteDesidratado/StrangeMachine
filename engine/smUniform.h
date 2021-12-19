@@ -3,62 +3,46 @@
 
 #include <stdint.h>
 
+#include "math/mat4.h"
+#include "math/quat.h"
 #include "math/vec2.h"
 #include "math/vec3.h"
 #include "math/vec4.h"
-#include "math/quat.h"
-#include "math/mat4.h"
 
 // Forward declaration
-void __uniform_default_value(int32_t slot, void *data);
-void __uniform_default_array(int32_t slot, void *data, int32_t length);
+void __uniform_default(int32_t slot, void *data, int32_t length);
 
-// values
-void __uniform_set_value_int(int32_t slot, int data);
-void __uniform_set_value_ivec4(int32_t slot, ivec4 data);
-void __uniform_set_value_ivec2(int32_t slot, ivec2 data);
-void __uniform_set_value_float(int32_t slot, float data);
-void __uniform_set_value_vec2(int32_t slot, vec2 data);
-void __uniform_set_value_vec3(int32_t slot, vec3 data);
-void __uniform_set_value_vec4(int32_t slot, vec4 data);
-void __uniform_set_value_quat(int32_t slot, quat data);
-void __uniform_set_value_mat4(int32_t slot, mat4 data);
+// uniform_set_value modifies the value of a uniform variable. The location of the uniform
+// variable to be modified is specified by SLOT, which should be a value returned by glGetUniformLocation.
+// To summarise, it wraps glUniform{1|2|3|4}{f|i|ui} GL functions
+#define uniform_set_value(SLOT, DATA)                                                                                  \
+  _Generic((DATA), int                                                                                                 \
+           : glUniform1iv(SLOT, 1, (int32_t *)&DATA), ivec4                                                            \
+           : glUniform4iv(SLOT, 1, (int32_t *)&DATA), ivec2                                                            \
+           : glUniform2iv(SLOT, 1, (int32_t *)&DATA), float                                                            \
+           : glUniform1fv(SLOT, 1, (float *)&DATA), vec2                                                               \
+           : glUniform2fv(SLOT, 1, (float *)&DATA), vec3                                                               \
+           : glUniform3fv(SLOT, 1, (float *)&DATA), vec4                                                               \
+           : glUniform4fv(SLOT, 1, (float *)&DATA), quat                                                               \
+           : glUniform4fv(SLOT, 1, (float *)&DATA), mat4                                                               \
+           : glUniformMatrix4fv(SLOT, 1, GL_FALSE, (float *)&DATA), default                                            \
+           : __uniform_default(0, (void *)&DATA, 0))
 
-#define uniform_set_value(SLOT, DATA)                                          \
-  _Generic((DATA), int                                                         \
-           : __uniform_set_value_int, ivec4                                    \
-           : __uniform_set_value_ivec4, ivec2                                  \
-           : __uniform_set_value_ivec2, float                                  \
-           : __uniform_set_value_float, vec2                                   \
-           : __uniform_set_value_vec2, vec3                                    \
-           : __uniform_set_value_vec3, vec4                                    \
-           : __uniform_set_value_vec4, quat                                    \
-           : __uniform_set_value_quat, mat4                                    \
-           : __uniform_set_value_mat4, default                                 \
-           : __uniform_default_value)(SLOT, DATA)
-
-// arrays
-void __uniform_set_array_int(int32_t slot, int *data, int32_t length);
-void __uniform_set_array_ivec4(int32_t slot, ivec4 *data, int32_t length);
-void __uniform_set_array_ivec2(int32_t slot, ivec2 *data, int32_t length);
-void __uniform_set_array_float(int32_t slot, float *data, int32_t length);
-void __uniform_set_array_vec2(int32_t slot, vec2 *data, int32_t length);
-void __uniform_set_array_vec3(int32_t slot, vec3 *data, int32_t length);
-void __uniform_set_array_vec4(int32_t slot, vec4 *data, int32_t length);
-void __uniform_set_array_quat(int32_t slot, quat *data, int32_t length);
-void __uniform_set_array_mat4(int32_t slot, mat4 *data, int32_t length);
-
-#define uniform_set_array(SLOT, DATA, LENGTH)                                  \
-  _Generic(&((DATA)[0]), int*                                                   \
-           : __uniform_set_array_int, ivec4*                                    \
-           : __uniform_set_array_ivec4, ivec2*                                  \
-           : __uniform_set_array_ivec2, float*                                  \
-           : __uniform_set_array_float, vec2*                                   \
-           : __uniform_set_array_vec2, vec3*                                    \
-           : __uniform_set_array_vec3, vec4*                                    \
-           : __uniform_set_array_vec4, quat*                                    \
-           : __uniform_set_array_quat, mat4*                                    \
-           : __uniform_set_array_mat4, default                                 \
-           : __uniform_default_array)(SLOT, DATA, LENGTH)
+// uniform_set_array modifies a uniform variable array. The location of the uniform variable to be modified is specified
+// by SLOT, which should be a value returned by glGetUniformLocation.
+// To summarise, it wraps glUniform{1|2|3|4}{f|i|ui} GL functions
+// see: http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1930.htm
+#define uniform_set_array(SLOT, DATA, LENGTH)                                                                          \
+  _Generic(&((DATA)[0]), int*                                                                                          \
+           : glUniform1iv(SLOT, LENGTH, (int32_t *)&DATA[0]), ivec4*                                                   \
+           : glUniform4iv(SLOT, LENGTH, (int32_t *)&DATA[0]), ivec2*                                                   \
+           : glUniform2iv(SLOT, LENGTH, (int32_t *)&DATA[0]), float*                                                   \
+           : glUniform1fv(SLOT, LENGTH, (float *)&DATA[0]), vec2*                                                      \
+           : glUniform2fv(SLOT, LENGTH, (float *)&DATA[0]), vec3*                                                      \
+           : glUniform3fv(SLOT, LENGTH, (float *)&DATA[0]), vec4*                                                      \
+           : glUniform4fv(SLOT, LENGTH, (float *)&DATA[0]), quat*                                                      \
+           : glUniform4fv(SLOT, LENGTH, (float *)&DATA[0]), mat4*                                                      \
+           : glUniformMatrix4fv(SLOT, LENGTH, GL_FALSE, (float *)&DATA[0]), default                                    \
+           : __uniform_default(0, (void *)&DATA, 0))
 
 #endif // SM_UNIFORM_H
