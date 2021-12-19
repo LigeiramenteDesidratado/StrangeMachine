@@ -7,24 +7,18 @@
 
 static vec3 __track_sample_constant_vec3(track_s *track, float t, bool looping);
 static vec3 __track_sample_cubic_vec3(track_s *track, float time, bool looping);
-static vec3 __track_sample_linear_vec3(track_s *track, float time,
-                                       bool looping);
+static vec3 __track_sample_linear_vec3(track_s *track, float time, bool looping);
 
-static float __track_sample_constant_float(track_s *track, float t,
-                                           bool looping);
-static float __track_sample_cubic_float(track_s *track, float time,
-                                        bool looping);
-static float __track_sample_linear_float(track_s *track, float time,
-                                         bool looping);
+static float __track_sample_constant_float(track_s *track, float t, bool looping);
+static float __track_sample_cubic_float(track_s *track, float time, bool looping);
+static float __track_sample_linear_float(track_s *track, float time, bool looping);
 
 static quat __track_sample_constant_quat(track_s *track, float t, bool looping);
 static quat __track_sample_cubic_quat(track_s *track, float time, bool looping);
-static quat __track_sample_linear_quat(track_s *track, float time,
-                                       bool looping);
+static quat __track_sample_linear_quat(track_s *track, float time, bool looping);
 
 static vec3 __track_hermite_vec3(float t, vec3 p1, vec3 s1, vec3 _p2, vec3 s2);
-static float __track_hermite_float(float t, float p1, float s1, float _p2,
-                                   float s2);
+static float __track_hermite_float(float t, float p1, float s1, float _p2, float s2);
 static quat __track_hermite_quat(float t, quat p1, quat s1, quat _p2, quat s2);
 
 void __track_neighborhood(const quat *a, quat *b);
@@ -173,8 +167,7 @@ void track_resize_frame_out(track_s *track, size_t size, uint32_t frame_index) {
   }
 }
 
-void track_resize_frame_value(track_s *track, size_t size,
-                              uint32_t frame_index) {
+void track_resize_frame_value(track_s *track, size_t size, uint32_t frame_index) {
   assert(track != NULL);
   if (frame_index > arrlenu(track->frames)) {
     log_warn("trying to access invalid index");
@@ -297,7 +290,7 @@ int32_t track_frame_index(track_s *track, float time, bool looping) {
 
   if (index >= arrlenu(track->sampled_frames)) {
     /* log_debug("index (%d) is gt array length (%lu)", index, */
-              /* arrlenu(track->sampled_frames)); */
+    /* arrlenu(track->sampled_frames)); */
     return (int32_t)track->sampled_frames[arrlenu(track->sampled_frames) - 1];
     // return -1;
   }
@@ -349,9 +342,7 @@ float track_adjust_time(track_s *track, float t, bool looping) {
 
 float track_cast_float(float *value) { return value[0]; }
 
-vec3 track_cast_vec3(float *value) {
-  return vec3_new(value[0], value[1], value[2]);
-}
+vec3 track_cast_vec3(float *value) { return vec3_new(value[0], value[1], value[2]); }
 
 quat track_cast_quat(float *value) {
 
@@ -362,8 +353,7 @@ quat track_cast_quat(float *value) {
 // Constant sampling is often used for things such as visibility flags, where it
 // makes sense for the value of a variable to change from one frame to the next
 // without any real interpolation
-static float __track_sample_constant_float(track_s *track, float t,
-                                           bool looping) {
+static float __track_sample_constant_float(track_s *track, float t, bool looping) {
 
   // To do a constant (step) sample, find the frame based on the time with the
   // track_frame_index helper. Make sure the frame is valid, then cast the value
@@ -376,8 +366,7 @@ static float __track_sample_constant_float(track_s *track, float t,
   return track->frames[frame].value[0];
 }
 
-static float __track_sample_linear_float(track_s *track, float t,
-                                         bool looping) {
+static float __track_sample_linear_float(track_s *track, float t, bool looping) {
   int32_t this_frame = track_frame_index(track, t, looping);
   if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
     return 0.0f;
@@ -404,8 +393,7 @@ static float __track_sample_linear_float(track_s *track, float t,
 // frames to sample and the interpolation time in the same way that linear
 // sampling did. This function calls the Hermite helper function to do its
 // interpolation.
-static float __track_sample_cubic_float(track_s *track, float time,
-                                        bool looping) {
+static float __track_sample_cubic_float(track_s *track, float time, bool looping) {
 
   int32_t this_frame = track_frame_index(track, time, looping);
   if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
@@ -441,8 +429,7 @@ static float __track_sample_cubic_float(track_s *track, float time,
   return __track_hermite_float(t, point1, slope1, point2, slope2);
 }
 
-static vec3 __track_sample_constant_vec3(track_s *track, float t,
-                                         bool looping) {
+static vec3 __track_sample_constant_vec3(track_s *track, float t, bool looping) {
 
   // To do a constant (step) sample, find the frame based on the time with the
   // track_frame_index helper. Make sure the frame is valid, then cast the value
@@ -482,8 +469,7 @@ static vec3 __track_sample_linear_vec3(track_s *track, float t, bool looping) {
 // frames to sample and the interpolation time in the same way that linear
 // sampling did. This function calls the Hermite helper function to do its
 // interpolation.
-static vec3 __track_sample_cubic_vec3(track_s *track, float time,
-                                      bool looping) {
+static vec3 __track_sample_cubic_vec3(track_s *track, float time, bool looping) {
 
   int32_t this_frame = track_frame_index(track, time, looping);
   if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
@@ -519,8 +505,7 @@ static vec3 __track_sample_cubic_vec3(track_s *track, float time,
   return __track_hermite_vec3(t, point1, slope1, point2, slope2);
 }
 
-static quat __track_sample_constant_quat(track_s *track, float t,
-                                         bool looping) {
+static quat __track_sample_constant_quat(track_s *track, float t, bool looping) {
 
   // To do a constant (step) sample, find the frame based on the time with the
   // track_frame_index helper. Make sure the frame is valid, then cast the value
@@ -559,8 +544,7 @@ static quat __track_sample_linear_quat(track_s *track, float t, bool looping) {
 // frames to sample and the interpolation time in the same way that linear
 // sampling did. This function calls the Hermite helper function to do its
 // interpolation.
-static quat __track_sample_cubic_quat(track_s *track, float time,
-                                      bool looping) {
+static quat __track_sample_cubic_quat(track_s *track, float time, bool looping) {
 
   int32_t this_frame = track_frame_index(track, time, looping);
   if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
@@ -596,8 +580,7 @@ static quat __track_sample_cubic_quat(track_s *track, float time,
   return __track_hermite_quat(t, point1, slope1, point2, slope2);
 }
 
-static float __track_hermite_float(float t, float p1, float s1, float _p2,
-                                   float s2) {
+static float __track_hermite_float(float t, float p1, float s1, float _p2, float s2) {
   float tt = t * t;
   float ttt = tt * t;
 
@@ -625,9 +608,7 @@ static vec3 __track_hermite_vec3(float t, vec3 p1, vec3 s1, vec3 _p2, vec3 s2) {
   float h4 = ttt - tt;
 
   vec3 result =
-      vec3_add(vec3_add(vec3_add(vec3_scale(p1, h1), vec3_scale(p2, h2)),
-                        vec3_scale(s1, h3)),
-               vec3_scale(s2, h4));
+      vec3_add(vec3_add(vec3_add(vec3_scale(p1, h1), vec3_scale(p2, h2)), vec3_scale(s1, h3)), vec3_scale(s2, h4));
 
   return result;
 }
@@ -645,9 +626,7 @@ static quat __track_hermite_quat(float t, quat p1, quat s1, quat _p2, quat s2) {
   float h4 = ttt - tt;
 
   quat result =
-      quat_add(quat_add(quat_add(quat_scale(p1, h1), quat_scale(p2, h2)),
-                        quat_scale(s1, h3)),
-               quat_scale(s2, h4));
+      quat_add(quat_add(quat_add(quat_scale(p1, h1), quat_scale(p2, h2)), quat_scale(s1, h3)), quat_scale(s2, h4));
 
   return __track_adjust_hermite_result(result);
 }

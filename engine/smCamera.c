@@ -4,9 +4,9 @@
 #include <SDL2/SDL_events.h>
 
 #define CAMERA_THIRD_PERSON_DISTANCE_CLAMP 1.2f
-#define CAMERA_THIRD_PERSON_MIN_CLAMP -5.0f
-#define CAMERA_THIRD_PERSON_MAX_CLAMP -70.0f
-#define CAMERA_MOUSE_SCROLL_SENSITIVITY 1.4f
+#define CAMERA_THIRD_PERSON_MIN_CLAMP      -5.0f
+#define CAMERA_THIRD_PERSON_MAX_CLAMP      -70.0f
+#define CAMERA_MOUSE_SCROLL_SENSITIVITY    1.4f
 
 typedef struct {
   MODE_EX5 mode;
@@ -17,8 +17,7 @@ typedef struct {
   vec3 up;
   vec3 right;
   float fovy;
-  // pitch, yaw, roll
-  vec3 angle;
+  vec3 angle; // pitch, yaw, roll
   float target_distance;
   float sensitive;
   float move_speed;
@@ -45,12 +44,10 @@ void camera_init(vec3 position, vec3 target, vec3 up, MODE_EX5 mode, PROJECTION_
   CAMERA.target = target;
   CAMERA.mode = mode;
   CAMERA.projection = projection;
-
 }
 
 // Destructor
 void camera_tear_down(void) {
-
   CAMERA = (camera_s){0};
 }
 
@@ -74,30 +71,22 @@ void camera_do(float dt) {
 
   if (CAMERA.mode == FREE_EX5) {
     if (input_scan_key(SDL_SCANCODE_W))
-      CAMERA.position =
-          vec3_add(CAMERA.position,
-                   vec3_scale(CAMERA.target, CAMERA.move_speed * dt));
+      CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.target, CAMERA.move_speed * dt));
 
     if (input_scan_key(SDL_SCANCODE_S))
-      CAMERA.position =
-          vec3_sub(CAMERA.position,
-                   vec3_scale(CAMERA.target, CAMERA.move_speed * dt));
+      CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.target, CAMERA.move_speed * dt));
 
     if (input_scan_key(SDL_SCANCODE_A))
-      CAMERA.position = vec3_sub(
-          CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt));
+      CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt));
 
     if (input_scan_key(SDL_SCANCODE_D))
-      CAMERA.position = vec3_add(
-          CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt));
+      CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt));
 
     if (input_scan_key(SDL_SCANCODE_SPACE))
-      CAMERA.position = vec3_add(
-          CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt));
+      CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt));
 
     if (input_scan_key(SDL_SCANCODE_LSHIFT))
-      CAMERA.position = vec3_sub(
-          CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt));
+      CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt));
 
     float offset_x = input_get_x_rel_mouse();
     float offset_y = input_get_y_rel_mouse();
@@ -128,8 +117,7 @@ void camera_update_vectors(float dt) {
   if (CAMERA.mode == THIRD_PERSON_EX5) {
     CAMERA.target = vec3_lerp(CAMERA.target, CAMERA._next_target, 10 * dt);
 
-    CAMERA.target_distance -=
-        (input_get_mouse_scroll() * CAMERA_MOUSE_SCROLL_SENSITIVITY);
+    CAMERA.target_distance -= (input_get_mouse_scroll() * CAMERA_MOUSE_SCROLL_SENSITIVITY);
 
     if (CAMERA.target_distance < CAMERA_THIRD_PERSON_DISTANCE_CLAMP)
       CAMERA.target_distance = CAMERA_THIRD_PERSON_DISTANCE_CLAMP;
@@ -137,22 +125,14 @@ void camera_update_vectors(float dt) {
     // TODO: It seems camera.position is not correctly updated or some rounding
     // issue makes the camera move straight to camera.target...
     vec3 nex_position = {0};
-    nex_position.x = sinf(CAMERA.angle.x) * CAMERA.target_distance *
-                         cosf(CAMERA.angle.y) +
-                     CAMERA.target.x;
+    nex_position.x = sinf(CAMERA.angle.x) * CAMERA.target_distance * cosf(CAMERA.angle.y) + CAMERA.target.x;
 
     if (CAMERA.angle.y <= 0.0f)
-      nex_position.y = sinf(CAMERA.angle.y) * CAMERA.target_distance *
-                           sinf(CAMERA.angle.y) +
-                       CAMERA.target.y;
+      nex_position.y = sinf(CAMERA.angle.y) * CAMERA.target_distance * sinf(CAMERA.angle.y) + CAMERA.target.y;
     else
-      nex_position.y = -sinf(CAMERA.angle.y) * CAMERA.target_distance *
-                           sinf(CAMERA.angle.y) +
-                       CAMERA.target.y;
+      nex_position.y = -sinf(CAMERA.angle.y) * CAMERA.target_distance * sinf(CAMERA.angle.y) + CAMERA.target.y;
 
-    nex_position.z = cosf(CAMERA.angle.x) * CAMERA.target_distance *
-                         cosf(CAMERA.angle.y) +
-                     CAMERA.target.z;
+    nex_position.z = cosf(CAMERA.angle.x) * CAMERA.target_distance * cosf(CAMERA.angle.y) + CAMERA.target.z;
 
     CAMERA.position = vec3_lerp(CAMERA.position, nex_position, 10 * dt);
   }
@@ -160,15 +140,12 @@ void camera_update_vectors(float dt) {
   if (CAMERA.mode == FREE_EX5) {
 
     vec3 front;
-    front.x = (cosf(CAMERA.angle.yaw * DEG2RAD) *
-               cosf(CAMERA.angle.pitch * DEG2RAD));
+    front.x = (cosf(CAMERA.angle.yaw * DEG2RAD) * cosf(CAMERA.angle.pitch * DEG2RAD));
     front.y = sinf(CAMERA.angle.pitch * DEG2RAD);
-    front.z =
-        sinf(CAMERA.angle.yaw * DEG2RAD) * cosf(CAMERA.angle.pitch * DEG2RAD);
+    front.z = sinf(CAMERA.angle.yaw * DEG2RAD) * cosf(CAMERA.angle.pitch * DEG2RAD);
 
     CAMERA.target = vec3_norm(front);
-    CAMERA.right =
-        vec3_norm(vec3_cross(CAMERA.target, vec3_new(0.0f, 1.0f, 0.0f)));
+    CAMERA.right = vec3_norm(vec3_cross(CAMERA.target, vec3_new(0.0f, 1.0f, 0.0f)));
     CAMERA.up = vec3_norm(vec3_cross(CAMERA.right, CAMERA.target));
   }
 }
@@ -179,8 +156,7 @@ mat4 camera_get_view(void) {
   if (CAMERA.mode == THIRD_PERSON_EX5)
     view = mat4_look_at(CAMERA.position, CAMERA.target, CAMERA.up);
   else
-    view = mat4_look_at(CAMERA.position,
-                        vec3_add(CAMERA.position, CAMERA.target), CAMERA.up);
+    view = mat4_look_at(CAMERA.position, vec3_add(CAMERA.position, CAMERA.target), CAMERA.up);
 
   return view;
 }
@@ -219,10 +195,10 @@ mat4 camera_get_projection_matrix(float aspect_ratio) {
   if (CAMERA.projection == PERSPECTIVE_EX4) {
     projection = mat4_perspective(CAMERA.fovy, aspect_ratio, 0.01f, 100.0f);
 
-  } else  {
+  } else {
 
     // https://stackoverflow.com/a/55009832
-    float ratio_size_per_depth = atanf(DEG2RAD*(CAMERA.fovy / 2.0f)) * 2.0f;
+    float ratio_size_per_depth = atanf(DEG2RAD * (CAMERA.fovy / 2.0f)) * 2.0f;
     float distance = vec3_len(vec3_sub(CAMERA.target, CAMERA.position));
 
     float size_y = ratio_size_per_depth * distance;
@@ -239,11 +215,9 @@ float camera_get_fovy() {
 }
 
 PROJECTION_EX4 camera_get_projection() {
-
   return CAMERA.projection;
 }
 
 MODE_EX5 camera_get_mode() {
-
   return CAMERA.mode;
 }

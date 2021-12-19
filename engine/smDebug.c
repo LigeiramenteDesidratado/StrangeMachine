@@ -1,21 +1,21 @@
 #include "smAttribute.h"
-#include "smShaderProgram.h"
-#include "smUniform.h"
 #include "smShader.h"
+#include "smShaderProgram.h"
 #include "smShapes.h"
+#include "smUniform.h"
 #include "util/common.h"
 
 typedef struct {
 
-  vec3* positions;
+  vec3 *positions;
   attribute_s position_attr; // VEC3_EX1
 
-  vec3* colors;
+  vec3 *colors;
   attribute_s color_attr; // VEC3_EX1
 
 } debug_s;
 
-debug_s DEBUG = {0};
+static debug_s DEBUG = {0};
 
 bool debug_init() {
 
@@ -41,99 +41,97 @@ void debug_tear_down(void) {
 // Draw aabb wires.
 void debug_draw_aabb(bounding_box_s aabb, vec3 color) {
 
-    float width = fabsf(aabb.max.x - aabb.min.x);
-    float height = fabsf(aabb.max.y - aabb.min.y);
-    float length = fabsf(aabb.max.z - aabb.min.z);
+  float width = fabsf(aabb.max.x - aabb.min.x);
+  float height = fabsf(aabb.max.y - aabb.min.y);
+  float length = fabsf(aabb.max.z - aabb.min.z);
 
+  float x = 0.0f;
+  float y = 0.0f;
+  float z = 0.0f;
 
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
+  vec3 cube[24] = {
 
-    vec3 cube[24] = {
+      // Front Face -----------------------------------------------------
+      // Bottom Line
+      vec3_new(x - width / 2, y - height / 2, z + length / 2), // Bottom Left
+      vec3_new(x + width / 2, y - height / 2, z + length / 2), // Bottom Right
 
-    // Front Face -----------------------------------------------------
-    // Bottom Line
-    vec3_new(x-width/2, y-height/2, z+length/2),  // Bottom Left
-    vec3_new(x+width/2, y-height/2, z+length/2),  // Bottom Right
+      // Left Line
+      vec3_new(x + width / 2, y - height / 2, z + length / 2), // Bottom Right
+      vec3_new(x + width / 2, y + height / 2, z + length / 2), // Top Right
 
-    // Left Line
-    vec3_new(x+width/2, y-height/2, z+length/2),  // Bottom Right
-    vec3_new(x+width/2, y+height/2, z+length/2),  // Top Right
+      // Top Line
+      vec3_new(x + width / 2, y + height / 2, z + length / 2), // Top Right
+      vec3_new(x - width / 2, y + height / 2, z + length / 2), // Top Left
 
-    // Top Line
-    vec3_new(x+width/2, y+height/2, z+length/2),  // Top Right
-    vec3_new(x-width/2, y+height/2, z+length/2),  // Top Left
+      // Right Line
+      vec3_new(x - width / 2, y + height / 2, z + length / 2), // Top Left
+      vec3_new(x - width / 2, y - height / 2, z + length / 2), // Bottom Left
 
-    // Right Line
-    vec3_new(x-width/2, y+height/2, z+length/2),  // Top Left
-    vec3_new(x-width/2, y-height/2, z+length/2),  // Bottom Left
+      // Back Face ------------------------------------------------------
+      // Bottom Line
+      vec3_new(x - width / 2, y - height / 2, z - length / 2), // Bottom Left
+      vec3_new(x + width / 2, y - height / 2, z - length / 2), // Bottom Right
 
-    // Back Face ------------------------------------------------------
-    // Bottom Line
-    vec3_new(x-width/2, y-height/2, z-length/2),  // Bottom Left
-    vec3_new(x+width/2, y-height/2, z-length/2),  // Bottom Right
+      // Left Line
+      vec3_new(x + width / 2, y - height / 2, z - length / 2), // Bottom Right
+      vec3_new(x + width / 2, y + height / 2, z - length / 2), // Top Right
 
-    // Left Line
-    vec3_new(x+width/2, y-height/2, z-length/2),  // Bottom Right
-    vec3_new(x+width/2, y+height/2, z-length/2),  // Top Right
+      // Top Line
+      vec3_new(x + width / 2, y + height / 2, z - length / 2), // Top Right
+      vec3_new(x - width / 2, y + height / 2, z - length / 2), // Top Left
 
-    // Top Line
-    vec3_new(x+width/2, y+height/2, z-length/2),  // Top Right
-    vec3_new(x-width/2, y+height/2, z-length/2),  // Top Left
+      // Right Line
+      vec3_new(x - width / 2, y + height / 2, z - length / 2), // Top Left
+      vec3_new(x - width / 2, y - height / 2, z - length / 2), // Bottom Left
 
-    // Right Line
-    vec3_new(x-width/2, y+height/2, z-length/2),  // Top Left
-    vec3_new(x-width/2, y-height/2, z-length/2),  // Bottom Left
+      // Top Face -------------------------------------------------------
+      // Left Line
+      vec3_new(x - width / 2, y + height / 2, z + length / 2), // Top Left Front
+      vec3_new(x - width / 2, y + height / 2, z - length / 2), // Top Left Back
 
-    // Top Face -------------------------------------------------------
-    // Left Line
-    vec3_new(x-width/2, y+height/2, z+length/2),  // Top Left Front
-    vec3_new(x-width/2, y+height/2, z-length/2),  // Top Left Back
+      // Right Line
+      vec3_new(x + width / 2, y + height / 2, z + length / 2), // Top Right Front
+      vec3_new(x + width / 2, y + height / 2, z - length / 2), // Top Right Back
 
-    // Right Line
-    vec3_new(x+width/2, y+height/2, z+length/2),  // Top Right Front
-    vec3_new(x+width/2, y+height/2, z-length/2),  // Top Right Back
+      // Bottom Face  ---------------------------------------------------
+      // Left Line
+      vec3_new(x - width / 2, y - height / 2, z + length / 2), // Top Left Front
+      vec3_new(x - width / 2, y - height / 2, z - length / 2), // Top Left Back
 
-    // Bottom Face  ---------------------------------------------------
-    // Left Line
-    vec3_new(x-width/2, y-height/2, z+length/2),  // Top Left Front
-    vec3_new(x-width/2, y-height/2, z-length/2),  // Top Left Back
+      // Right Line
+      vec3_new(x + width / 2, y - height / 2, z + length / 2), // Top Right Front
+      vec3_new(x + width / 2, y - height / 2, z - length / 2), // Top Right Back
 
-    // Right Line
-    vec3_new(x+width/2, y-height/2, z+length/2),  // Top Right Front
-    vec3_new(x+width/2, y-height/2, z-length/2),  // Top Right Back
+  };
 
-    };
+  vec3 colors[24];
+  for (uint8_t i = 0; i < 24; ++i) {
+    colors[i] = color;
+  }
 
-    vec3 colors[24];
-    for (uint8_t i = 0; i < 24; ++i) {
-      colors[i] = color;
-    }
+  transform_s transform = transform_zero();
+  transform.position =
+      (vec3){.x = aabb.min.x + width / 2.0f, .y = aabb.min.y + height / 2.0f, .z = aabb.min.z + length / 2.0f};
 
-    transform_s transform = transform_zero();
-    transform.position = (vec3){.x= aabb.min.x + width/2.0f, .y = aabb.min.y + height/2.0f, .z = aabb.min.z + length/2.0f };
+  shader_bind(SHADERS[DEBUG_SHADER_EX7]);
+  attribute_set(&DEBUG.position_attr, cube, 24, GL_STATIC_DRAW);
+  attribute_set(&DEBUG.color_attr, colors, 24, GL_STATIC_DRAW);
 
-    shader_bind(SHADERS[DEBUG_SHADER_EX7]);
-    attribute_set(&DEBUG.position_attr, cube, 24, GL_STATIC_DRAW);
-    attribute_set(&DEBUG.color_attr, colors, 24, GL_STATIC_DRAW);
-
-    /* mat4 model = mat4_identity(); */
+  /* mat4 model = mat4_identity(); */
   /* uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "model"), model); */
-    mat4 model = transform_to_mat4(transform);
-    uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "model"), model);
+  mat4 model = transform_to_mat4(transform);
+  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "model"), model);
 
+  attribute_bind_to(&DEBUG.position_attr, 1);
+  attribute_bind_to(&DEBUG.color_attr, 2);
 
-    attribute_bind_to(&DEBUG.position_attr, 1);
-    attribute_bind_to(&DEBUG.color_attr, 2);
+  glDrawArrays(GL_LINES, 0, 24);
 
-    glDrawArrays(GL_LINES, 0, 24);
+  attribute_unbind_from(&DEBUG.color_attr, 2);
+  attribute_unbind_from(&DEBUG.position_attr, 1);
 
-    attribute_unbind_from(&DEBUG.color_attr, 2);
-    attribute_unbind_from(&DEBUG.position_attr, 1);
-
-    shader_unbind();
-
+  shader_unbind();
 }
 
 // The translation is already stored in the capsule tip and base component.
@@ -193,8 +191,8 @@ void debug_draw_capsule(capsule_s c) {
 
     for (int j = 1; j < 180 / step_size; j++) {
 
-      float ta = j * step_size;
-      float fa = 360 - (j * step_size);
+      float ta = (float)j * step_size;
+      float fa = 360 - (float)(j * step_size);
       vec3 t;
 
       ax = vec3_scale(forward, sinf(ta * DEG2RAD));
@@ -237,7 +235,7 @@ void debug_draw_capsule(capsule_s c) {
   attribute_bind_to(&DEBUG.position_attr, 1);
   attribute_bind_to(&DEBUG.color_attr, 2);
 
-  glDrawArrays(GL_LINES, 0, s);
+  glDrawArrays(GL_LINES, 0, (GLsizei)s);
 
   attribute_unbind_from(&DEBUG.color_attr, 2);
   attribute_unbind_from(&DEBUG.position_attr, 1);
@@ -246,17 +244,18 @@ void debug_draw_capsule(capsule_s c) {
 
   arrfree(vert);
   arrfree(colors);
-
 }
 
 void debug_draw_line(vec3 from, vec3 to, vec3 color) {
 
   vec3 line[2] = {
-    from, to,
+      from,
+      to,
   };
 
   vec3 colors[2] = {
-    color, color,
+      color,
+      color,
   };
 
   glEnable(GL_BLEND);

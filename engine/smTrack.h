@@ -7,8 +7,8 @@
 
 #include "smInterpolation.h"
 
-#include "math/vec3.h"
 #include "math/quat.h"
+#include "math/vec3.h"
 
 typedef unsigned char TRACK_KIND_EX2;
 #define SCALAR_EX2 ((TRACK_KIND_EX2)0x01)

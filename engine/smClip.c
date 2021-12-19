@@ -143,8 +143,7 @@ float clip_sample(const clip_s *const clip, pose_s *pose, float t) {
   for (size_t i = 0; i < size; ++i) {
     uint32_t j = clip->tracks[i].id; // joint
     transform_s local = pose_get_local_transform(pose, j);
-    transform_s animated =
-        transform_track_sample(&clip->tracks[i], &local, t, clip->looping);
+    transform_s animated = transform_track_sample(&clip->tracks[i], &local, t, clip->looping);
 
     pose_set_local_transform(pose, j, animated);
   }
@@ -194,8 +193,7 @@ void clip_recalculate_duration(clip_s *clip) {
 // reference to it is returned. If no qualifying track is found, a new one is
 // created and returned:
 // similar [] operator
-transform_track_s *clip_get_transform_track_from_joint(clip_s *clip,
-                                                       uint32_t joint) {
+transform_track_s *clip_get_transform_track_from_joint(clip_s *clip, uint32_t joint) {
   assert(clip != NULL);
 
   for (size_t i = 0, s = arrlenu(clip->tracks); i < s; ++i) {

@@ -13,7 +13,7 @@ extern struct physics_s *physics_new(void);
 // Constructor
 extern bool physics_sphere_ctor(struct physics_s *physics, vec3 pos, float radius);
 extern bool physics_capsule_ctor(struct physics_s *physics, vec3 pos, float radius, float height);
-extern bool physics_terrain_ctor(struct physics_s *physics, vec3 pos, mesh_s* mesh);
+extern bool physics_terrain_ctor(struct physics_s *physics, vec3 pos, mesh_s *mesh);
 
 // Destructor
 extern void physics_dtor(struct physics_s *physics);

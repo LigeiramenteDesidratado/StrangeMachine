@@ -1,10 +1,10 @@
 #ifndef SM_MESH_H
 #define SM_MESH_H
 
-#include "smVertex.h"
 #include "smAttribute.h"
 #include "smIndexBuffer.h"
 #include "smShapes.h"
+#include "smVertex.h"
 
 // NOTE: in case of change make sure to update the src/shader/glsl/static.vs as
 // well

@@ -63,8 +63,7 @@ transform_s __gltf_get_local_transform(cgltf_node *n) {
 // by looping through all the nodes in a .gltf file and returning the index of
 // the node that you are searching for. If the index is no found, return -1 to
 // signal an invalid index
-int __gltf_get_node_index(cgltf_node *target, cgltf_node *all_nodes,
-                          uint32_t num_nodes) {
+int __gltf_get_node_index(cgltf_node *target, cgltf_node *all_nodes, uint32_t num_nodes) {
   if (target == NULL) {
     log_debug("returning -1");
     return -1;
@@ -97,8 +96,7 @@ void gltf_loader_load_rest_pose(cgltf_data *data, pose_s *pose) {
     transform_s transform = __gltf_get_local_transform(&data->nodes[i]);
     pose_set_local_transform(pose, i, transform);
 
-    int32_t parent =
-        __gltf_get_node_index(node->parent, data->nodes, bone_count);
+    int32_t parent = __gltf_get_node_index(node->parent, data->nodes, bone_count);
     pose_set_parent(pose, i, parent);
   }
 }
@@ -121,8 +119,7 @@ char **__gltf_loader_load_joint_names(cgltf_data *data) {
   return result;
 }
 
-void __gltf_track_from_channel(track_s *result, int32_t stride,
-                               const cgltf_animation_channel *channel) {
+void __gltf_track_from_channel(track_s *result, int32_t stride, const cgltf_animation_channel *channel) {
 
   cgltf_animation_sampler *sampler = channel->sampler;
   INTERPOLATION_EX3 interpolation = CONSTANT_EX3;
@@ -209,18 +206,15 @@ struct clip_s **gltf_loader_load_animation_clips(cgltf_data *data) {
       int node_id = __gltf_get_node_index(target, data->nodes, num_nodes);
 
       if (channel->target_path == cgltf_animation_path_type_translation) {
-        transform_track_s *track =
-            clip_get_transform_track_from_joint(result[i], node_id);
+        transform_track_s *track = clip_get_transform_track_from_joint(result[i], node_id);
         __gltf_track_from_channel(&track->position, 3, channel);
 
       } else if (channel->target_path == cgltf_animation_path_type_scale) {
-        transform_track_s *track =
-            clip_get_transform_track_from_joint(result[i], node_id);
+        transform_track_s *track = clip_get_transform_track_from_joint(result[i], node_id);
         __gltf_track_from_channel(&track->scale, 3, channel);
 
       } else if (channel->target_path == cgltf_animation_path_type_rotation) {
-        transform_track_s *track =
-            clip_get_transform_track_from_joint(result[i], node_id);
+        transform_track_s *track = clip_get_transform_track_from_joint(result[i], node_id);
         __gltf_track_from_channel(&track->rotation, 4, channel);
       }
     } // End channels loop
@@ -232,8 +226,7 @@ struct clip_s **gltf_loader_load_animation_clips(cgltf_data *data) {
     for (size_t j = 0; j < clip_get_size(result[i]); ++j) {
       int32_t joint = clip_get_id_at_index(result[i], j);
 
-      transform_track_s *ttrack =
-          clip_get_transform_track_from_joint(result[i], joint);
+      transform_track_s *ttrack = clip_get_transform_track_from_joint(result[i], joint);
 
       track_index_look_up_table(&ttrack->position);
       track_index_look_up_table(&ttrack->rotation);
@@ -283,8 +276,7 @@ void gltf_loader_load_bind_pose(cgltf_data *data, pose_s *bind_pose) {
     // skin->inverse_bind_matrices);
 
     for (cgltf_size i = 0; i < skin->inverse_bind_matrices->count; ++i) {
-      cgltf_accessor_read_float(skin->inverse_bind_matrices, i,
-                                &inverse_bind_accessor[i * 16], 16);
+      cgltf_accessor_read_float(skin->inverse_bind_matrices, i, &inverse_bind_accessor[i * 16], 16);
     }
 
     // For each joint in the skin, get the inverse bind matrix. Invert the
@@ -304,8 +296,7 @@ void gltf_loader_load_bind_pose(cgltf_data *data, pose_s *bind_pose) {
 
       // set that transform in the world_nind_pose
       cgltf_node *joint_node = skin->joints[j];
-      int32_t joint_index =
-          __gltf_get_node_index(joint_node, data->nodes, num_bones);
+      int32_t joint_index = __gltf_get_node_index(joint_node, data->nodes, num_bones);
       world_bind_pose[joint_index] = bind_transform;
 
     } // end for each joints
@@ -357,10 +348,8 @@ struct skeleton_s *gltf_loader_load_skeleton(cgltf_data *data) {
   return skeleton;
 }
 
-void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh,
-                                       cgltf_attribute *attribute,
-                                       cgltf_skin *skin, cgltf_node *nodes,
-                                       uint32_t node_count) {
+void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh, cgltf_attribute *attribute, cgltf_skin *skin,
+                                       cgltf_node *nodes, uint32_t node_count) {
   cgltf_attribute_type attr_type = attribute->type;
   cgltf_accessor *accessor = attribute->data;
 
@@ -375,8 +364,7 @@ void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh,
   float *values = NULL;
   arrsetlen(values, accessor->count * component_count);
   for (cgltf_size i = 0; i < accessor->count; ++i) {
-    cgltf_accessor_read_float(accessor, i, &values[i * component_count],
-                              component_count);
+    cgltf_accessor_read_float(accessor, i, &values[i * component_count], component_count);
   }
 
   size_t accessor_count = accessor->count;
@@ -394,31 +382,27 @@ void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh,
       if (i == 0)
         arrsetlen(mesh->vertex.positions, accessor_count);
 
-      mesh->vertex.positions[i] =
-          vec3_new(values[index + 0], values[index + 1], values[index + 2]);
+      mesh->vertex.positions[i] = vec3_new(values[index + 0], values[index + 1], values[index + 2]);
 
       break;
     case cgltf_attribute_type_texcoord:
       if (i == 0)
         arrsetlen(mesh->vertex.tex_coords, accessor_count);
 
-      mesh->vertex.tex_coords[i] =
-          vec2_new(values[index + 0], (1.0f - values[index + 1]));
+      mesh->vertex.tex_coords[i] = vec2_new(values[index + 0], (1.0f - values[index + 1]));
       break;
     case cgltf_attribute_type_weights:
       if (i == 0)
         arrsetlen(mesh->weights, accessor_count);
 
-      mesh->weights[i] = vec4_new(values[index + 0], values[index + 1],
-                                  values[index + 2], values[index + 3]);
+      mesh->weights[i] = vec4_new(values[index + 0], values[index + 1], values[index + 2], values[index + 3]);
       break;
 
     case cgltf_attribute_type_normal: {
       if (i == 0)
         arrsetlen(mesh->vertex.normals, accessor_count);
 
-      vec3 norm =
-          vec3_new(values[index + 0], values[index + 1], values[index + 2]);
+      vec3 norm = vec3_new(values[index + 0], values[index + 1], values[index + 2]);
       if (vec3_len_sq(norm) < EPSILON) {
         norm = vec3_new(0.0f, 1.0f, 0.0f);
       }
@@ -430,18 +414,13 @@ void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh,
       // These indices are skin relative. This function has no information about
       // the skin that is being parsed. Add +0.5f to round, since we can't read
       // integers
-      ivec4 joints = ivec4_new(
-          (int)(values[index + 0] + 0.5f), (int)(values[index + 1] + 0.5f),
-          (int)(values[index + 2] + 0.5f), (int)(values[index + 3] + 0.5f));
+      ivec4 joints = ivec4_new((int)(values[index + 0] + 0.5f), (int)(values[index + 1] + 0.5f),
+                               (int)(values[index + 2] + 0.5f), (int)(values[index + 3] + 0.5f));
 
-      joints.x =
-          __gltf_get_node_index(skin->joints[joints.x], nodes, node_count);
-      joints.y =
-          __gltf_get_node_index(skin->joints[joints.y], nodes, node_count);
-      joints.z =
-          __gltf_get_node_index(skin->joints[joints.z], nodes, node_count);
-      joints.w =
-          __gltf_get_node_index(skin->joints[joints.w], nodes, node_count);
+      joints.x = __gltf_get_node_index(skin->joints[joints.x], nodes, node_count);
+      joints.y = __gltf_get_node_index(skin->joints[joints.y], nodes, node_count);
+      joints.z = __gltf_get_node_index(skin->joints[joints.z], nodes, node_count);
+      joints.w = __gltf_get_node_index(skin->joints[joints.w], nodes, node_count);
 
       mesh->influences[i] = joints;
 
@@ -490,8 +469,7 @@ skinned_mesh_s *gltf_loader_load_meshes(cgltf_data *data) {
       size_t ac = primitive->attributes_count;
       for (size_t k = 0; k < ac; ++k) {
         cgltf_attribute *attribute = &primitive->attributes[k];
-        __gltf_loader_mesh_from_attribute(&m, attribute, node->skin, nodes,
-                                          node_count);
+        __gltf_loader_mesh_from_attribute(&m, attribute, node->skin, nodes, node_count);
       }
 
       // check whether the primitive contains indices. If it does, the index

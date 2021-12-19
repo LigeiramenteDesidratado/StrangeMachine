@@ -1,10 +1,9 @@
 #include "smMesh.h"
-#include "util/bitmask.h"
 #include "smDebug.h"
+#include "util/bitmask.h"
 #include "util/common.h"
 
-const struct mesh_attrs mesh_attr_locs = {
-    .position = 1, .tex_coord = 2, .normal = 3};
+const struct mesh_attrs mesh_attr_locs = {.position = 1, .tex_coord = 2, .normal = 3};
 
 // Constructor
 bool mesh_ctor(mesh_s *mesh) {
@@ -68,20 +67,16 @@ void mesh_update_gl_buffers(mesh_s *mesh) {
   assert(mesh != NULL);
 
   if (arrlenu(mesh->vertex.positions) > 0)
-    attribute_set(&mesh->vertex.position_attr, mesh->vertex.positions,
-                  arrlenu(mesh->vertex.positions), GL_STATIC_DRAW);
+    attribute_set(&mesh->vertex.position_attr, mesh->vertex.positions, arrlenu(mesh->vertex.positions), GL_STATIC_DRAW);
 
   if (arrlenu(mesh->vertex.normals) > 0)
-    attribute_set(&mesh->vertex.normal_attr, mesh->vertex.normals,
-                  arrlenu(mesh->vertex.normals), GL_STATIC_DRAW);
+    attribute_set(&mesh->vertex.normal_attr, mesh->vertex.normals, arrlenu(mesh->vertex.normals), GL_STATIC_DRAW);
 
   if (arrlenu(mesh->vertex.tex_coords) > 0)
-    attribute_set(&mesh->vertex.uv_attr, mesh->vertex.tex_coords,
-                  arrlenu(mesh->vertex.tex_coords), GL_STATIC_DRAW);
+    attribute_set(&mesh->vertex.uv_attr, mesh->vertex.tex_coords, arrlenu(mesh->vertex.tex_coords), GL_STATIC_DRAW);
 
   if (arrlenu(mesh->indices) > 0)
-    index_buffer_set(&mesh->index_buffer, mesh->indices,
-                     arrlenu(mesh->indices));
+    index_buffer_set(&mesh->index_buffer, mesh->indices, arrlenu(mesh->indices));
 }
 
 void mesh_bind(const mesh_s *const mesh, uint8_t flag) {

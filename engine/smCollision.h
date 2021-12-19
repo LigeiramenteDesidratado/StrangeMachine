@@ -1,15 +1,14 @@
 #ifndef SM_COLLISION_H
 #define SM_COLLISION_H
 
-#include <math.h>
 #include <assert.h>
+#include <math.h>
 
 #include "stb_ds/stb_ds.h"
 
+#include "smDebug.h"
 #include "smMesh.h"
 #include "smShapes.h"
-#include "smDebug.h"
-
 
 #define FLT_EPSILON 1.192092896e-07
 
@@ -21,13 +20,10 @@ typedef struct {
 } intersect_result_s;
 
 static vec3 __closest_point_on_line_segment(vec3 a, vec3 b, vec3 point);
-static void collision_check_capsules(capsule_s a, capsule_s b,
-                              intersect_result_s *result);
-void collision_check_sphere_triangle(sphere_s s, triangle_s t,
-                                     intersect_result_s *result);
+static void collision_check_capsules(capsule_s a, capsule_s b, intersect_result_s *result);
+void collision_check_sphere_triangle(sphere_s s, triangle_s t, intersect_result_s *result);
+void collision_check_capsule_triangle(capsule_s c, triangle_s t, intersect_result_s *result);
 
-void collision_check_capsule_triangle(capsule_s c, triangle_s t,
-                                      intersect_result_s *result);
 vec3 __closest_point_on_line_segment(vec3 a, vec3 b, vec3 point) {
 
   vec3 AB = vec3_sub(b, a);
@@ -118,8 +114,7 @@ void collision_check_sphere_triangle(sphere_s s, triangle_s t, intersect_result_
   bool no_intercection = (dist < -radius || dist > radius);
 
   // Project the center of the sphere onto the plane of the triangle.
-  vec3 point0 = vec3_sub(
-      center, vec3_scale(N, dist)); // projected sphere center on triangle plane
+  vec3 point0 = vec3_sub(center, vec3_scale(N, dist)); // projected sphere center on triangle plane
 
   // Compute the cross products of the vector from the base of each edge to
   // the point with each edge vector.
@@ -129,8 +124,7 @@ void collision_check_sphere_triangle(sphere_s s, triangle_s t, intersect_result_
 
   // If the cross product points in the same direction as the normal the the
   // point is inside the edge (it is zero if is on the edge).
-  bool intersection = ((vec3_dot(c0, N) <= 0) & (vec3_dot(c1, N) <= 0)) &
-                      (vec3_dot(c2, N) <= 0);
+  bool intersection = ((vec3_dot(c0, N) <= 0) & (vec3_dot(c1, N) <= 0)) & (vec3_dot(c2, N) <= 0);
 
   bool inside = intersection && !no_intercection;
 
@@ -198,8 +192,7 @@ void collision_check_sphere_triangle(sphere_s s, triangle_s t, intersect_result_
   }
 }
 
-void collision_check_capsule_triangle(capsule_s c, triangle_s t,
-                                      intersect_result_s *result) {
+void collision_check_capsule_triangle(capsule_s c, triangle_s t, intersect_result_s *result) {
 
   vec3 base = c.base;
   vec3 tip = c.tip;
@@ -232,18 +225,13 @@ void collision_check_capsule_triangle(capsule_s c, triangle_s t,
 
     // Compute the cross products of the vector from the base of each edge
     // to the point with each edge vector.
-    vec3 c0 = vec3_cross(vec3_sub(line_plane_intersection, t.p0),
-                         vec3_sub(t.p1, t.p0));
-
-    vec3 c1 = vec3_cross(vec3_sub(line_plane_intersection, t.p1),
-                         vec3_sub(t.p2, t.p1));
-    vec3 c2 = vec3_cross(vec3_sub(line_plane_intersection, t.p2),
-                         vec3_sub(t.p0, t.p2));
+    vec3 c0 = vec3_cross(vec3_sub(line_plane_intersection, t.p0), vec3_sub(t.p1, t.p0));
+    vec3 c1 = vec3_cross(vec3_sub(line_plane_intersection, t.p1), vec3_sub(t.p2, t.p1));
+    vec3 c2 = vec3_cross(vec3_sub(line_plane_intersection, t.p2), vec3_sub(t.p0, t.p2));
 
     // If the cross product points in the same direction as the normal the
     // the point is inside the edge (it is zero if is on the edge).
-    bool inside =
-        vec3_dot(c0, N) <= 0 && vec3_dot(c1, N) <= 0 && vec3_dot(c2, N) <= 0;
+    bool inside = vec3_dot(c0, N) <= 0 && vec3_dot(c1, N) <= 0 && vec3_dot(c2, N) <= 0;
 
     if (inside) {
 
@@ -251,16 +239,13 @@ void collision_check_capsule_triangle(capsule_s c, triangle_s t,
     } else {
 
       // Edge 1:
-      vec3 point1 =
-          __closest_point_on_line_segment(t.p0, t.p1, line_plane_intersection);
+      vec3 point1 = __closest_point_on_line_segment(t.p0, t.p1, line_plane_intersection);
 
       // Edge 2:
-      vec3 point2 =
-          __closest_point_on_line_segment(t.p1, t.p2, line_plane_intersection);
+      vec3 point2 = __closest_point_on_line_segment(t.p1, t.p2, line_plane_intersection);
 
       // Edge 3:
-      vec3 point3 =
-          __closest_point_on_line_segment(t.p2, t.p0, line_plane_intersection);
+      vec3 point3 = __closest_point_on_line_segment(t.p2, t.p0, line_plane_intersection);
 
       reference_point = point1;
       float best_dist = vec3_len_sq(vec3_sub(point1, line_plane_intersection));
@@ -338,13 +323,12 @@ void collision_check_capsule_mesh(capsule_s c, mesh_s *mesh, intersect_result_s 
 
     if (result->valid) {
 
-
-        /* DrawSphere(reference_point, 0.1, GREEN); */
-        /* DrawLine3D(t.p0, Vector3Add(t.p0, N), RED); */
-        /* DrawSphere(t.p0, 0.1, ORANGE); */
-        debug_draw_line(t.p0, t.p1, vec3_new(1.0f, .6f, .3f));
-        debug_draw_line(t.p1, t.p2, vec3_new(1.0f, .6f, .3f));
-        debug_draw_line(t.p2, t.p0, vec3_new(1.0f, .6f, .3f));
+      /* DrawSphere(reference_point, 0.1, GREEN); */
+      /* DrawLine3D(t.p0, Vector3Add(t.p0, N), RED); */
+      /* DrawSphere(t.p0, 0.1, ORANGE); */
+      /* debug_draw_line(t.p0, t.p1, vec3_new(1.0f, .6f, .3f)); */
+      /* debug_draw_line(t.p1, t.p2, vec3_new(1.0f, .6f, .3f)); */
+      /* debug_draw_line(t.p2, t.p0, vec3_new(1.0f, .6f, .3f)); */
 
       return;
     }

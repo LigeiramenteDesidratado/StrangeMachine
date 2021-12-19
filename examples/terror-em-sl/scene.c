@@ -1,7 +1,7 @@
 #include "scene_p.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 void __scene_do(void *this_ptr, float dt) {
   /* scene_t* scene = (scene_t*)this_ptr; */
@@ -34,6 +34,7 @@ scene_s *scene_new(void) {
 }
 
 void scene_ctor(scene_s *scene, SCENE_EX6 id) {
+  assert(scene != NULL);
 
   // Set the function pointer to point to the default definition
   scene->__id = id;
@@ -63,7 +64,7 @@ vec3 scene_get_look_at(scene_s *scene) {
 }
 
 SCENE_EX6 scene_get_id(scene_s *scene) {
-
   assert(scene != NULL);
+
   return scene->__id;
 }

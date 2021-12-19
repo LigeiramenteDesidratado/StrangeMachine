@@ -3,22 +3,22 @@
 #include "util/file.h"
 
 // private helper functions
-static GLuint shader_compile_vert(char* vertex);
-static GLuint shader_compile_frag(char* fragment);
+static GLuint shader_compile_vert(char *vertex);
+static GLuint shader_compile_frag(char *fragment);
 static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment);
 
 // Constructor
-bool shader_ctor(GLuint *shader, const char* vs, const char* fs) {
+bool shader_ctor(GLuint *shader, const char *vs, const char *fs) {
 
   assert(shader != NULL);
   assert(vs != NULL);
   assert(fs != NULL);
 
-  char* v_source = read_file(vs);
+  char *v_source = read_file(vs);
   if (!v_source)
     return false;
 
-  char* f_source = read_file(fs);
+  char *f_source = read_file(fs);
   if (!f_source) {
     free(v_source);
     return false;
@@ -50,10 +50,7 @@ void shader_bind(GLuint shader) { glUseProgram(shader); }
 
 void shader_unbind() { glUseProgram(0); }
 
-void shader_bind_attrib_loc(GLuint shader, uint32_t loc, const char* name) {
-
-  glBindAttribLocation(shader, loc, name);
-}
+void shader_bind_attrib_loc(GLuint shader, uint32_t loc, const char *name) { glBindAttribLocation(shader, loc, name); }
 
 bool shader_relink_program(GLuint shader) {
 
@@ -73,7 +70,7 @@ bool shader_relink_program(GLuint shader) {
   return true;
 }
 
-static GLuint shader_compile_vert(char* vertex) {
+static GLuint shader_compile_vert(char *vertex) {
 
   GLuint v = glCreateShader(GL_VERTEX_SHADER);
   const char *v_source = vertex;
@@ -93,7 +90,7 @@ static GLuint shader_compile_vert(char* vertex) {
   return v;
 }
 
-static GLuint shader_compile_frag(char* fragment) {
+static GLuint shader_compile_frag(char *fragment) {
 
   GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
   const char *f_source = fragment;

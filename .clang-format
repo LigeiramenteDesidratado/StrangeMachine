@@ -1,0 +1,5 @@
+ColumnLimit: 120
+AlignConsecutiveMacros: AcrossComments
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
+AlignTrailingComments: true

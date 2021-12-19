@@ -1,6 +1,6 @@
-#include <stdlib.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "player.h"
 #include "scene.h"
@@ -55,8 +55,7 @@ bool center_ctor(center_s *center, SCENE_EX6 id) {
   center->world = model;
 
   struct physics_s *terrain = physics_new();
-  if (!physics_terrain_ctor(terrain, vec3_zero(),
-                            *model_get_meshes(center->world))) {
+  if (!physics_terrain_ctor(terrain, vec3_zero(), *model_get_meshes(center->world))) {
     return false;
   }
   center->terrain = terrain;
@@ -91,7 +90,7 @@ static void __one_draw(void *ptr) {
   player_draw(center->player);
   model_draw(center->world);
 
-  player_draw_debug(center->player);
+  /* player_draw_debug(center->player); */
 }
 
 static vec3 __one_get_look_at(void *ptr) {

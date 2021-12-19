@@ -13,11 +13,11 @@ typedef struct {
 
 } texture_s;
 
-#define texture_new()                                                          \
+#define texture_new()                                                                                                  \
   (texture_s) { .width = 0, .height = 0, .channels = 0, .texture = 0 }
 
 // Constructor
-bool texture_ctor(texture_s *texture, const char* path);
+bool texture_ctor(texture_s *texture, const char *path);
 
 // Destructor
 void texture_dtor(texture_s *texture);

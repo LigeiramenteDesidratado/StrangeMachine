@@ -12,23 +12,23 @@ bool attribute_ctor(attribute_s *attribute, EX1 kind) {
   return true;
 }
 
+struct Statistics stats = {.uploads = 0, .frames = 0};
+
 void attribute_dtor(attribute_s *attribute) {
   assert(attribute != NULL);
 
   glDeleteBuffers(1, &attribute->vbo);
 }
 
-#define DEFINE_ATTRIBUTE_SET(X)                                                \
-  void attribute_set_##X(attribute_s *const attribute,                         \
-                         const X *const input_array, size_t array_length,      \
-                         GLenum usage) {                                       \
-    assert(attribute != NULL);                                                 \
-    attribute->length = array_length;                                          \
-    size_t size = sizeof(X);                                                   \
-    glBindBuffer(GL_ARRAY_BUFFER, attribute->vbo);                             \
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(size * attribute->length),      \
-                 input_array, usage);                                          \
-    glBindBuffer(GL_ARRAY_BUFFER, 0);                                          \
+#define DEFINE_ATTRIBUTE_SET(X)                                                                                        \
+  void attribute_set_##X(attribute_s *const attr, const X *const input_array, size_t array_length, GLenum usage) {     \
+    assert(attr != NULL);                                                                                              \
+    attr->length = array_length;                                                                                       \
+    size_t size = sizeof(X);                                                                                           \
+    glBindBuffer(GL_ARRAY_BUFFER, attr->vbo);                                                                          \
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(size * attr->length), input_array, usage);                              \
+    glBindBuffer(GL_ARRAY_BUFFER, 0);                                                                                  \
+    stats.uploads++;                                                                                                   \
   }
 
 DEFINE_ATTRIBUTE_SET(int)
@@ -38,9 +38,8 @@ DEFINE_ATTRIBUTE_SET(vec3)
 DEFINE_ATTRIBUTE_SET(vec4)
 DEFINE_ATTRIBUTE_SET(ivec4)
 
-void attribute_default(const attribute_s *const attribute,
-                       const void *const array, uint32_t length, GLenum usage) {
-  (void)attribute;
+void attribute_default(const attribute_s *const attr, const void *const array, uint32_t length, GLenum usage) {
+  (void)attr;
   (void)array;
   (void)length;
   (void)usage;

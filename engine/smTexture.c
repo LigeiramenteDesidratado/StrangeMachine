@@ -1,10 +1,10 @@
 #include "smTexture.h"
 #include "util/common.h"
 
-bool __texture_load(texture_s *texture, const char* path);
+bool __texture_load(texture_s *texture, const char *path);
 
 // Constructor
-bool texture_ctor(texture_s *texture, const char* path) {
+bool texture_ctor(texture_s *texture, const char *path) {
 
   assert(texture != NULL);
 
@@ -37,7 +37,7 @@ void texture_unset(uint32_t tex_index) {
   glActiveTexture(GL_TEXTURE0);
 }
 
-bool __texture_load(texture_s *texture, const char* path) {
+bool __texture_load(texture_s *texture, const char *path) {
   assert(texture != NULL);
 
   int32_t width, height, channels;
@@ -50,8 +50,7 @@ bool __texture_load(texture_s *texture, const char* path) {
   log_info("[%s] image successfully loaded", path);
 
   glBindTexture(GL_TEXTURE_2D, texture->texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
   /* glGenerateMipmap(GL_TEXTURE_2D); */
   stbi_image_free(data);
 

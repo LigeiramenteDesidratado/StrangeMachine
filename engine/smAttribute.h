@@ -13,10 +13,10 @@
 // ENUM X ID
 typedef unsigned char EX1;
 #define FLOAT_EX1 ((EX1)0x01)
-#define INT_EX1 ((EX1)0x02)
-#define VEC2_EX1 ((EX1)0x03)
-#define VEC3_EX1 ((EX1)0x04)
-#define VEC4_EX1 ((EX1)0x05)
+#define INT_EX1   ((EX1)0x02)
+#define VEC2_EX1  ((EX1)0x03)
+#define VEC3_EX1  ((EX1)0x04)
+#define VEC4_EX1  ((EX1)0x05)
 #define IVEC4_EX1 ((EX1)0x06)
 
 typedef struct {
@@ -27,6 +27,13 @@ typedef struct {
 
 } attribute_s;
 
+struct Statistics {
+  uint32_t uploads;
+  uint32_t frames;
+};
+
+extern struct Statistics stats;
+
 #define attribute_new() ((attribute_s){.vbo = 0, .length = 0, .kind = 0})
 
 // Constructor
@@ -35,10 +42,8 @@ bool attribute_ctor(attribute_s *attribute, EX1 kind);
 // Destructor
 void attribute_dtor(attribute_s *attribute);
 
-#define DECLARE_ATTRIBUTE_SET(X)                                               \
-  void attribute_set_##X(attribute_s *const attribute,                         \
-                         const X *const input_array, size_t array_length,    \
-                         GLenum usage);
+#define DECLARE_ATTRIBUTE_SET(X)                                                                                       \
+  void attribute_set_##X(attribute_s *const attr, const X *const input_array, size_t array_length, GLenum usage);
 
 DECLARE_ATTRIBUTE_SET(int)
 DECLARE_ATTRIBUTE_SET(float)
@@ -46,11 +51,10 @@ DECLARE_ATTRIBUTE_SET(vec2)
 DECLARE_ATTRIBUTE_SET(vec3)
 DECLARE_ATTRIBUTE_SET(vec4)
 DECLARE_ATTRIBUTE_SET(ivec4)
-void attribute_default(const attribute_s *const attribute,
-                       const void *const array, uint32_t length, GLenum usage);
+void attribute_default(const attribute_s *const attr, const void *const array, uint32_t length, GLenum usage);
 
 // see: http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1930.htm
-#define attribute_set(ATTR, INPUT_ARRAY, ARRAY_LENGTH, USAGE)                  \
+#define attribute_set(ATTR, INPUT_ARRAY, ARRAY_LENGTH, USAGE)                                                          \
   _Generic(&((INPUT_ARRAY)[0]), \
       int*: attribute_set_int, \
       float*: attribute_set_float, \

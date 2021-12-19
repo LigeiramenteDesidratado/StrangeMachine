@@ -12,8 +12,7 @@ typedef struct {
 } skeleton_s;
 
 void skeleton_update_inverse_bind_pose(skeleton_s *skeleton);
-void skeleton_set(skeleton_s *skeleton, pose_s *rest, pose_s *bind,
-                  const char **const names);
+void skeleton_set(skeleton_s *skeleton, pose_s *rest, pose_s *bind, const char **const names);
 
 // Allocate memory
 skeleton_s *skeleton_new(void) {
@@ -25,8 +24,7 @@ skeleton_s *skeleton_new(void) {
 }
 
 // Constructor
-bool skeleton_ctor(skeleton_s *skeleton, pose_s *rest, pose_s *bind,
-                       const char **const names) {
+bool skeleton_ctor(skeleton_s *skeleton, pose_s *rest, pose_s *bind, const char **const names) {
 
   assert(skeleton != NULL);
 
@@ -49,8 +47,7 @@ void skeleton_dtor(skeleton_s *skeleton) {
   skeleton = NULL;
 }
 
-void skeleton_set(skeleton_s *skeleton, pose_s *rest, pose_s *bind,
-                  const char **const names) {
+void skeleton_set(skeleton_s *skeleton, pose_s *rest, pose_s *bind, const char **const names) {
   assert(skeleton != NULL);
 
   // TODO: investigate this
@@ -114,8 +111,7 @@ char **skeleton_get_joint_names(const skeleton_s *const skeleton) {
   return skeleton->joint_names;
 }
 
-char *skeleton_get_joint_name(const skeleton_s *const skeleton,
-                              uint32_t index) {
+char *skeleton_get_joint_name(const skeleton_s *const skeleton, uint32_t index) {
   assert(skeleton != NULL);
   return skeleton->joint_names[index];
 }

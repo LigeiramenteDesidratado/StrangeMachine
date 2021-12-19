@@ -1,16 +1,15 @@
 #include "smText.h"
-#include "smShaderProgram.h"
-#include "smShader.h"
-#include "smUniform.h"
 #include "smAttribute.h"
+#include "smShader.h"
+#include "smShaderProgram.h"
 #include "smTexture.h"
+#include "smUniform.h"
 #include "util/common.h"
 
 #define GLYPH_W 7
 #define GLYPH_H 7
 
-const struct text_attr text_attr_locs = {
-    .position = 1, .tex_coord = 2, .color = 3};
+const struct text_attr text_attr_locs = {.position = 1, .tex_coord = 2, .color = 3};
 
 typedef struct {
 
@@ -55,7 +54,6 @@ void text_init(void) {
     exit(1);
   }
   TEXT.texture = texture;
-
 }
 
 void text_draw(vec2 dest, int w, vec3 color, char *format, ...) {
@@ -95,23 +93,22 @@ void text_draw(vec2 dest, int w, vec3 color, char *format, ...) {
 
       srcX = (c - ' ') * GLYPH_W;
 
-      arrput(TEXT.positions, vec3_new(dest.x, dest.y, 0.0f));  // top left
-      arrput(TEXT.positions, vec3_new(dest.x, dest.y+GLYPH_H, 0.0f));  // bottom left
-      arrput(TEXT.positions, vec3_new(dest.x+GLYPH_W, dest.y, 0.0f)); //top right
+      arrput(TEXT.positions, vec3_new(dest.x, dest.y, 0.0f));           // top left
+      arrput(TEXT.positions, vec3_new(dest.x, dest.y + GLYPH_H, 0.0f)); // bottom left
+      arrput(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y, 0.0f)); // top right
 
-      arrput(TEXT.positions, vec3_new(dest.x+GLYPH_W, dest.y+GLYPH_H, 0.0f));  // bottom right
-      arrput(TEXT.positions, vec3_new(dest.x+GLYPH_W, dest.y, 0.0f));  // top right
-      arrput(TEXT.positions, vec3_new(dest.x, dest.y+GLYPH_H, 0.0f));  // bottom left
+      arrput(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y + GLYPH_H, 0.0f)); // bottom right
+      arrput(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y, 0.0f));           // top right
+      arrput(TEXT.positions, vec3_new(dest.x, dest.y + GLYPH_H, 0.0f));           // bottom left
 
       // OpenGL does store texture "upside-down", so flip it
-      arrput(TEXT.tex_coords, vec2_new(srcX/width, (srcY+GLYPH_H)/height)); // top left
-      arrput(TEXT.tex_coords, vec2_new(srcX/width, srcY/height)); // bottom left
-      arrput(TEXT.tex_coords, vec2_new((srcX+GLYPH_W)/width , (srcY+GLYPH_H)/height)); // top right
+      arrput(TEXT.tex_coords, vec2_new(srcX / width, (srcY + GLYPH_H) / height));             // top left
+      arrput(TEXT.tex_coords, vec2_new(srcX / width, srcY / height));                         // bottom left
+      arrput(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, (srcY + GLYPH_H) / height)); // top right
 
-      arrput(TEXT.tex_coords, vec2_new((srcX+GLYPH_W)/width, srcY/height));  // bottom right
-      arrput(TEXT.tex_coords, vec2_new((srcX+GLYPH_W)/width , (srcY+GLYPH_H)/height)); // top right
-      arrput(TEXT.tex_coords, vec2_new(srcX/width, srcY/height)); // bottom left
-
+      arrput(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, srcY / height));             // bottom right
+      arrput(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, (srcY + GLYPH_H) / height)); // top right
+      arrput(TEXT.tex_coords, vec2_new(srcX / width, srcY / height));                         // bottom left
 
       arrput(TEXT.color, color);
       arrput(TEXT.color, color);
@@ -133,10 +130,12 @@ void text_draw(vec2 dest, int w, vec3 color, char *format, ...) {
 
 void text_flush(void) {
 
-  if (arrlenu(TEXT.positions) > 0) attribute_set(&TEXT.position_attr, TEXT.positions, arrlenu(TEXT.positions), GL_STREAM_DRAW);
-  if (arrlenu(TEXT.tex_coords) > 0) attribute_set(&TEXT.uv_attr, TEXT.tex_coords, arrlenu(TEXT.tex_coords), GL_STREAM_DRAW);
-  if (arrlenu(TEXT.tex_coords) > 0) attribute_set(&TEXT.color_attr, TEXT.color, arrlenu(TEXT.color), GL_STREAM_DRAW);
-
+  if (arrlenu(TEXT.positions) > 0)
+    attribute_set(&TEXT.position_attr, TEXT.positions, arrlenu(TEXT.positions), GL_STREAM_DRAW);
+  if (arrlenu(TEXT.tex_coords) > 0)
+    attribute_set(&TEXT.uv_attr, TEXT.tex_coords, arrlenu(TEXT.tex_coords), GL_STREAM_DRAW);
+  if (arrlenu(TEXT.tex_coords) > 0)
+    attribute_set(&TEXT.color_attr, TEXT.color, arrlenu(TEXT.color), GL_STREAM_DRAW);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -162,9 +161,7 @@ void text_flush(void) {
   attribute_bind_to(&TEXT.color_attr, text_attr_locs.color);
   texture_set(&TEXT.texture, glGetUniformLocation(SHADERS[TEXT_SHADER_EX7], "tex0"), 0);
 
-
-  glDrawArrays(GL_TRIANGLES, 0, arrlen(TEXT.positions));
-
+  glDrawArrays(GL_TRIANGLES, 0, arrlenu(TEXT.positions));
 
   attribute_unbind_from(&TEXT.color_attr, text_attr_locs.color);
   attribute_unbind_from(&TEXT.uv_attr, text_attr_locs.tex_coord);
@@ -178,7 +175,6 @@ void text_flush(void) {
   arrsetlen(TEXT.positions, 0);
   arrsetlen(TEXT.tex_coords, 0);
   arrsetlen(TEXT.color, 0);
-
 }
 
 void text_tear_down(void) {

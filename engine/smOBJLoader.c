@@ -1,7 +1,7 @@
 #include "smMesh.h"
 #include "util/common.h"
 
-bool obj_loader_load(mesh_s **meshes, const char* path) {
+bool obj_loader_load(mesh_s **meshes, const char *path) {
 
   FILE *fp;
   fp = fopen(path, "r");
@@ -14,7 +14,7 @@ bool obj_loader_load(mesh_s **meshes, const char* path) {
   size_t iv_len = 0, iu_len = 0, in_len = 0;
   size_t tmp_v_len = 0, tmp_uv_len = 0, tmp_n_len = 0;
 
-  char* _line = NULL, *line = NULL;
+  char *_line = NULL, *line = NULL;
   size_t len = 0;
   ssize_t read;
   while ((read = getline(&_line, &len, fp)) != -1) {
@@ -99,12 +99,10 @@ bool obj_loader_load(mesh_s **meshes, const char* path) {
     } else if (strcmp(lineHeader, "f") == 0) {
       uint32_t vi[3], ui[3], ni[3];
 
-      int matches =
-          fscanf(fp, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vi[0], &ui[0], &ni[0],
-                 &vi[1], &ui[1], &ni[1], &vi[2], &ui[2], &ni[2]);
+      int matches = fscanf(fp, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vi[0], &ui[0], &ni[0], &vi[1], &ui[1], &ni[1], &vi[2],
+                           &ui[2], &ni[2]);
 
-      assert(matches == 9 &&
-             "should export your model with 'Triangulate faces' checked" &&
+      assert(matches == 9 && "should export your model with 'Triangulate faces' checked" &&
              "make sure that vertex, uv and normals are being exported");
 
       arrput(iv, vi[0]);

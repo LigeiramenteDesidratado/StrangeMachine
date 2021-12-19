@@ -38,4 +38,3 @@ bounding_box_s shapes_get_aabb_capsule(capsule_s c);
 bounding_box_s shapes_get_aabb_triangle(triangle_s t);
 
 #endif // SM_SHAPES_H
-

@@ -13,8 +13,7 @@ typedef struct {
 
 } controller_s;
 
-void controller_skeleton_set(controller_s *controller,
-                             struct skeleton_s *skeleton);
+void controller_skeleton_set(controller_s *controller, struct skeleton_s *skeleton);
 
 // Allocate memory
 controller_s *controller_new(void) {
@@ -25,8 +24,7 @@ controller_s *controller_new(void) {
 }
 
 // Constructor
-bool controller_ctor(controller_s *controller,
-                         struct skeleton_s *skeleton) {
+bool controller_ctor(controller_s *controller, struct skeleton_s *skeleton) {
 
   assert(controller != NULL);
   assert(skeleton != NULL);
@@ -77,8 +75,7 @@ void controller_do(controller_s *controller, float dt) {
 
   num_targets = arrlenu(controller->targets);
   pose_copy(&controller->pose, skeleton_get_rest_pose(controller->skeleton));
-  controller->time =
-      clip_sample(controller->clip, &controller->pose, controller->time + dt);
+  controller->time = clip_sample(controller->clip, &controller->pose, controller->time + dt);
 
   for (size_t i = 0; i < num_targets; ++i) {
     cross_fade_target_s *target = &controller->targets[i];
@@ -92,8 +89,7 @@ void controller_do(controller_s *controller, float dt) {
   }
 }
 
-void controller_skeleton_set(controller_s *controller,
-                             struct skeleton_s *skeleton) {
+void controller_skeleton_set(controller_s *controller, struct skeleton_s *skeleton) {
 
   assert(controller != NULL);
 
@@ -119,8 +115,7 @@ void controller_play(controller_s *controller, struct clip_s *target) {
   controller->time = clip_get_start_time(target);
 }
 
-void controller_fade_to(controller_s *controller, struct clip_s *target,
-                        float fade_time) {
+void controller_fade_to(controller_s *controller, struct clip_s *target, float fade_time) {
   assert(controller != NULL);
 
   if (controller->clip == NULL) {
@@ -143,17 +138,13 @@ void controller_fade_to(controller_s *controller, struct clip_s *target,
   }
 
   cross_fade_target_s cross_targ = cross_fade_target_new();
-  if (!cross_fade_target_ctor(&cross_targ, target,
-                              skeleton_get_rest_pose(controller->skeleton),
-                              fade_time))
+  if (!cross_fade_target_ctor(&cross_targ, target, skeleton_get_rest_pose(controller->skeleton), fade_time))
     return;
 
   arrput(controller->targets, cross_targ);
 }
 
-pose_s *controller_get_current_pose(controller_s *controller) {
-  return &controller->pose;
-}
+pose_s *controller_get_current_pose(controller_s *controller) { return &controller->pose; }
 
 struct clip_s *controller_get_current_clip(controller_s *controller) {
   return controller->clip;

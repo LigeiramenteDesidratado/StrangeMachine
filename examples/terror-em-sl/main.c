@@ -1,17 +1,18 @@
 #include "smAttribute.h"
 #include "smIndexBuffer.h"
+#include "smText.h"
 #include "smTexture.h"
 #include "smUniform.h"
-#include "smText.h"
 
-#include "smInput.h"
+#include "smAttribute.h"
+#include "smCamera.h"
 #include "smDebug.h"
+#include "smInput.h"
 #include "smMesh.h"
 #include "smModel.h"
+#include "smShaderProgram.h"
 #include "smSkinnedMesh.h"
 #include "smSkinnedModel.h"
-#include "smCamera.h"
-#include "smShaderProgram.h"
 #include "stage.h"
 
 #include <SDL2/SDL.h>
@@ -33,11 +34,8 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  window =
-      SDL_CreateWindow("Terror em SL", SDL_WINDOWPOS_CENTERED,
-                       SDL_WINDOWPOS_CENTERED, win_width, win_height,
-                       SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL |
-                           SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_MOUSE_GRABBED);
+  window = SDL_CreateWindow("Terror em SL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, win_width, win_height,
+                            SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_MOUSE_GRABBED);
   if (window == NULL) {
     printf("failed to create SDL window: %s\n", SDL_GetError());
     exit(1);
@@ -68,7 +66,6 @@ int main(int argc, char *argv[]) {
   // Use v-sync
   SDL_GL_SetSwapInterval(1);
 
-
   shaders_init();
   text_init();
   input_init();
@@ -86,7 +83,6 @@ int main(int argc, char *argv[]) {
   /* struct skinned_model_s *woman = skinned_model_new(); */
   /* if (!skinned_model_ctor(woman, "goth.glb", "goth.png")) */
   /* exit(1); */
-
 
   Uint32 lastTicks = SDL_GetTicks();
   float dt = 0.0f;
@@ -126,6 +122,7 @@ int main(int argc, char *argv[]) {
     lastTicks = newTicks;
 
     SDL_GL_SwapWindow(window);
+    stats.frames++;
   }
 
   /* model_dtor(plane); */

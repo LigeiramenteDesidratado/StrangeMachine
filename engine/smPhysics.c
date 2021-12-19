@@ -3,12 +3,12 @@
 
 #include "smCollision.h"
 #include "smMesh.h"
-#include "smText.h"
 #include "smShapes.h"
+#include "smText.h"
 
-#define GRAVITY  9.8f
-#define GROUND_FRICTION  0.8f
-#define AIR_FRICTION  0.9f
+#define GRAVITY         9.8f
+#define GROUND_FRICTION 0.8f
+#define AIR_FRICTION    0.9f
 
 void physics_init(void) {
   // TODO: implement
@@ -46,14 +46,13 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against);
 static void __handle_sphere_mesh(physics_s *physics, physics_s *against);
 static void __handle_default(physics_s *physics, physics_s *against);
 
-static void (*handler[SPHERE_EX0 | CAPSULE_EX0 | MESH_EX0])(
-    physics_s *physics, physics_s *against) = {
-    [SPHERE_EX0  | SPHERE_EX0] = __handle_default,   // TODO: The collision of sphere-to-sphere is ready, but I can't stop being lazy
-    [SPHERE_EX0  | CAPSULE_EX0] = __handle_default,  // TODO: implement...
-    [SPHERE_EX0  | MESH_EX0] = __handle_sphere_mesh,
-    [CAPSULE_EX0 | CAPSULE_EX0] = __handle_default,  // TODO: implement...
+static void (*handler[SPHERE_EX0 | CAPSULE_EX0 | MESH_EX0])(physics_s *physics, physics_s *against) = {
+    [SPHERE_EX0 | SPHERE_EX0] = __handle_default,  // TODO: implement
+    [SPHERE_EX0 | CAPSULE_EX0] = __handle_default, // TODO: implement...
+    [SPHERE_EX0 | MESH_EX0] = __handle_sphere_mesh,
+    [CAPSULE_EX0 | CAPSULE_EX0] = __handle_default, // TODO: implement...
     [CAPSULE_EX0 | MESH_EX0] = __handle_capsule_mesh,
-    [MESH_EX0    | MESH_EX0] = __handle_default,     // TODO: implement...
+    [MESH_EX0 | MESH_EX0] = __handle_default, // TODO: implement...
 };
 
 // Globals
@@ -71,8 +70,7 @@ void physics_step(void) {
 
   for (signed char i = 0; i <= entity.count; ++i) {
     for (signed char j = i + 1; j <= entity.count; ++j) {
-      handler[entity.bodies[i]->entity_type | entity.bodies[j]->entity_type](
-          entity.bodies[i], entity.bodies[j]);
+      handler[entity.bodies[i]->entity_type | entity.bodies[j]->entity_type](entity.bodies[i], entity.bodies[j]);
     }
   }
 }
@@ -113,8 +111,7 @@ bool physics_sphere_ctor(physics_s *physics, vec3 pos, float radius) {
   return true;
 }
 
-bool physics_capsule_ctor(physics_s *physics, vec3 pos, float radius,
-                              float height) {
+bool physics_capsule_ctor(physics_s *physics, vec3 pos, float radius, float height) {
 
   assert(physics != NULL);
   assert(radius > 0.0f && "negative radius");
@@ -143,8 +140,7 @@ bool physics_capsule_ctor(physics_s *physics, vec3 pos, float radius,
   return true;
 }
 
-bool physics_terrain_ctor(physics_s *physics, vec3 pos,
-                              mesh_s *terrain_model) {
+bool physics_terrain_ctor(physics_s *physics, vec3 pos, mesh_s *terrain_model) {
 
   if (++entity.count == INT8_MAX) {
     --entity.count;
@@ -214,7 +210,7 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
   float radius = physics->entity_body.capsule.radius;
   bool ground_intersection = false;
   uint8_t const ccd_max = 5;
- 
+
   // colision information, if any
   intersect_result_s result = {0};
   for (uint8_t i = 0; i < ccd_max; ++i) {
@@ -239,8 +235,7 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
 
       // Remove penetration (penetration epsilon added to handle infinitely
       // small penetration)
-      capsulepos =
-          vec3_add(capsulepos, vec3_scale(rNorm, result.depth + 0.0001f));
+      capsulepos = vec3_add(capsulepos, vec3_scale(rNorm, result.depth + 0.0001f));
     }
   }
 
@@ -259,15 +254,13 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
     sphere_s s = {.center = capsulepos, .radius = radius};
     physics->entity_body.capsule = shapes_capsule_new(s, height);
 
-    
     collision_check_capsule_mesh(physics->entity_body.capsule, mesh, &result);
 
     if (result.valid) {
 
       // Remove penetration (penetration epsilon added to handle infinitely
       // small penetration):
-      capsulepos = vec3_add(capsulepos,
-                            vec3_scale(result.normal, result.depth + 0.0001f));
+      capsulepos = vec3_add(capsulepos, vec3_scale(result.normal, result.depth + 0.0001f));
 
       // Check whether it is intersecting the ground (ground normal is
       // upwards)
@@ -284,20 +277,19 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
   else
     physics->velocity = vec3_scale(physics->velocity, AIR_FRICTION);
 
-  physics->position =
-      vec3_add(physics->position, vec3_sub(capsulepos, original_capsulepos));
+  physics->position = vec3_add(physics->position, vec3_sub(capsulepos, original_capsulepos));
 
-  if (result.valid) {
-    debug_draw_line(result.position, vec3_add(result.position, result.normal), vec3_new(1, 0, 0));
-  }
+  /* if (result.valid) { */
+  /* debug_draw_line(result.position, vec3_add(result.position, result.normal), vec3_new(1, 0, 0)); */
+  /* } */
 
   float vel = vec3_len(physics->velocity);
   static float max_vel = 0;
   if (vel > max_vel)
     max_vel = vel;
 
-  text_draw(vec2_new(10, 10), 800- 10, vec3_new(0.2f, 0.7f, 0.9f), "Grounded: %s\nVelocity: %.2f\nPedro", ground_intersection ? "True" : "False", vec3_len(physics->velocity));
-  
+  text_draw(vec2_new(10, 10), 800 - 10, vec3_new(0.2f, 0.7f, 0.9f), "Grounded: %s\nVelocity: %.2f\n",
+            ground_intersection ? "True" : "False", vec3_len(physics->velocity));
 }
 
 vec3 physics_get_pos(physics_s *physics) {
@@ -310,8 +302,7 @@ vec3 physics_get_pos(physics_s *physics) {
   return pos;
 }
 
-static
-void __handle_sphere_mesh(physics_s *physics, physics_s *against) {
+static void __handle_sphere_mesh(physics_s *physics, physics_s *against) {
 
   assert(physics != NULL);
   assert(against != NULL);
@@ -347,8 +338,7 @@ void __handle_sphere_mesh(physics_s *physics, physics_s *against) {
 
       // Remove penetration (penetration epsilon added to handle infinitely
       // small penetration)
-      sphere_pos =
-          vec3_add(sphere_pos, vec3_scale(rNorm, result.depth + 0.0001f));
+      sphere_pos = vec3_add(sphere_pos, vec3_scale(rNorm, result.depth + 0.0001f));
     }
   }
 }
@@ -363,9 +353,13 @@ capsule_s physics_get_capsule(physics_s *physics) {
   return physics->entity_body.capsule;
 }
 
-vec3 physics_get_force(physics_s *physics) { return physics->force; }
+vec3 physics_get_force(physics_s *physics) {
+  return physics->force;
+}
 
-vec3 physics_get_velocity(physics_s *physics) { return physics->velocity; }
+vec3 physics_get_velocity(physics_s *physics) {
+  return physics->velocity;
+}
 
 void physics_draw(physics_s *physics) {
   assert(physics != NULL);
@@ -380,4 +374,3 @@ static void __handle_default(physics_s *physics, physics_s *against) {
   (void)against;
   log_warn("NOT IMPLEMENTED DEFAULT\n");
 }
-

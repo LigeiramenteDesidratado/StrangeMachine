@@ -69,4 +69,3 @@ bounding_box_s shapes_get_aabb_triangle(triangle_s t) {
 
   return result;
 }
-

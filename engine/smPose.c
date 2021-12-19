@@ -46,8 +46,7 @@ transform_s pose_get_local_transform(const pose_s *const pose, uint32_t index) {
   return pose->joints[index];
 }
 
-void pose_set_local_transform(pose_s *pose, uint32_t index,
-                              transform_s transform) {
+void pose_set_local_transform(pose_s *pose, uint32_t index, transform_s transform) {
   assert(pose != NULL);
   assert(index < arrlenu(pose->joints));
 
@@ -146,9 +145,7 @@ bool pose_is_equal(const pose_s *const a, const pose_s *const b) {
   return true;
 }
 
-bool pose_not_equal(const pose_s *const a, const pose_s *const b) {
-  return !pose_is_equal(a, b);
-}
+bool pose_not_equal(const pose_s *const a, const pose_s *const b) { return !pose_is_equal(a, b); }
 
 void pose_copy(pose_s *dest, const pose_s *const src) {
 
@@ -166,8 +163,7 @@ void pose_copy(pose_s *dest, const pose_s *const src) {
 }
 
 // returns true if the search node is a descendant of the given root node
-bool pose_is_in_hierarchy(const pose_s *const pose, uint32_t root,
-                          uint32_t search) {
+bool pose_is_in_hierarchy(const pose_s *const pose, uint32_t root, uint32_t search) {
   if (search == root)
     return true;
 
@@ -182,8 +178,7 @@ bool pose_is_in_hierarchy(const pose_s *const pose, uint32_t root,
   return false;
 }
 
-void pose_blend(pose_s *output, const pose_s *const a, const pose_s *const b,
-                float t, int root) {
+void pose_blend(pose_s *output, const pose_s *const a, const pose_s *const b, float t, int root) {
   size_t num_joints = arrlenu(output->joints);
   for (size_t i = 0; i < num_joints; ++i) {
     if (root >= 0) {
@@ -192,8 +187,7 @@ void pose_blend(pose_s *output, const pose_s *const a, const pose_s *const b,
         continue;
       }
     }
-    transform_s mix = transform_mix(pose_get_local_transform(a, i),
-                                    pose_get_local_transform(b, i), t);
+    transform_s mix = transform_mix(pose_get_local_transform(a, i), pose_get_local_transform(b, i), t);
     pose_set_local_transform(output, i, mix);
     // output.SetLocalTransform(i,
     // mix(a.GetLocalTransform(i), b.GetLocalTransform(i), t));

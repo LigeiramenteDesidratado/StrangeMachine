@@ -36,8 +36,7 @@ skinned_model_s *skinned_model_new(void) {
   return skinned_model;
 }
 
-bool skinned_model_ctor(skinned_model_s *skinned_model,
-                            const char* gltf_path, const char* texture_path) {
+bool skinned_model_ctor(skinned_model_s *skinned_model, const char *gltf_path, const char *texture_path) {
 
   assert(skinned_model != NULL);
 
@@ -70,9 +69,7 @@ bool skinned_model_ctor(skinned_model_s *skinned_model,
 
   controller_play(skinned_model->fade_controller, skinned_model->clips[0]);
   controller_do(skinned_model->fade_controller, 0.0f);
-  pose_get_matrix_palette(
-      controller_get_current_pose(skinned_model->fade_controller),
-      &skinned_model->pose_palette);
+  pose_get_matrix_palette(controller_get_current_pose(skinned_model->fade_controller), &skinned_model->pose_palette);
 
   skinned_model->next_clip = 0;
   skinned_model->current_clip = 0;
@@ -115,19 +112,14 @@ void skinned_model_do(skinned_model_s *skinned_model, float dt) {
     // sample->fade_timer = 3.0;
     skinned_model->current_clip = skinned_model->next_clip;
 
-    controller_fade_to(skinned_model->fade_controller,
-                       skinned_model->clips[skinned_model->current_clip], 0.5f);
+    controller_fade_to(skinned_model->fade_controller, skinned_model->clips[skinned_model->current_clip], 0.5f);
   }
 
-  pose_get_matrix_palette(
-      controller_get_current_pose(skinned_model->fade_controller),
-      &skinned_model->pose_palette);
+  pose_get_matrix_palette(controller_get_current_pose(skinned_model->fade_controller), &skinned_model->pose_palette);
 
-  mat4 **inverse_bind_pose =
-      skeleton_get_inverse_bind_pose(skinned_model->skeleton);
+  mat4 **inverse_bind_pose = skeleton_get_inverse_bind_pose(skinned_model->skeleton);
   for (size_t i = 0; i < arrlenu(skinned_model->pose_palette); ++i) {
-    skinned_model->pose_palette[i] =
-        mat4_mul(skinned_model->pose_palette[i], (*inverse_bind_pose)[i]);
+    skinned_model->pose_palette[i] = mat4_mul(skinned_model->pose_palette[i], (*inverse_bind_pose)[i]);
   }
 }
 
@@ -135,12 +127,10 @@ void skinned_model_draw(skinned_model_s *skinned_model) {
   assert(skinned_model != NULL);
 
   shader_bind(SHADERS[SKINNED_SHADER_EX7]);
-  uniform_set_array(
-      glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "animated"),
-      skinned_model->pose_palette, arrlenu(skinned_model->pose_palette));
+  uniform_set_array(glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "animated"), skinned_model->pose_palette,
+                    (int32_t)arrlenu(skinned_model->pose_palette));
 
-  texture_set(&skinned_model->texture,
-              glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "tex0"), 0);
+  texture_set(&skinned_model->texture, glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "tex0"), 0);
 
   uint8_t flags = 0;
   MASK_SET(flags, 1 << skinned_mesh_attr_locs.position);
@@ -153,10 +143,10 @@ void skinned_model_draw(skinned_model_s *skinned_model) {
     skinned_mesh_bind(&skinned_model->meshes[i], flags);
 
     GLuint handle = skinned_model->meshes[i].index_buffer.ebo;
-    uint32_t num_indices = skinned_model->meshes[i].index_buffer.count;
+    size_t num_indices = skinned_model->meshes[i].index_buffer.count;
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
-    glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, (int32_t)num_indices, GL_UNSIGNED_INT, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     skinned_mesh_unbind(&skinned_model->meshes[i], flags);
@@ -166,8 +156,7 @@ void skinned_model_draw(skinned_model_s *skinned_model) {
   shader_unbind();
 }
 
-bool skinned_model_set_animation(skinned_model_s *skinned_model,
-                                     const char* animation) {
+bool skinned_model_set_animation(skinned_model_s *skinned_model, const char *animation) {
 
   for (unsigned int i = 0; i < arrlenu(skinned_model->clips); ++i) {
     if (strcmp(clip_get_name(skinned_model->clips[i]), animation) == 0) {

@@ -18,8 +18,7 @@ void skeleton_dtor(struct skeleton_s *skeleton);
 
 // Forward declaration
 
-void skeleton_set(struct skeleton_s *skeleton, pose_s *rest, pose_s *bind,
-                  const char **const names);
+void skeleton_set(struct skeleton_s *skeleton, pose_s *rest, pose_s *bind, const char **const names);
 void skeleton_update_inverse_bind_pose(struct skeleton_s *skeleton);
 pose_s *skeleton_get_bind_pose(struct skeleton_s *const skeleton);
 pose_s *skeleton_get_rest_pose(struct skeleton_s *const skeleton);

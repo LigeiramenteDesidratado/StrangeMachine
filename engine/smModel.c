@@ -17,7 +17,7 @@ typedef struct {
 
 } model_s;
 
-static bool string_suffix(const char* str, const char* suffix);
+static bool string_suffix(const char *str, const char *suffix);
 
 model_s *model_new(void) {
   model_s *model = calloc(1, sizeof(model_s));
@@ -27,8 +27,7 @@ model_s *model_new(void) {
   return model;
 }
 
-bool model_ctor(model_s *model, const char* obj_path,
-                    const char* texture_path) {
+bool model_ctor(model_s *model, const char *obj_path, const char *texture_path) {
 
   assert(model != NULL);
   assert(obj_path != NULL);
@@ -92,11 +91,9 @@ void model_draw(const model_s *const model) {
   shader_bind(SHADERS[STATIC_SHADER_EX7]);
 
   mat4 md = transform_to_mat4(model->transform);
-  uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "model"),
-                    md);
+  uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "model"), md);
 
-  texture_set(&model->texture,
-              glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "tex0"), 0);
+  texture_set(&model->texture, glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "tex0"), 0);
 
   uint8_t flags = 0;
   MASK_SET(flags, 1 << mesh_attr_locs.position);
@@ -113,12 +110,12 @@ void model_draw(const model_s *const model) {
 
   shader_unbind();
 
-  for (size_t i = 0; i < arrlenu(model->meshes); ++i) {
-    mesh_draw_debug(&model->meshes[i]);
-  };
+  /* for (size_t i = 0; i < arrlenu(model->meshes); ++i) { */
+  /* mesh_draw_debug(&model->meshes[i]); */
+  /* }; */
 }
 
-static bool string_suffix(const char* str, const char* suffix) {
+static bool string_suffix(const char *str, const char *suffix) {
   if (!str || !suffix)
     return false;
 

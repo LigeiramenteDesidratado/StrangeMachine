@@ -15,9 +15,9 @@
 typedef uint8_t STATE_EX8;
 #define IDLE_EX8 ((STATE_EX8)0x00)
 #define WALK_EX8 ((STATE_EX8)0x01)
-#define RUN_EX8 ((STATE_EX8)0x02)
+#define RUN_EX8  ((STATE_EX8)0x02)
 
-char* state_str[3] = {
+char *state_str[3] = {
     "idle",
     "walk",
     "run.001",
@@ -82,11 +82,8 @@ void player_do(player_s *player, float dt) {
   // Get the left/right/forward/backward.
   // They are mapped to the A,S,D,W keys.
   // The keyboard value will always be -1, 0 or 1
-  vec3 input = vec3_new(
-      (float)(input_scan_key(SDL_SCANCODE_A) + -input_scan_key(SDL_SCANCODE_D)),
-      0.f,
-      (float)(input_scan_key(SDL_SCANCODE_W) +
-              -input_scan_key(SDL_SCANCODE_S)));
+  vec3 input = vec3_new((float)(input_scan_key(SDL_SCANCODE_A) + -input_scan_key(SDL_SCANCODE_D)), 0.f,
+                        (float)(input_scan_key(SDL_SCANCODE_W) + -input_scan_key(SDL_SCANCODE_S)));
 
   vec3 direction = vec3_norm(input);
   float dir_len = vec3_len(direction);
@@ -96,15 +93,13 @@ void player_do(player_s *player, float dt) {
     vec3 fwd = vec3_new(view.forward.x, 0, -view.forward.z);
     vec3 right = vec3_new(-view.right.x, 0, view.right.z);
 
-    direction =
-        vec3_add(vec3_scale(fwd, direction.z), vec3_scale(right, direction.x));
+    direction = vec3_add(vec3_scale(fwd, direction.z), vec3_scale(right, direction.x));
 
     direction = vec3_norm(direction);
     float yaw = atan2f(direction.x, direction.z);
 
     quat rotation = quat_angle_axis(yaw, vec3_new(0, 1.0f, 0));
-    player->transform.rotation =
-        quat_slerp2(player->transform.rotation, rotation, 15 * dt);
+    player->transform.rotation = quat_slerp2(player->transform.rotation, rotation, 15 * dt);
 
     player->state = WALK_EX8;
   } else
@@ -140,8 +135,8 @@ void player_draw(player_s *player) {
   assert(player != NULL);
 
   shader_bind(SHADERS[SKINNED_SHADER_EX7]);
-  uniform_set_value(glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "model"),
-                    transform_to_mat4(player->transform));
+  mat4  p_trans = transform_to_mat4(player->transform);
+  uniform_set_value(glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "model"), p_trans);
   skinned_model_draw(player->model);
   shader_unbind();
 }

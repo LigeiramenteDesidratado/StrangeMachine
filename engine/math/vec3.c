@@ -150,33 +150,31 @@ float vec3_angle(vec3 a, vec3 b) {
   return acosf(dot / len);
 }
 
+void vec3_orthonorm(float left[3], float up[3], const float v[3]) {
+  float lenSqr, invLen;
+  if (fabs(v[2]) > 0.7f) {
+    lenSqr = v[1] * v[1] + v[2] * v[2];
+    invLen = rev_sqrt(lenSqr);
 
-void vec3_orthonorm(float left[3], float up[3], const float v[3])
-{
-    float lenSqr, invLen;
-    if (fabs(v[2]) > 0.7f) {
-        lenSqr  = v[1]*v[1]+v[2]*v[2];
-        invLen  = rev_sqrt(lenSqr);
+    up[0] = 0.0f;
+    up[1] = v[2] * invLen;
+    up[2] = -v[1] * invLen;
 
-        up[0] = 0.0f;
-        up[1] =  v[2]*invLen;
-        up[2] = -v[1]*invLen;
+    left[0] = lenSqr * invLen;
+    left[1] = -v[0] * up[2];
+    left[2] = v[0] * up[1];
+  } else {
+    lenSqr = v[0] * v[0] + v[1] * v[1];
+    invLen = rev_sqrt(lenSqr);
 
-        left[0] = lenSqr*invLen;
-        left[1] = -v[0]*up[2];
-        left[2] =  v[0]*up[1];
-    } else {
-        lenSqr = v[0]*v[0] + v[1]*v[1];
-        invLen = rev_sqrt(lenSqr);
+    left[0] = -v[1] * invLen;
+    left[1] = v[0] * invLen;
+    left[2] = 0.0f;
 
-        left[0] = -v[1] * invLen;
-        left[1] =  v[0] * invLen;
-        left[2] = 0.0f;
-
-        up[0] = -v[2] * left[1];
-        up[1] =  v[2] * left[0];
-        up[2] = lenSqr * invLen;
-    }
+    up[0] = -v[2] * left[1];
+    up[1] = v[2] * left[0];
+    up[2] = lenSqr * invLen;
+  }
 }
 
 // projection of vector a onto vector b
@@ -214,16 +212,14 @@ vec3 vec3_ref(vec3 a, vec3 b) {
 // cross product between vector a and vector b
 vec3 vec3_cross(vec3 a, vec3 b) {
 
-  vec3 result = vec3_new(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
-                         a.x * b.y - a.y * b.x);
+  vec3 result = vec3_new(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
 
   return result;
 }
 
 // linear interpolation between vector a and vector b
 vec3 vec3_lerp(vec3 a, vec3 b, float t) {
-  vec3 result = vec3_new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t,
-                         a.z + (b.z - a.z) * t);
+  vec3 result = vec3_new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
 
   return result;
 }
@@ -249,8 +245,7 @@ vec3 vec3_slerp(vec3 a, vec3 b, float t) {
 }
 
 vec3 vec3_nlerp(vec3 a, vec3 b, float t) {
-  vec3 result = vec3_new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t,
-                         a.z + (b.z - a.z) * t);
+  vec3 result = vec3_new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
 
   return vec3_norm(result);
 }
