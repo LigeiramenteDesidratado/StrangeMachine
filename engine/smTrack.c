@@ -1,8 +1,8 @@
 #include "smTrack.h"
 #include "util/common.h"
 
-#define SCALAR_TRACK 1
-#define VECTOR_TRACK 3
+#define SCALAR_TRACK    1
+#define VECTOR_TRACK    3
 #define QUATERION_TRACK 4
 
 static vec3 __track_sample_constant_vec3(track_s *track, float t, bool looping);
@@ -340,9 +340,13 @@ float track_adjust_time(track_s *track, float t, bool looping) {
   return t;
 }
 
-float track_cast_float(float *value) { return value[0]; }
+float track_cast_float(float *value) {
+  return value[0];
+}
 
-vec3 track_cast_vec3(float *value) { return vec3_new(value[0], value[1], value[2]); }
+vec3 track_cast_vec3(float *value) {
+  return vec3_new(value[0], value[1], value[2]);
+}
 
 quat track_cast_quat(float *value) {
 
@@ -637,7 +641,9 @@ void __track_neighborhood(const quat *a, quat *b) {
   }
 }
 
-quat __track_adjust_hermite_result(quat q) { return quat_norm(q); }
+quat __track_adjust_hermite_result(quat q) {
+  return quat_norm(q);
+}
 
 static quat quat_iterpolate(quat a, quat b, float t) {
   quat result = quat_mix(a, b, t);

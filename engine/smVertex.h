@@ -2,6 +2,7 @@
 #define SM_VERTEX_H
 
 #include "smAttribute.h"
+#include "util/common.h"
 
 typedef struct {
   vec3 *positions;

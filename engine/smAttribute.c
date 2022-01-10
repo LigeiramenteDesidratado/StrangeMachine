@@ -48,6 +48,11 @@ void attribute_default(const attribute_s *const attr, const void *const array, u
 }
 
 void attribute_bind_to(attribute_s const *attribute, uint8_t slot) {
+
+  attribute_bind_to_pro(attribute, slot, 0, 0);
+}
+
+void attribute_bind_to_pro(attribute_s const *attribute, uint8_t slot, GLsizei stride, const void *pointer) {
   assert(attribute != NULL);
 
   glBindBuffer(GL_ARRAY_BUFFER, attribute->vbo);

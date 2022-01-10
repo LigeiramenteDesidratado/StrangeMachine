@@ -4,6 +4,9 @@
 #include "vec3.h"
 
 // Quake III algorithm for fast inverse square root
+// Looping 1000000000 times and compiled with the -O3 flag:
+//      - rev_sqrt(number)  4.34s user 0.02s system 97% cpu 4.471 total
+//      - 1/sqrt(number)    6.33s user 0.03s system 98% cpu 6.483 total
 float rev_sqrt(float number) {
   long i;
   float x2, y;

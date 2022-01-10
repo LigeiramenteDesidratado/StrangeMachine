@@ -145,7 +145,9 @@ void controller_fade_to(controller_s *controller, struct clip_s *target, float f
   arrput(controller->targets, cross_targ);
 }
 
-pose_s *controller_get_current_pose(controller_s *controller) { return &controller->pose; }
+pose_s *controller_get_current_pose(controller_s *controller) {
+  return &controller->pose;
+}
 
 struct clip_s *controller_get_current_clip(controller_s *controller) {
   return controller->clip;

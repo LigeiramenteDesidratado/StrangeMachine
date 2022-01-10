@@ -201,15 +201,15 @@ void skinned_mesh_CPU_skin_matrix_opt(skinned_mesh_s *mesh, mat4 *animated_pose)
     vec3 p2 = mat4_transform_point(animated_pose[j.z], mesh->vertex.positions[i]);
     vec3 p3 = mat4_transform_point(animated_pose[j.w], mesh->vertex.positions[i]);
 
-    mesh->skinned_position[i] =
-        vec3_add(vec3_add(vec3_scale(p0, w.x), vec3_scale(p1, w.y)),
-                 vec3_add(vec3_scale(p2, w.z), vec3_scale(p3, w.w)));
+    mesh->skinned_position[i] = vec3_add(vec3_add(vec3_scale(p0, w.x), vec3_scale(p1, w.y)),
+                                         vec3_add(vec3_scale(p2, w.z), vec3_scale(p3, w.w)));
 
     vec3 n0 = mat4_transform_vec3(animated_pose[j.x], mesh->vertex.normals[i]);
     vec3 n1 = mat4_transform_vec3(animated_pose[j.y], mesh->vertex.normals[i]);
     vec3 n2 = mat4_transform_vec3(animated_pose[j.z], mesh->vertex.normals[i]);
     vec3 n3 = mat4_transform_vec3(animated_pose[j.w], mesh->vertex.normals[i]);
-    mesh->skinned_normal[i] = vec3_add(vec3_add(vec3_scale(n0, w.x), vec3_scale(n1, w.y)), vec3_add(vec3_scale(n2, w.z), vec3_scale(n3, w.w)));
+    mesh->skinned_normal[i] = vec3_add(vec3_add(vec3_scale(n0, w.x), vec3_scale(n1, w.y)),
+                                       vec3_add(vec3_scale(n2, w.z), vec3_scale(n3, w.w)));
   }
 
   attribute_set(&mesh->vertex.position_attr, mesh->skinned_position, arrlenu(mesh->skinned_position), GL_STREAM_DRAW);

@@ -43,7 +43,8 @@ void scene_ctor(scene_s *scene, SCENE_EX6 id) {
   scene->scene_get_look_at = __scene_get_look_at;
 }
 
-void scene_dtor(scene_s *scene) {}
+void scene_dtor(scene_s *scene) {
+}
 
 void scene_do(scene_s *scene, float dt) {
   assert(scene != NULL);

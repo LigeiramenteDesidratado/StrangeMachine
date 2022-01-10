@@ -45,13 +45,21 @@ bool shader_ctor(GLuint *shader, const char *vs, const char *fs) {
 }
 
 // Destructor
-void shader_dtor(GLuint shader) { glDeleteProgram(shader); }
+void shader_dtor(GLuint shader) {
+  glDeleteProgram(shader);
+}
 
-void shader_bind(GLuint shader) { glUseProgram(shader); }
+void shader_bind(GLuint shader) {
+  glUseProgram(shader);
+}
 
-void shader_unbind() { glUseProgram(0); }
+void shader_unbind() {
+  glUseProgram(0);
+}
 
-void shader_bind_attrib_loc(GLuint shader, uint32_t loc, const char *name) { glBindAttribLocation(shader, loc, name); }
+void shader_bind_attrib_loc(GLuint shader, uint32_t loc, const char *name) {
+  glBindAttribLocation(shader, loc, name);
+}
 
 bool shader_relink_program(GLuint shader) {
 

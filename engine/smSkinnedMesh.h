@@ -1,11 +1,11 @@
 #ifndef SM_SKINNED_MESH_H
 #define SM_SKINNED_MESH_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-#include "smVertex.h"
 #include "smIndexBuffer.h"
+#include "smVertex.h"
 
 #include "math/mat4.h"
 #include "math/vec4.h"
@@ -31,9 +31,7 @@ typedef struct {
 
   // extra vertex information
   vec4 *weights;
-
   ivec4 *influences;
-
   uint32_t *indices;
 
   // Each list in the preceding code also needs to be set appropriate
@@ -50,7 +48,7 @@ typedef struct {
 
 } skinned_mesh_s;
 
-#define skinned_mesh_new() ((skinned_mesh_s) {0})
+#define skinned_mesh_new() ((skinned_mesh_s){0})
 
 // Constructor
 bool skinned_mesh_ctor(skinned_mesh_s *mesh);
@@ -59,12 +57,10 @@ bool skinned_mesh_ctor(skinned_mesh_s *mesh);
 void skinned_mesh_dtor(skinned_mesh_s *mesh);
 
 
-void skinned_mesh_copy(skinned_mesh_s *dest, const skinned_mesh_s * const src);
+void skinned_mesh_copy(skinned_mesh_s *dest, const skinned_mesh_s *const src);
 void skinned_mesh_update_gl_buffers(skinned_mesh_s *mesh);
-void skinned_mesh_bind(const skinned_mesh_s * const mesh, uint8_t flag);
-void skinned_mesh_unbind(const skinned_mesh_s * const mesh, uint8_t flag);
+void skinned_mesh_bind(const skinned_mesh_s *const mesh, uint8_t flag);
+void skinned_mesh_unbind(const skinned_mesh_s *const mesh, uint8_t flag);
 void skinned_mesh_CPU_skin_matrix_opt(skinned_mesh_s *mesh, mat4 *animated_pose);
 
-
 #endif // SM_SKINNED_MESH_H
-

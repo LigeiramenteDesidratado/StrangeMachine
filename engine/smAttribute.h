@@ -55,15 +55,16 @@ void attribute_default(const attribute_s *const attr, const void *const array, u
 
 // see: http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1930.htm
 #define attribute_set(ATTR, INPUT_ARRAY, ARRAY_LENGTH, USAGE)                                                          \
-  _Generic(&((INPUT_ARRAY)[0]), \
-      int*: attribute_set_int, \
-      float*: attribute_set_float, \
-      vec2*: attribute_set_vec2, \
-      vec3*: attribute_set_vec3, \
-      vec4*: attribute_set_vec4, \
-      ivec4*: attribute_set_ivec4, \
+  _Generic(&((INPUT_ARRAY)[0]),                                                                                        \
+      int*: attribute_set_int,                                                                                         \
+      float*: attribute_set_float,                                                                                     \
+      vec2*: attribute_set_vec2,                                                                                       \
+      vec3*: attribute_set_vec3,                                                                                       \
+      vec4*: attribute_set_vec4,                                                                                       \
+      ivec4*: attribute_set_ivec4,                                                                                     \
       default : attribute_default)(ATTR, INPUT_ARRAY, ARRAY_LENGTH, USAGE)
 
+void attribute_bind_to_pro(attribute_s const *attribute, uint8_t slot, GLsizei stride, const void *pointer);
 void attribute_bind_to(attribute_s const *attribute, uint8_t slot);
 void attribute_unbind_from(attribute_s const *attribute, uint8_t slot);
 

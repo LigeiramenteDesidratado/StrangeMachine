@@ -30,7 +30,7 @@ typedef struct {
 
 } vec3;
 
-#define vec3_print(V) printf("%s\n\t%f, %f, %f\n", #V, V.x, V.y, V.z);
+#define vec3_print(V) printf("%s\n\t%f, %f, %f\n", #V, V.x, V.y, V.z)
 
 #define vec3_zero() ((vec3){.x = 0.0f, .y = 0.0f, .z = 0.0f})
 #define vec3_new(X, Y, Z) ((vec3){.x = X, .y = Y, .z = Z})
