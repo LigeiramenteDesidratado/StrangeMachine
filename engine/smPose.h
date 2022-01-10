@@ -5,8 +5,13 @@
 #include <stdint.h>
 
 typedef struct {
-  transform_s *joints;
-  int32_t *parents;
+  transform_s joint;
+  int32_t parent;
+} node_s;
+
+typedef struct {
+
+  node_s * nodes;
 
 } pose_s;
 

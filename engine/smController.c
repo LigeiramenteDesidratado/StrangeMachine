@@ -95,7 +95,7 @@ void controller_skeleton_set(controller_s *controller, struct skeleton_s *skelet
 
   controller->skeleton = skeleton;
 
-  if (controller->pose.parents == NULL) {
+  if (controller->pose.nodes == NULL) {
     controller->pose = pose_new();
   }
 

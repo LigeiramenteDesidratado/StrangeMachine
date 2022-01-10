@@ -247,7 +247,7 @@ void gltf_loader_load_bind_pose(cgltf_data *data, pose_s *bind_pose) {
 
   pose_s rest_pose = pose_new();
   gltf_loader_load_rest_pose(data, &rest_pose);
-  size_t num_bones = arrlenu(rest_pose.joints);
+  size_t num_bones = arrlenu(rest_pose.nodes);
   transform_s *world_bind_pose = NULL;
   arrsetlen(world_bind_pose, num_bones);
 

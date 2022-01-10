@@ -51,10 +51,10 @@ void skeleton_set(skeleton_s *skeleton, pose_s *rest, pose_s *bind, const char *
   assert(skeleton != NULL);
 
   // TODO: investigate this
-  if (skeleton->rest_pose.joints == NULL)
+  if (skeleton->rest_pose.nodes == NULL)
     skeleton->rest_pose = pose_new();
 
-  if (skeleton->bind_pose.joints == NULL)
+  if (skeleton->bind_pose.nodes == NULL)
     skeleton->bind_pose = pose_new();
 
   pose_copy(&skeleton->rest_pose, rest);
@@ -76,7 +76,7 @@ void skeleton_update_inverse_bind_pose(skeleton_s *skeleton) {
 
   assert(skeleton != NULL);
 
-  size_t size = arrlenu(skeleton->bind_pose.joints);
+  size_t size = arrlenu(skeleton->bind_pose.nodes);
   arrsetlen(skeleton->inverse_bind_pose, size);
   assert(skeleton->inverse_bind_pose != NULL);
 

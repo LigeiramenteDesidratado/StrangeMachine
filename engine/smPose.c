@@ -5,61 +5,57 @@
 void pose_dtor(pose_s *pose) {
   assert(pose != NULL);
 
-  arrfree(pose->joints);
-  arrfree(pose->parents);
+  arrfree(pose->nodes);
 }
 
 void pose_resize(pose_s *pose, size_t size) {
 
   assert(pose != NULL);
 
-  size_t joint_old_size = arrlenu(pose->joints);
-  arrsetlen(pose->joints, size);
-  size_t joint_new_size = arrlenu(pose->joints);
-  for (size_t i = 0; i < (joint_new_size - joint_old_size); ++i) {
-    pose->joints[joint_old_size + i] = transform_zero();
-  }
+  size_t nodes_old_size = arrlenu(pose->nodes);
+  arrsetlen(pose->nodes, size);
+  size_t nodes_new_size = arrlenu(pose->nodes);
 
-  size_t parent_old_size = arrlenu(pose->parents);
-  arrsetlen(pose->parents, size);
-  size_t parent_new_size = arrlenu(pose->parents);
-  for (size_t i = 0; i < (parent_new_size - parent_old_size); ++i) {
-    pose->parents[parent_old_size + i] = 0;
+  for (size_t i = 0; i < (nodes_new_size - nodes_old_size); ++i) {
+    pose->nodes[nodes_old_size + i].joint = transform_zero();
+    pose->nodes[nodes_old_size + i].parent = 0;
   }
 }
 
 int32_t pose_get_parent(const pose_s *const pose, size_t index) {
   assert(pose != NULL);
-  assert(index < arrlenu(pose->joints));
-  return pose->parents[index];
+
+  assert(index < arrlenu(pose->nodes));
+  return pose->nodes[index].parent;
 }
 
 void pose_set_parent(pose_s *pose, uint32_t index, int parent) {
   assert(pose != NULL);
-  assert(index < arrlenu(pose->joints));
-  pose->parents[index] = parent;
+  assert(index < arrlenu(pose->nodes));
+
+  pose->nodes[index].parent = parent;
 }
 
 transform_s pose_get_local_transform(const pose_s *const pose, uint32_t index) {
   assert(pose != NULL);
-  assert(index < arrlenu(pose->joints));
-  return pose->joints[index];
+  assert(index < arrlenu(pose->nodes));
+  return pose->nodes[index].joint;
 }
 
 void pose_set_local_transform(pose_s *pose, uint32_t index, transform_s transform) {
   assert(pose != NULL);
-  assert(index < arrlenu(pose->joints));
+  assert(index < arrlenu(pose->nodes));
 
-  pose->joints[index] = transform;
+  pose->nodes[index].joint = transform;
 }
 
 transform_s pose_get_global_transform(const pose_s *const pose, uint32_t index) {
   assert(pose != NULL);
-  assert(index < arrlenu(pose->joints));
+  assert(index < arrlenu(pose->nodes));
 
-  transform_s result = pose->joints[index];
-  for (int32_t p = pose->parents[index]; p >= 0; p = pose->parents[p]) {
-    result = transform_combine(pose->joints[p], result);
+  transform_s result = pose->nodes[index].joint;
+  for (int32_t p = pose->nodes[index].parent; p >= 0; p = pose->nodes[p].parent) {
+    result = transform_combine(pose->nodes[p].joint, result);
   }
   return result;
 }
@@ -78,9 +74,10 @@ void pose_get_matrix_palette(pose_t *pose, mat4 **out, unsigned int length) {
   }
 }
 #else
+
 void pose_get_matrix_palette(const pose_s *const pose, mat4 **out) {
-  int32_t size = (int32_t)arrlenu(pose->joints);
-  int32_t length = arrlenu((*out));
+  int32_t size = (int32_t)arrlenu(pose->nodes);
+  int32_t length = (int32_t)arrlenu((*out));
 
   if (length != size) {
     arrsetlen(*out, size);
@@ -91,14 +88,14 @@ void pose_get_matrix_palette(const pose_s *const pose, mat4 **out) {
 
   int32_t i = 0;
   for (; i < size; ++i) {
-    int32_t parent = pose->parents[i];
+    int32_t parent = pose->nodes[i].parent;
     // this breaks ascending order, so the previous calculated results cannot be
     // used
     if (parent > i) {
       break;
     }
 
-    mat4 global = transform_to_mat4(pose->joints[i]);
+    mat4 global = transform_to_mat4(pose->nodes[i].joint);
     if (parent >= 0) {
       global = mat4_mul((*out)[parent], global);
     }
@@ -117,17 +114,17 @@ bool pose_is_equal(const pose_s *const a, const pose_s *const b) {
   if (a == NULL || b == NULL)
     return false;
 
-  if (arrlenu(a->joints) != arrlenu(b->joints)) {
+  if (arrlenu(a->nodes) != arrlenu(b->nodes)) {
     return false;
   }
 
-  size_t size = arrlenu(a->joints);
+  size_t size = arrlenu(a->nodes);
   for (size_t i = 0; i < size; ++i) {
-    transform_s a_local = a->joints[i];
-    transform_s b_local = b->joints[i];
+    transform_s a_local = a->nodes[i].joint;
+    transform_s b_local = b->nodes[i].joint;
 
-    int32_t a_parent = a->parents[i];
-    int32_t b_parent = b->parents[i];
+    int32_t a_parent = a->nodes[i].parent;
+    int32_t b_parent = b->nodes[i].parent;
 
     if (a_parent != b_parent)
       return false;
@@ -145,21 +142,19 @@ bool pose_is_equal(const pose_s *const a, const pose_s *const b) {
   return true;
 }
 
-bool pose_not_equal(const pose_s *const a, const pose_s *const b) { return !pose_is_equal(a, b); }
+bool pose_not_equal(const pose_s *const a, const pose_s *const b) {
+  return !pose_is_equal(a, b);
+}
 
 void pose_copy(pose_s *dest, const pose_s *const src) {
 
   assert((src != dest) || pose_not_equal(src, dest));
 
-  size_t size = arrlenu(src->joints);
+  size_t size = arrlenu(src->nodes);
   pose_resize(dest, size);
-  // arrsetlen(to->parents, arrlenu(from->parents));
-  // arrsetlen(to->joints, arrlenu(from->joints));
 
-  if (size != 0) {
-    memcpy(dest->parents, src->parents, sizeof(int32_t) * size);
-    memcpy(dest->joints, src->joints, sizeof(transform_s) * size);
-  }
+  if (size != 0)
+    memcpy(dest->nodes, src->nodes, sizeof(node_s) * size);
 }
 
 // returns true if the search node is a descendant of the given root node
@@ -179,7 +174,7 @@ bool pose_is_in_hierarchy(const pose_s *const pose, uint32_t root, uint32_t sear
 }
 
 void pose_blend(pose_s *output, const pose_s *const a, const pose_s *const b, float t, int root) {
-  size_t num_joints = arrlenu(output->joints);
+  size_t num_joints = arrlenu(output->nodes);
   for (size_t i = 0; i < num_joints; ++i) {
     if (root >= 0) {
       // don't blend if they aren't within the same hierarchy

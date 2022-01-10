@@ -5,7 +5,7 @@ bone_map_s *rearrange_skeleton(struct skeleton_s *skeleton) {
   pose_s *rest_pose = skeleton_get_rest_pose(skeleton);
   pose_s *bind_pose = skeleton_get_bind_pose(skeleton);
 
-  size_t size = arrlenu(rest_pose->joints);
+  size_t size = arrlenu(rest_pose->nodes);
   if (size == 0)
     return NULL;
 
