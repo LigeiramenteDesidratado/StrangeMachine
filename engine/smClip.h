@@ -25,7 +25,7 @@ float clip_sample(const struct clip_s *const clip, pose_s *pose, float t);
 void clip_recalculate_duration(struct clip_s *clip);
 transform_track_s *clip_get_transform_track_from_joint(struct clip_s *clip, uint32_t joint);
 char *clip_get_name(const struct clip_s *const clip);
-void clip_resize_tracks(struct clip_s *clip, uint32_t value);
+void clip_resize_tracks(struct clip_s *clip, size_t size);
 float clip_get_duration(const struct clip_s *const clip);
 float clip_get_start_time(const struct clip_s *const clip);
 float clip_get_end_time(const struct clip_s *const clip);

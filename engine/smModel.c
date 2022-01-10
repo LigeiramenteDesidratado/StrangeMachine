@@ -7,6 +7,7 @@
 #include "smShaderProgram.h"
 #include "smTexture.h"
 #include "smUniform.h"
+#include "smMem.h"
 
 typedef struct {
 
@@ -20,7 +21,7 @@ typedef struct {
 static bool string_suffix(const char *str, const char *suffix);
 
 model_s *model_new(void) {
-  model_s *model = calloc(1, sizeof(model_s));
+  model_s *model = SM_CALLOC(1, sizeof(model_s));
 
   assert(model != NULL);
 
@@ -71,7 +72,7 @@ void model_dtor(model_s *model) {
 
   texture_dtor(&model->texture);
 
-  free(model);
+  SM_FREE(model);
   model = NULL;
 }
 

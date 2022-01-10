@@ -1,4 +1,5 @@
 #include "smCrossFadeTarget.h"
+#include "smMem.h"
 #include "smSkeleton.h"
 #include "util/common.h"
 
@@ -17,7 +18,7 @@ void controller_skeleton_set(controller_s *controller, struct skeleton_s *skelet
 
 // Allocate memory
 controller_s *controller_new(void) {
-  controller_s *controller = (controller_s *)calloc(1, sizeof(controller_s));
+  controller_s *controller = (controller_s *)SM_CALLOC(1, sizeof(controller_s));
   assert(controller != NULL);
 
   return controller;
@@ -43,7 +44,7 @@ void controller_dtor(controller_s *controller) {
 
   pose_dtor(&controller->pose);
 
-  free(controller);
+  SM_FREE(controller);
   controller = NULL;
 }
 

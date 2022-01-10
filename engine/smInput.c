@@ -1,3 +1,4 @@
+#include "smMem.h"
 #include "util/common.h"
 #include <SDL2/SDL_events.h>
 
@@ -21,7 +22,7 @@ static input_s *GINPUT = NULL;
 
 void input_init(void) {
   assert(GINPUT == NULL && "input initialized twice");
-  GINPUT = (input_s *)calloc(1, sizeof(input_s));
+  GINPUT = (input_s *)SM_CALLOC(1, sizeof(input_s));
   assert(GINPUT != NULL);
 }
 
@@ -120,6 +121,6 @@ void input_do(SDL_Event *e) {
 
 void input_tear_down(void) {
   assert(GINPUT != NULL && "trying to finilize a not initialized input");
-  free(GINPUT);
+  SM_FREE(GINPUT);
   GINPUT = NULL;
 }

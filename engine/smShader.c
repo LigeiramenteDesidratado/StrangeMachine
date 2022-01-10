@@ -1,4 +1,5 @@
 #include "glad/glad.h"
+#include "smMem.h"
 #include "util/common.h"
 #include "util/file.h"
 
@@ -20,15 +21,15 @@ bool shader_ctor(GLuint *shader, const char *vs, const char *fs) {
 
   char *f_source = read_file(fs);
   if (!f_source) {
-    free(v_source);
+    SM_FREE(v_source);
     return false;
   }
 
   GLuint vert = shader_compile_vert(v_source);
   GLuint frag = shader_compile_frag(f_source);
 
-  free(v_source);
-  free(f_source);
+  SM_FREE(v_source);
+  SM_FREE(f_source);
 
   if (!vert || !frag)
     return false;

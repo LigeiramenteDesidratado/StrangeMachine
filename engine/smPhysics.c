@@ -2,11 +2,12 @@
 #include "util/common.h"
 
 #include "smCollision.h"
+#include "smMem.h"
 #include "smMesh.h"
 #include "smShapes.h"
 #include "smText.h"
 
-#define GRAVITY         9.8f
+#define GRAVITY         3.1f
 #define GROUND_FRICTION 0.8f
 #define AIR_FRICTION    0.9f
 
@@ -77,7 +78,7 @@ void physics_step(void) {
 
 // Allocate memory
 physics_s *physics_new(void) {
-  physics_s *physics = (physics_s *)calloc(1, sizeof(physics_s));
+  physics_s *physics = (physics_s *)SM_CALLOC(1, sizeof(physics_s));
 
   assert(physics != NULL);
 
@@ -167,7 +168,7 @@ bool physics_terrain_ctor(physics_s *physics, vec3 pos, mesh_s *terrain_model) {
 void physics_dtor(physics_s *physics) {
   assert(physics != NULL);
 
-  free(physics);
+  SM_FREE(physics);
 }
 
 void physics_do_late(physics_s *physics) {

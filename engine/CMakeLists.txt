@@ -17,6 +17,7 @@ message(STATUS "C flags, Release configuration: ${CMAKE_C_FLAGS_RELEASE}")
 
 add_library(${PROJECT_NAME} STATIC 
   glad.c
+  smLoader.c
   smAttribute.c
   smCamera.c
   smClip.c
@@ -43,7 +44,7 @@ add_library(${PROJECT_NAME} STATIC
   smTrack.c
   smTransformTrack.c
   smUniform.c
-  smLoader.c
+  smMem.c
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE -fPIC -Wall)

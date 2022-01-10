@@ -9,8 +9,10 @@ also keep track of metadata, such as the name of the clip, whether the clip is
 looping, and information about the time or duration of the clip. */
 
 #include "smPose.h"
+#include "smMem.h"
 #include "smTransformTrack.h"
 #include "util/common.h"
+#include <assert.h>
 
 typedef struct {
   //  The clip_t struct needs to maintain an array of transform tracks. This is
@@ -32,7 +34,7 @@ float clip_get_duration(const clip_s *const clip);
 
 // Allocate memory
 clip_s *clip_new(void) {
-  clip_s *clip = (clip_s *)calloc(1, sizeof(clip_s));
+  clip_s *clip = (clip_s *)SM_CALLOC(1, sizeof(clip_s));
 
   assert(clip != NULL);
 
@@ -62,11 +64,11 @@ void clip_dtor(clip_s *clip) {
   clip->tracks = NULL;
 
   if (clip->name != NULL) {
-    free(clip->name);
+    SM_FREE(clip->name);
     clip->name = NULL;
   }
 
-  free(clip);
+  SM_FREE(clip);
   clip = NULL;
 }
 
@@ -209,10 +211,10 @@ transform_track_s *clip_get_transform_track_from_joint(clip_s *clip, uint32_t jo
   return &arrlast(clip->tracks);
 }
 
-void clip_resize_tracks(clip_s *clip, uint32_t value) {
+void clip_resize_tracks(clip_s *clip, size_t size) {
   assert(clip != NULL);
 
-  clip->tracks = realloc(clip->tracks, value);
+  arrsetcap(clip->tracks, size);
 }
 
 char *clip_get_name(const clip_s *const clip) {
@@ -224,7 +226,7 @@ char *clip_get_name(const clip_s *const clip) {
 static void __clip_set_name(clip_s *clip, const char *name) {
   assert(clip != NULL);
 
-  clip->name = (char *)malloc((strlen(name) + 1) * sizeof(char));
+  clip->name = (char *)SM_MALLOC((strlen(name) + 1) * sizeof(char));
   strcpy(clip->name, name);
 }
 

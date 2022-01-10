@@ -2,6 +2,7 @@
 #define UTIL_FILE_H
 
 #include "util/common.h"
+#include "smMem.h"
 
 char* read_file(const char* filename) {
 
@@ -21,13 +22,13 @@ char* read_file(const char* filename) {
       fseek(f, 0, SEEK_SET);
 
       if (size > 0) {
-        text = (char*)malloc((size + 1) * sizeof(char));
+        text = (char*)SM_MALLOC((size + 1) * sizeof(char));
 
         uint64_t count = fread(text, sizeof(char), size, f);
         // WARNING: \r\n is converted to \n on reading, so,
         // read bytes count gets reduced by the number of lines
         if (count < size)
-          text = realloc(text, count + 1);
+          text = SM_REALLOC(text, count + 1);
 
         // Zero-terminate the char*
         text[count] = '\0';

@@ -5,6 +5,7 @@
 #include "smUniform.h"
 
 #include "smAttribute.h"
+#include "smMem.h"
 #include "smCamera.h"
 #include "smDebug.h"
 #include "smInput.h"
@@ -134,6 +135,8 @@ int main(int argc, char *argv[]) {
   SDL_GL_DeleteContext(gc);
   SDL_DestroyWindow(window);
   SDL_Quit();
+
+  __smmem_print();
 
   return 0;
 }

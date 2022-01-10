@@ -2,6 +2,7 @@
 #include "util/common.h"
 
 #include "smController.h"
+#include "smMem.h"
 #include "smGLTFLoader.h"
 #include "smInput.h"
 #include "smRearrangeBones.h"
@@ -29,7 +30,7 @@ typedef struct {
 
 void next_animation(skinned_model_s *sample);
 skinned_model_s *skinned_model_new(void) {
-  skinned_model_s *skinned_model = calloc(1, sizeof(skinned_model_s));
+  skinned_model_s *skinned_model = SM_CALLOC(1, sizeof(skinned_model_s));
 
   assert(skinned_model != NULL);
 
@@ -97,7 +98,7 @@ void skinned_model_dtor(skinned_model_s *skinned_model) {
   }
   arrfree(skinned_model->meshes);
 
-  free(skinned_model);
+  SM_FREE(skinned_model);
   skinned_model = NULL;
 }
 

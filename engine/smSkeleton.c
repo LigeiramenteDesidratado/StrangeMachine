@@ -1,3 +1,4 @@
+#include "smMem.h"
 #include "smPose.h"
 #include "util/common.h"
 
@@ -16,7 +17,7 @@ void skeleton_set(skeleton_s *skeleton, pose_s *rest, pose_s *bind, const char *
 
 // Allocate memory
 skeleton_s *skeleton_new(void) {
-  skeleton_s *skeleton = (skeleton_s *)calloc(1, sizeof(skeleton_s));
+  skeleton_s *skeleton = (skeleton_s *)SM_CALLOC(1, sizeof(skeleton_s));
 
   assert(skeleton != NULL);
 
@@ -43,7 +44,7 @@ void skeleton_dtor(skeleton_s *skeleton) {
   pose_dtor(&skeleton->bind_pose);
   pose_dtor(&skeleton->rest_pose);
 
-  free(skeleton);
+  SM_FREE(skeleton);
   skeleton = NULL;
 }
 
