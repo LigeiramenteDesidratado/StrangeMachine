@@ -1,9 +1,8 @@
 #ifndef SCENE_P_H
 #define SCENE_P_H
 
-#include "scene_defs.h"
 #include "math/vec3.h"
-
+#include "scene_defs.h"
 
 // Polymorphic behavior functions
 typedef void (*do_f)(void *ptr, float dt);
@@ -16,8 +15,8 @@ typedef vec3 (*get_look_at_f)(void *ptr);
    are supposed to be polymorphic and can be overridden by the child classes.
 */
 typedef struct {
-  // id will works like a runtime type check
-  SCENE_EX6 __id;
+  /* id will works like a runtime type check */
+  scenes_e __id;
 
   do_f scene_do;
   /* do_late_t scene_do_late; */
@@ -28,4 +27,3 @@ typedef struct {
 } scene_s;
 
 #endif
-

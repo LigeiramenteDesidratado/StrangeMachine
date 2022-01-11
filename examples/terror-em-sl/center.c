@@ -35,7 +35,7 @@ center_s *center_new(void) {
   return center;
 }
 
-bool center_ctor(center_s *center, SCENE_EX6 id) {
+bool center_ctor(center_s *center, scenes_e id) {
 
   scene_ctor((struct scene_s *)center, id);
   center->scene.scene_do = __one_do;

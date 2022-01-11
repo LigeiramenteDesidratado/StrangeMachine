@@ -10,13 +10,8 @@
 #include "math/quat.h"
 #include "math/vec3.h"
 
-typedef unsigned char TRACK_KIND_EX2;
-#define SCALAR_EX2 ((TRACK_KIND_EX2)0x01)
-#define VECTOR_EX2 ((TRACK_KIND_EX2)0x02)
-#define QUATERNION_EX2 ((TRACK_KIND_EX2)0x03)
-
-// The frame_s struct is used to store keyframes in a animation track. An
-// animation track is a collection of keyframes.
+/* The frame_s struct is used to store keyframes in a animation track. An animation track is a collection of keyframes.
+ */
 typedef struct {
   float *value;
   float *in;
@@ -33,13 +28,13 @@ typedef struct {
 
   uint32_t *sampled_frames;
 
-  INTERPOLATION_EX3 interpolation;
+  interpolation_e interpolation;
 
 } track_s;
 
-#define track_new() ((track_s){0, .interpolation = LINEAR_EX3})
+#define track_new() ((track_s){0, .interpolation = LINEAR_INTERP})
 
-// Destructor
+/* Destructor */
 void track_dtor(track_s *track);
 float track_get_start_time(const track_s *const track);
 float track_get_end_time(const track_s *const track);

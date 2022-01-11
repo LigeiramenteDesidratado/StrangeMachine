@@ -127,11 +127,11 @@ void skinned_model_do(skinned_model_s *skinned_model, float dt) {
 void skinned_model_draw(skinned_model_s *skinned_model) {
   assert(skinned_model != NULL);
 
-  shader_bind(SHADERS[SKINNED_SHADER_EX7]);
-  uniform_set_array(glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "animated"), skinned_model->pose_palette,
+  shader_bind(SHADERS[SKINNED_SHADER]);
+  uniform_set_array(glGetUniformLocation(SHADERS[SKINNED_SHADER], "animated"), skinned_model->pose_palette,
                     (int32_t)arrlenu(skinned_model->pose_palette));
 
-  texture_set(&skinned_model->texture, glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "tex0"), 0);
+  texture_set(&skinned_model->texture, glGetUniformLocation(SHADERS[SKINNED_SHADER], "tex0"), 0);
 
   uint8_t flags = 0;
   MASK_SET(flags, 1 << skinned_mesh_attr_locs.position);

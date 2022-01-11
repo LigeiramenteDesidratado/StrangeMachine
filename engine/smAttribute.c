@@ -1,7 +1,7 @@
 #include "smAttribute.h"
 #include "util/common.h"
 
-bool attribute_ctor(attribute_s *attribute, EX1 kind) {
+bool attribute_ctor(attribute_s *attribute, type_kind_e kind) {
 
   assert(attribute != NULL);
 
@@ -59,23 +59,19 @@ void attribute_bind_to_pro(attribute_s const *attribute, uint8_t slot, GLsizei s
   glEnableVertexAttribArray(slot);
 
   switch (attribute->kind) {
-  case INT_EX1:
-    glVertexAttribPointer(slot, 1, GL_FLOAT, GL_FALSE, 0, (void *)0);
+  case INT_KIND: /* Fallthrough */
+  case FLOAT_KIND:
+    glVertexAttribPointer(slot, 1, GL_FLOAT, GL_FALSE, stride, pointer);
     break;
-  case IVEC4_EX1:
-    glVertexAttribPointer(slot, 4, GL_FLOAT, GL_FALSE, 0, (void *)0);
+  case IVEC4_KIND: /* Fallthrough */
+  case VEC4_KIND:
+    glVertexAttribPointer(slot, 4, GL_FLOAT, GL_FALSE, stride, pointer);
     break;
-  case FLOAT_EX1:
-    glVertexAttribPointer(slot, 1, GL_FLOAT, GL_FALSE, 0, 0);
+  case VEC2_KIND:
+    glVertexAttribPointer(slot, 2, GL_FLOAT, GL_FALSE, stride, pointer);
     break;
-  case VEC2_EX1:
-    glVertexAttribPointer(slot, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    break;
-  case VEC3_EX1:
-    glVertexAttribPointer(slot, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    break;
-  case VEC4_EX1:
-    glVertexAttribPointer(slot, 4, GL_FLOAT, GL_FALSE, 0, 0);
+  case VEC3_KIND:
+    glVertexAttribPointer(slot, 3, GL_FLOAT, GL_FALSE, stride, pointer);
     break;
 
   default:

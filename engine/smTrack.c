@@ -1,9 +1,7 @@
 #include "smTrack.h"
 #include "util/common.h"
 
-#define SCALAR_TRACK    1
-#define VECTOR_TRACK    3
-#define QUATERION_TRACK 4
+typedef enum { SCALAR_TRACK_KIND = 0x01, VECTOR_TRACK_KIND = 0x02, QUATERNION_TRACK_KIND = 0x04 } track_kind_e;
 
 static vec3 __track_sample_constant_vec3(track_s *track, float t, bool looping);
 static vec3 __track_sample_cubic_vec3(track_s *track, float time, bool looping);
@@ -56,13 +54,13 @@ float track_get_end_time(const track_s *const track) {
 
 float track_sample_float(track_s *track, float time, bool looping) {
   switch (track->interpolation) {
-  case CONSTANT_EX3:
+  case CONSTANT_INTERP:
     return __track_sample_constant_float(track, time, looping);
     break;
-  case CUBIC_EX3:
+  case CUBIC_INTERP:
     return __track_sample_cubic_float(track, time, looping);
     break;
-  case LINEAR_EX3:
+  case LINEAR_INTERP:
     return __track_sample_linear_float(track, time, looping);
     break;
   default:
@@ -74,13 +72,13 @@ float track_sample_float(track_s *track, float time, bool looping) {
 vec3 track_sample_vec3(track_s *track, float time, bool looping) {
 
   switch (track->interpolation) {
-  case CONSTANT_EX3:
+  case CONSTANT_INTERP:
     return __track_sample_constant_vec3(track, time, looping);
     break;
-  case CUBIC_EX3:
+  case CUBIC_INTERP:
     return __track_sample_cubic_vec3(track, time, looping);
     break;
-  case LINEAR_EX3:
+  case LINEAR_INTERP:
     return __track_sample_linear_vec3(track, time, looping);
     break;
   default:
@@ -91,17 +89,16 @@ vec3 track_sample_vec3(track_s *track, float time, bool looping) {
 
 quat track_sample_quat(track_s *track, float time, bool looping) {
   switch (track->interpolation) {
-  case CONSTANT_EX3:
+  case CONSTANT_INTERP:
     return __track_sample_constant_quat(track, time, looping);
     break;
-  case CUBIC_EX3:
+  case CUBIC_INTERP:
     return __track_sample_cubic_quat(track, time, looping);
     break;
-  case LINEAR_EX3:
+  case LINEAR_INTERP:
     return __track_sample_linear_quat(track, time, looping);
     break;
   default:
-    // TODO: Decent log system
     log_warn("unkown iterpolation");
   }
   return quat_identity();
@@ -190,14 +187,14 @@ size_t track_get_frame_size(track_s *track) {
   return arrlenu(track->frames);
 }
 
-INTERPOLATION_EX3 track_get_interpolation(track_s *track) {
+interpolation_e track_get_interpolation(track_s *track) {
 
   assert(track != NULL);
 
   return track->interpolation;
 }
 
-void track_set_interpolation(track_s *track, INTERPOLATION_EX3 interpolation) {
+void track_set_interpolation(track_s *track, interpolation_e interpolation) {
   assert(track != NULL);
 
   track->interpolation = interpolation;
@@ -420,14 +417,14 @@ static float __track_sample_cubic_float(track_s *track, float time, bool looping
   float slope1; // track_cast_float(&frame_get_out(track->frames[this_frame])) *
                 // frame_delta;
 
-  memcpy(&slope1, track->frames[this_frame].out, SCALAR_TRACK * flt_size);
+  memcpy(&slope1, track->frames[this_frame].out, SCALAR_TRACK_KIND * flt_size);
   slope1 = slope1 * frame_delta;
 
   float point2 = track->frames[next_frame].value[0];
   float slope2; // track_cast_float(&frame_get_out(track->frames[next_frame])) *
                 // frame_delta;
 
-  memcpy(&slope2, track->frames[next_frame].in, SCALAR_TRACK * flt_size);
+  memcpy(&slope2, track->frames[next_frame].in, SCALAR_TRACK_KIND * flt_size);
   slope2 = slope2 * frame_delta;
 
   return __track_hermite_float(t, point1, slope1, point2, slope2);
@@ -496,14 +493,14 @@ static vec3 __track_sample_cubic_vec3(track_s *track, float time, bool looping) 
   vec3 slope1; // track_cast_vec3(&frame_get_out(track->frames[this_frame])) *
                // frame_delta;
 
-  memcpy(&slope1, track->frames[this_frame].out, VECTOR_TRACK * flt_size);
+  memcpy(&slope1, track->frames[this_frame].out, VECTOR_TRACK_KIND * flt_size);
   slope1 = vec3_scale(slope1, frame_delta);
 
   vec3 point2 = track_cast_vec3(&track->frames[next_frame].value[0]);
   vec3 slope2; // track_cast_vec3(&frame_get_out(track->frames[next_frame])) *
                // frame_delta;
 
-  memcpy(&slope2, track->frames[next_frame].in, VECTOR_TRACK * flt_size);
+  memcpy(&slope2, track->frames[next_frame].in, VECTOR_TRACK_KIND * flt_size);
   slope2 = vec3_scale(slope2, frame_delta);
 
   return __track_hermite_vec3(t, point1, slope1, point2, slope2);
@@ -571,14 +568,14 @@ static quat __track_sample_cubic_quat(track_s *track, float time, bool looping) 
   quat slope1; // track_cast_vec3(&frame_get_out(track->frames[this_frame])) *
                // frame_delta;
 
-  memcpy(&slope1, track->frames[this_frame].out, QUATERION_TRACK * flt_size);
+  memcpy(&slope1, track->frames[this_frame].out, QUATERNION_TRACK_KIND * flt_size);
   slope1 = quat_scale(slope1, frame_delta);
 
   quat point2 = track_cast_quat(&track->frames[next_frame].value[0]);
   quat slope2; // track_cast_quat(&frame_get_out(track->frames[next_frame])) *
                // frame_delta;
 
-  memcpy(&slope2, track->frames[next_frame].in, QUATERION_TRACK * flt_size);
+  memcpy(&slope2, track->frames[next_frame].in, QUATERNION_TRACK_KIND * flt_size);
   slope2 = quat_scale(slope2, frame_delta);
 
   return __track_hermite_quat(t, point1, slope1, point2, slope2);

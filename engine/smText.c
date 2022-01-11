@@ -16,13 +16,13 @@ typedef struct {
   texture_s texture;
 
   vec3 *positions;
-  attribute_s position_attr; // VEC3_EX1
+  attribute_s position_attr; // VEC3_KIND
 
   vec2 *tex_coords;
-  attribute_s uv_attr; // VEC2_EX1
+  attribute_s uv_attr; // VEC2_KIND
 
   vec3 *color;
-  attribute_s color_attr; // VEC2_EX1
+  attribute_s color_attr; // VEC2_KIND
 
   /* index_buffer_s index_buffer; */
   /* uint32_t *indices; */
@@ -34,15 +34,15 @@ text_s TEXT = {0};
 void text_init(void) {
 
   TEXT.position_attr = attribute_new();
-  if (!attribute_ctor(&TEXT.position_attr, VEC3_EX1))
+  if (!attribute_ctor(&TEXT.position_attr, VEC3_KIND))
     exit(1);
 
   TEXT.uv_attr = attribute_new();
-  if (!attribute_ctor(&TEXT.uv_attr, VEC2_EX1))
+  if (!attribute_ctor(&TEXT.uv_attr, VEC2_KIND))
     exit(1);
 
   TEXT.color_attr = attribute_new();
-  if (!attribute_ctor(&TEXT.color_attr, VEC3_EX1))
+  if (!attribute_ctor(&TEXT.color_attr, VEC3_KIND))
     exit(1);
 
   TEXT.positions = NULL;
@@ -141,7 +141,7 @@ void text_flush(void) {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_DEPTH_TEST);
   /* glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
-  shader_bind(SHADERS[TEXT_SHADER_EX7]);
+  shader_bind(SHADERS[TEXT_SHADER]);
 
   static int angle = 360;
   if (angle++ >= 360)
@@ -154,12 +154,12 @@ void text_flush(void) {
   mat4 model = transform_to_mat4(transf);
   /* model = mat4_identity(); */
 
-  uniform_set_value(glGetUniformLocation(SHADERS[TEXT_SHADER_EX7], "model"), model);
+  uniform_set_value(glGetUniformLocation(SHADERS[TEXT_SHADER], "model"), model);
 
   attribute_bind_to(&TEXT.position_attr, text_attr_locs.position);
   attribute_bind_to(&TEXT.uv_attr, text_attr_locs.tex_coord);
   attribute_bind_to(&TEXT.color_attr, text_attr_locs.color);
-  texture_set(&TEXT.texture, glGetUniformLocation(SHADERS[TEXT_SHADER_EX7], "tex0"), 0);
+  texture_set(&TEXT.texture, glGetUniformLocation(SHADERS[TEXT_SHADER], "tex0"), 0);
 
   glDrawArrays(GL_TRIANGLES, 0, arrlenu(TEXT.positions));
 

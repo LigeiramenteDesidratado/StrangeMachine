@@ -24,10 +24,10 @@ typedef struct {
   index_buffer_s index_buffer;
 
   vec3 aabb_debug[24];
-  attribute_s debug_attr; // VEC3_EX1
+  attribute_s debug_attr; // VEC3_KIND
 
   vec3 debug_color;
-  attribute_s debug_color_attr; // VEC3_EX1
+  attribute_s debug_color_attr; // VEC3_KIND
 
 } mesh_s;
 

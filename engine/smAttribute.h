@@ -10,20 +10,21 @@
 #include "math/vec3.h"
 #include "math/vec4.h"
 
-// ENUM X ID
-typedef unsigned char EX1;
-#define FLOAT_EX1 ((EX1)0x01)
-#define INT_EX1   ((EX1)0x02)
-#define VEC2_EX1  ((EX1)0x03)
-#define VEC3_EX1  ((EX1)0x04)
-#define VEC4_EX1  ((EX1)0x05)
-#define IVEC4_EX1 ((EX1)0x06)
+typedef enum {
+  FLOAT_KIND = 0x01,
+  INT_KIND = 0x02,
+  VEC2_KIND = 0x03,
+  VEC3_KIND = 0x04,
+  VEC4_KIND = 0x05,
+  IVEC4_KIND = 0x06
+
+} type_kind_e;
 
 typedef struct {
   // vertex buffer objects
   GLuint vbo;
   size_t length;
-  EX1 kind;
+  type_kind_e kind;
 
 } attribute_s;
 
@@ -37,7 +38,7 @@ extern struct Statistics stats;
 #define attribute_new() ((attribute_s){.vbo = 0, .length = 0, .kind = 0})
 
 // Constructor
-bool attribute_ctor(attribute_s *attribute, EX1 kind);
+bool attribute_ctor(attribute_s *attribute, type_kind_e kind);
 
 // Destructor
 void attribute_dtor(attribute_s *attribute);

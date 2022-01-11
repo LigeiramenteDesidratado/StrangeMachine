@@ -89,12 +89,12 @@ void model_do(model_s *model) {
 
 void model_draw(const model_s *const model) {
 
-  shader_bind(SHADERS[STATIC_SHADER_EX7]);
+  shader_bind(SHADERS[STATIC_SHADER]);
 
   mat4 md = transform_to_mat4(model->transform);
-  uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "model"), md);
+  uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER], "model"), md);
 
-  texture_set(&model->texture, glGetUniformLocation(SHADERS[STATIC_SHADER_EX7], "tex0"), 0);
+  texture_set(&model->texture, glGetUniformLocation(SHADERS[STATIC_SHADER], "tex0"), 0);
 
   uint8_t flags = 0;
   MASK_SET(flags, 1 << mesh_attr_locs.position);

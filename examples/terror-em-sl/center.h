@@ -9,7 +9,7 @@ struct center_s;
 struct center_s *center_new(void);
 
 // Constructor
-int center_ctor(struct center_s *center, SCENE_EX6 id);
+int center_ctor(struct center_s *center, scenes_e id);
 
 // Destructor
 void center_dtor(struct center_s *lvl_one);

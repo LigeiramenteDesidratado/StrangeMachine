@@ -15,18 +15,17 @@ void physics_init(void) {
   // TODO: implement
 }
 
-// ENUM X ID
-typedef unsigned char EX0;
-// TODO: more shapes?
-#define EMPTY_EX0   ((EX0)(0 << 0)) // 0b00000000 0
-#define SPHERE_EX0  ((EX0)(1 << 0)) // 0b00000001 1
-#define CAPSULE_EX0 ((EX0)(1 << 1)) // 0b00000010 2
-#define MESH_EX0    ((EX0)(1 << 2)) // 0b00000100 4
+typedef enum {
+  EMPTY = (0 << 0),   /* 0b00000000 0 */
+  SPHERE = (1 << 0),  /* 0b00000001 1 */
+  CAPSULE = (1 << 1), /* 0b00000010 2 */
+  MESH = (1 << 2),    /* 0b00000100 4 */
+} body_e;
 
 typedef struct {
 
   int8_t __id;
-  EX0 entity_type;
+  body_e entity_type;
 
   vec3 position;
   vec3 force;
@@ -47,13 +46,13 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against);
 static void __handle_sphere_mesh(physics_s *physics, physics_s *against);
 static void __handle_default(physics_s *physics, physics_s *against);
 
-static void (*handler[SPHERE_EX0 | CAPSULE_EX0 | MESH_EX0])(physics_s *physics, physics_s *against) = {
-    [SPHERE_EX0 | SPHERE_EX0] = __handle_default,  // TODO: implement
-    [SPHERE_EX0 | CAPSULE_EX0] = __handle_default, // TODO: implement...
-    [SPHERE_EX0 | MESH_EX0] = __handle_sphere_mesh,
-    [CAPSULE_EX0 | CAPSULE_EX0] = __handle_default, // TODO: implement...
-    [CAPSULE_EX0 | MESH_EX0] = __handle_capsule_mesh,
-    [MESH_EX0 | MESH_EX0] = __handle_default, // TODO: implement...
+static void (*handler[SPHERE | CAPSULE | MESH])(physics_s *physics, physics_s *against) = {
+    [SPHERE | SPHERE] = __handle_default,  // TODO: implement
+    [SPHERE | CAPSULE] = __handle_default, // TODO: implement...
+    [SPHERE | MESH] = __handle_sphere_mesh,
+    [CAPSULE | CAPSULE] = __handle_default, // TODO: implement...
+    [CAPSULE | MESH] = __handle_capsule_mesh,
+    [MESH | MESH] = __handle_default, // TODO: implement...
 };
 
 // Globals
@@ -96,13 +95,13 @@ bool physics_sphere_ctor(physics_s *physics, vec3 pos, float radius) {
     return false;
   }
 
-  if (physics->entity_type != EMPTY_EX0 || physics->__id != 0) {
+  if (physics->entity_type != EMPTY || physics->__id != 0) {
     --entity.count;
     log_warn("NON EMPTY PHYSICS BODY!\n");
     return false;
   }
   physics->__id = entity.count;
-  physics->entity_type = SPHERE_EX0;
+  physics->entity_type = SPHERE;
 
   physics->entity_body.sphere.center = pos;
   physics->entity_body.sphere.radius = radius;
@@ -123,13 +122,13 @@ bool physics_capsule_ctor(physics_s *physics, vec3 pos, float radius, float heig
     return false;
   }
 
-  if (physics->entity_type != EMPTY_EX0 || physics->__id != 0) {
+  if (physics->entity_type != EMPTY || physics->__id != 0) {
     --entity.count;
     log_warn("NON EMPTY PHYSICS BODY!\n");
     return false;
   }
   physics->__id = entity.count;
-  physics->entity_type = CAPSULE_EX0;
+  physics->entity_type = CAPSULE;
 
   physics->position = pos;
 
@@ -148,13 +147,13 @@ bool physics_terrain_ctor(physics_s *physics, vec3 pos, mesh_s *terrain_model) {
     return false;
   }
 
-  if (physics->entity_type != EMPTY_EX0 || physics->__id != 0) {
+  if (physics->entity_type != EMPTY || physics->__id != 0) {
     --entity.count;
     log_warn("NON EMPTY PHYSICS BODY!\n");
     return false;
   }
   physics->__id = entity.count;
-  physics->entity_type = MESH_EX0;
+  physics->entity_type = MESH;
 
   physics->entity_body.mesh_ref = terrain_model;
   physics->position = pos;
@@ -297,7 +296,7 @@ vec3 physics_get_pos(physics_s *physics) {
   assert(physics != NULL);
   vec3 pos = physics->position;
 
-  if (MASK_CHK(physics->entity_type, CAPSULE_EX0) > 0)
+  if (MASK_CHK(physics->entity_type, CAPSULE) > 0)
     pos.y -= physics->entity_body.capsule.radius;
 
   return pos;
@@ -346,7 +345,7 @@ static void __handle_sphere_mesh(physics_s *physics, physics_s *against) {
 
 capsule_s physics_get_capsule(physics_s *physics) {
 
-  if (physics->entity_type != CAPSULE_EX0) {
+  if (physics->entity_type != CAPSULE) {
     log_error("not a capsule body");
     return shapes_capsule_new((sphere_s){.center = vec3_zero(), .radius = 1.0f}, 2.0f);
   }

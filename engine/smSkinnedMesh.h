@@ -56,7 +56,6 @@ bool skinned_mesh_ctor(skinned_mesh_s *mesh);
 // Destructor
 void skinned_mesh_dtor(skinned_mesh_s *mesh);
 
-
 void skinned_mesh_copy(skinned_mesh_s *dest, const skinned_mesh_s *const src);
 void skinned_mesh_update_gl_buffers(skinned_mesh_s *mesh);
 void skinned_mesh_bind(const skinned_mesh_s *const mesh, uint8_t flag);

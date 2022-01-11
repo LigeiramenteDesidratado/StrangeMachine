@@ -9,8 +9,8 @@
 #define CAMERA_MOUSE_SCROLL_SENSITIVITY    1.4f
 
 typedef struct {
-  MODE_EX5 mode;
-  PROJECTION_EX4 projection;
+  cam_mode_e mode;
+  cam_projection_e projection;
 
   vec3 position;
   vec3 target, _next_target; // looks-at or front
@@ -32,7 +32,7 @@ static camera_s last_free_camera = {0};
 
 void camera_update_vectors(float dt);
 
-void camera_init(vec3 position, vec3 target, vec3 up, MODE_EX5 mode, PROJECTION_EX4 projection) {
+void camera_init(vec3 position, vec3 target, vec3 up, cam_mode_e mode, cam_projection_e projection) {
 
   CAMERA.move_speed = 12.0f;
   CAMERA.sensitive = 1.4f;
@@ -53,7 +53,7 @@ void camera_tear_down(void) {
 
 void camera_do(float dt) {
 
-  if (CAMERA.mode == THIRD_PERSON_EX5) {
+  if (CAMERA.mode == THIRD_PERSON) {
 
     float offset_x = input_get_x_rel_mouse();
     float offset_y = input_get_y_rel_mouse();
@@ -69,7 +69,7 @@ void camera_do(float dt) {
     }
   }
 
-  if (CAMERA.mode == FREE_EX5) {
+  if (CAMERA.mode == FREE) {
     if (input_scan_key(SDL_SCANCODE_W))
       CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.target, CAMERA.move_speed * dt));
 
@@ -114,7 +114,7 @@ void camera_set_target(vec3 target) {
 
 void camera_update_vectors(float dt) {
 
-  if (CAMERA.mode == THIRD_PERSON_EX5) {
+  if (CAMERA.mode == THIRD_PERSON) {
     CAMERA.target = vec3_lerp(CAMERA.target, CAMERA._next_target, 10 * dt);
 
     CAMERA.target_distance -= (input_get_mouse_scroll() * CAMERA_MOUSE_SCROLL_SENSITIVITY);
@@ -137,7 +137,7 @@ void camera_update_vectors(float dt) {
     CAMERA.position = vec3_lerp(CAMERA.position, nex_position, 10 * dt);
   }
 
-  if (CAMERA.mode == FREE_EX5) {
+  if (CAMERA.mode == FREE) {
 
     vec3 front;
     front.x = (cosf(CAMERA.angle.yaw * DEG2RAD) * cosf(CAMERA.angle.pitch * DEG2RAD));
@@ -153,7 +153,7 @@ void camera_update_vectors(float dt) {
 mat4 camera_get_view(void) {
 
   mat4 view;
-  if (CAMERA.mode == THIRD_PERSON_EX5)
+  if (CAMERA.mode == THIRD_PERSON)
     view = mat4_look_at(CAMERA.position, CAMERA.target, CAMERA.up);
   else
     view = mat4_look_at(CAMERA.position, vec3_add(CAMERA.position, CAMERA.target), CAMERA.up);
@@ -161,27 +161,27 @@ mat4 camera_get_view(void) {
   return view;
 }
 
-void camera_set_projection(PROJECTION_EX4 projection) {
+void camera_set_projection(cam_projection_e projection) {
   CAMERA.projection = projection;
 }
 
-void camera_set_mode(MODE_EX5 mode) {
+void camera_set_mode(cam_mode_e mode) {
 
   if (CAMERA.mode != mode) {
-    if (mode == THIRD_PERSON_EX5) {
+    if (mode == THIRD_PERSON) {
       last_free_camera = CAMERA;
     } else
       last_third_person_camera = CAMERA;
   } else
     return;
 
-  if (mode == THIRD_PERSON_EX5) {
+  if (mode == THIRD_PERSON) {
     if (last_third_person_camera.move_speed != 0.0f) {
       CAMERA = last_third_person_camera;
     }
     CAMERA.mode = mode;
   }
-  if (mode == FREE_EX5) {
+  if (mode == FREE) {
     if (last_free_camera.move_speed != 0.0f)
       CAMERA = last_free_camera;
 
@@ -192,7 +192,7 @@ void camera_set_mode(MODE_EX5 mode) {
 mat4 camera_get_projection_matrix(float aspect_ratio) {
 
   mat4 projection;
-  if (CAMERA.projection == PERSPECTIVE_EX4) {
+  if (CAMERA.projection == PERSPECTIVE) {
     projection = mat4_perspective(CAMERA.fovy, aspect_ratio, 0.01f, 100.0f);
 
   } else {
@@ -214,10 +214,10 @@ float camera_get_fovy() {
   return CAMERA.fovy;
 }
 
-PROJECTION_EX4 camera_get_projection() {
+cam_projection_e camera_get_projection() {
   return CAMERA.projection;
 }
 
-MODE_EX5 camera_get_mode() {
+cam_mode_e camera_get_mode() {
   return CAMERA.mode;
 }

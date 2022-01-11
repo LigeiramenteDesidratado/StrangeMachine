@@ -13,27 +13,27 @@ bool skinned_mesh_ctor(skinned_mesh_s *mesh) {
   assert(mesh != NULL);
 
   attribute_s position_attr = attribute_new();
-  if (!attribute_ctor(&position_attr, VEC3_EX1))
+  if (!attribute_ctor(&position_attr, VEC3_KIND))
     return false;
   mesh->vertex.position_attr = position_attr;
 
   attribute_s normal_attr = attribute_new();
-  if (!attribute_ctor(&normal_attr, VEC3_EX1))
+  if (!attribute_ctor(&normal_attr, VEC3_KIND))
     return false;
   mesh->vertex.normal_attr = normal_attr;
 
   attribute_s uv_attr = attribute_new();
-  if (!attribute_ctor(&uv_attr, VEC2_EX1))
+  if (!attribute_ctor(&uv_attr, VEC2_KIND))
     return false;
   mesh->vertex.uv_attr = uv_attr;
 
   attribute_s weight_attr = attribute_new();
-  if (!attribute_ctor(&weight_attr, VEC4_EX1))
+  if (!attribute_ctor(&weight_attr, VEC4_KIND))
     return false;
   mesh->weight_attr = weight_attr;
 
   attribute_s influence_attr = attribute_new();
-  if (!attribute_ctor(&influence_attr, IVEC4_EX1))
+  if (!attribute_ctor(&influence_attr, IVEC4_KIND))
     return false;
   mesh->influence_attr = influence_attr;
 

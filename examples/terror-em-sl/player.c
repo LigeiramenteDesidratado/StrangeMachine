@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "math/transform.h"
 #include "smCamera.h"
@@ -12,10 +13,12 @@
 #include "smText.h"
 #include "smUniform.h"
 
-typedef uint8_t STATE_EX8;
-#define IDLE_EX8 ((STATE_EX8)0x00)
-#define WALK_EX8 ((STATE_EX8)0x01)
-#define RUN_EX8  ((STATE_EX8)0x02)
+typedef enum {
+  IDLE = 0x00,
+  WALK = 0x01,
+  RUN = 0x02,
+
+} state_e;
 
 char *state_str[3] = {
     "idle",
@@ -27,7 +30,7 @@ typedef struct {
   struct skinned_model_s *model;
   struct physics_s *physics;
   transform_s transform;
-  STATE_EX8 state;
+  state_e state;
 
 } player_s;
 
@@ -48,7 +51,7 @@ bool player_ctor(player_s *player) {
   player->model = model;
 
   player->transform = transform_zero();
-  player->state = IDLE_EX8;
+  player->state = IDLE;
 
   struct physics_s *physics = physics_new();
   if (!physics_capsule_ctor(physics, vec3_new(0.0f, 9.0f, 0.0f), 0.9f, 5.3f)) {
@@ -101,14 +104,14 @@ void player_do(player_s *player, float dt) {
     quat rotation = quat_angle_axis(yaw, vec3_new(0, 1.0f, 0));
     player->transform.rotation = quat_slerp2(player->transform.rotation, rotation, 15 * dt);
 
-    player->state = WALK_EX8;
+    player->state = WALK;
   } else
-    player->state = IDLE_EX8;
+    player->state = IDLE;
 
   float sprint = 1;
   if (input_scan_key(SDL_SCANCODE_LSHIFT) && dir_len != 0) {
     sprint = 1.9f;
-    player->state = RUN_EX8;
+    player->state = RUN;
   }
 
   physics_add_force(player->physics, vec3_scale(direction, 1.1f * sprint));
@@ -134,9 +137,9 @@ void player_do(player_s *player, float dt) {
 void player_draw(player_s *player) {
   assert(player != NULL);
 
-  shader_bind(SHADERS[SKINNED_SHADER_EX7]);
-  mat4  p_trans = transform_to_mat4(player->transform);
-  uniform_set_value(glGetUniformLocation(SHADERS[SKINNED_SHADER_EX7], "model"), p_trans);
+  shader_bind(SHADERS[SKINNED_SHADER]);
+  mat4 p_trans = transform_to_mat4(player->transform);
+  uniform_set_value(glGetUniformLocation(SHADERS[SKINNED_SHADER], "model"), p_trans);
   skinned_model_draw(player->model);
   shader_unbind();
 }

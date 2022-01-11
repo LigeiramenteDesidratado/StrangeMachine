@@ -33,7 +33,7 @@ scene_s *scene_new(void) {
   return scene;
 }
 
-void scene_ctor(scene_s *scene, SCENE_EX6 id) {
+void scene_ctor(scene_s *scene, scenes_e id) {
   assert(scene != NULL);
 
   // Set the function pointer to point to the default definition
@@ -64,7 +64,7 @@ vec3 scene_get_look_at(scene_s *scene) {
   return scene->scene_get_look_at(scene);
 }
 
-SCENE_EX6 scene_get_id(scene_s *scene) {
+scenes_e scene_get_id(scene_s *scene) {
   assert(scene != NULL);
 
   return scene->__id;

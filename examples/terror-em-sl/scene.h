@@ -11,7 +11,7 @@ struct scene_s;
 struct scene_s *scene_new();
 
 // Constructor
-void scene_ctor(struct scene_s *scene, SCENE_EX6 id);
+void scene_ctor(struct scene_s *scene, scenes_e id);
 
 // Destructor
 void scene_dtor(struct scene_s *scene);
@@ -22,6 +22,6 @@ void scene_do(struct scene_s *scene, float dt);
 void scene_draw(struct scene_s *scene);
 vec3 scene_get_look_at(struct scene_s *scene);
 /* void scene_draw_late(struct scene_t *scene); */
-SCENE_EX6 scene_get_id(struct scene_s *scene);
+scenes_e scene_get_id(struct scene_s *scene);
 
 #endif

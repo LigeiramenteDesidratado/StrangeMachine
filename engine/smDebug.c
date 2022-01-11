@@ -8,10 +8,10 @@
 typedef struct {
 
   vec3 *positions;
-  attribute_s position_attr; // VEC3_EX1
+  attribute_s position_attr; // VEC3_KIND
 
   vec3 *colors;
-  attribute_s color_attr; // VEC3_EX1
+  attribute_s color_attr; // VEC3_KIND
 
 } debug_s;
 
@@ -20,11 +20,11 @@ static debug_s DEBUG = {0};
 bool debug_init() {
 
   DEBUG.position_attr = attribute_new();
-  if (!attribute_ctor(&DEBUG.position_attr, VEC3_EX1))
+  if (!attribute_ctor(&DEBUG.position_attr, VEC3_KIND))
     return false;
 
   DEBUG.color_attr = attribute_new();
-  if (!attribute_ctor(&DEBUG.color_attr, VEC3_EX1))
+  if (!attribute_ctor(&DEBUG.color_attr, VEC3_KIND))
     return false;
 
   return true;
@@ -114,14 +114,14 @@ void debug_draw_aabb(bounding_box_s aabb, vec3 color) {
   transform.position =
       (vec3){.x = aabb.min.x + width / 2.0f, .y = aabb.min.y + height / 2.0f, .z = aabb.min.z + length / 2.0f};
 
-  shader_bind(SHADERS[DEBUG_SHADER_EX7]);
+  shader_bind(SHADERS[DEBUG_SHADER]);
   attribute_set(&DEBUG.position_attr, cube, 24, GL_STATIC_DRAW);
   attribute_set(&DEBUG.color_attr, colors, 24, GL_STATIC_DRAW);
 
   /* mat4 model = mat4_identity(); */
-  /* uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "model"), model); */
+  /* uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "model"), model); */
   mat4 model = transform_to_mat4(transform);
-  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "model"), model);
+  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "model"), model);
 
   attribute_bind_to(&DEBUG.position_attr, 1);
   attribute_bind_to(&DEBUG.color_attr, 2);
@@ -225,12 +225,12 @@ void debug_draw_capsule(capsule_s c) {
     colors[i] = vec3_new(1.0f, 1.0f, 1.0f);
   }
 
-  shader_bind(SHADERS[DEBUG_SHADER_EX7]);
+  shader_bind(SHADERS[DEBUG_SHADER]);
   attribute_set(&DEBUG.position_attr, vert, s, GL_STATIC_DRAW);
   attribute_set(&DEBUG.color_attr, colors, s, GL_STATIC_DRAW);
 
   mat4 model = mat4_identity();
-  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "model"), model);
+  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "model"), model);
 
   attribute_bind_to(&DEBUG.position_attr, 1);
   attribute_bind_to(&DEBUG.color_attr, 2);
@@ -261,13 +261,13 @@ void debug_draw_line(vec3 from, vec3 to, vec3 color) {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  shader_bind(SHADERS[DEBUG_SHADER_EX7]);
+  shader_bind(SHADERS[DEBUG_SHADER]);
   glLineWidth(3);
   attribute_set(&DEBUG.position_attr, line, 2, GL_STATIC_DRAW);
   attribute_set(&DEBUG.color_attr, colors, 2, GL_STATIC_DRAW);
 
   mat4 model = mat4_identity();
-  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER_EX7], "model"), model);
+  uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "model"), model);
 
   attribute_bind_to(&DEBUG.position_attr, 1);
   attribute_bind_to(&DEBUG.color_attr, 2);

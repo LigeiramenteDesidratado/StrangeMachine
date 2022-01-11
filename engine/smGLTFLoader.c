@@ -122,13 +122,13 @@ char **__gltf_loader_load_joint_names(cgltf_data *data) {
 void __gltf_track_from_channel(track_s *result, int32_t stride, const cgltf_animation_channel *channel) {
 
   cgltf_animation_sampler *sampler = channel->sampler;
-  INTERPOLATION_EX3 interpolation = CONSTANT_EX3;
+  interpolation_e interpolation = CONSTANT_INTERP;
   if (sampler->interpolation == cgltf_interpolation_type_linear)
-    interpolation = LINEAR_EX3;
+    interpolation = LINEAR_INTERP;
   else if (sampler->interpolation == cgltf_interpolation_type_cubic_spline)
-    interpolation = CUBIC_EX3;
+    interpolation = CUBIC_INTERP;
 
-  bool is_sampler_cubic = interpolation == CUBIC_EX3;
+  bool is_sampler_cubic = interpolation == CUBIC_INTERP;
 
   result->interpolation = interpolation;
 

@@ -3,12 +3,7 @@
 
 #include <stdint.h>
 
-typedef uint8_t PROJECTION_EX4;
-#define PERSPECTIVE_EX4 ((PROJECTION_EX4)0x01)
-#define ORTHOGONAL_EX4 ((PROJECTION_EX4)0x02)
-
-typedef uint8_t MODE_EX5;
-#define FREE_EX5 ((MODE_EX5)0x01)
-#define THIRD_PERSON_EX5 ((MODE_EX5)0x02)
+typedef enum { PERSPECTIVE = 0x01, ORTHOGONAL = 0x02 } cam_projection_e;
+typedef enum { FREE = 0x01, THIRD_PERSON = 0x02 } cam_mode_e;
 
 #endif // SM_CAMERA_P_H
