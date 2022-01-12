@@ -1,3 +1,4 @@
+#include "smMem.h"
 #include "util/common.h"
 
 static struct {
@@ -8,8 +9,6 @@ static struct {
   size_t bytes;
 
 } mem_info = {0};
-
-#define SM_MEM_HEADER_SIZE sizeof(size_t)
 
 void *__smmem_malloc(size_t size) {
 

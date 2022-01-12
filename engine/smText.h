@@ -14,7 +14,7 @@ struct text_attr {
 extern const struct text_attr text_attr_locs;
 
 void text_init(void);
-void text_draw(vec2 dest, int w, vec3 color, char *format, ...);
+void text_draw(vec2 dest, float line_width, vec3 color, char *format, ...);
 void text_flush(void);
 void text_tear_down(void);
 

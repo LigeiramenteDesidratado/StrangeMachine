@@ -6,6 +6,8 @@
 #include "smUniform.h"
 #include "util/common.h"
 
+#include "smMem.h"
+
 #define GLYPH_W 7
 #define GLYPH_H 7
 
@@ -45,9 +47,9 @@ void text_init(void) {
   if (!attribute_ctor(&TEXT.color_attr, VEC3_KIND))
     exit(1);
 
-  TEXT.positions = NULL;
-  TEXT.tex_coords = NULL;
-  TEXT.color = NULL;
+  TEXT.positions = (vec3 *)SM_ARRAY_NEW_EMPTY();
+  TEXT.tex_coords = (vec2 *)SM_ARRAY_NEW_EMPTY();
+  TEXT.color = (vec3 *)SM_ARRAY_NEW_EMPTY();
 
   texture_s texture = texture_new();
   if (!texture_ctor(&texture, "engine/smFonts.png")) {
@@ -56,7 +58,7 @@ void text_init(void) {
   TEXT.texture = texture;
 }
 
-void text_draw(vec2 dest, int w, vec3 color, char *format, ...) {
+void text_draw(vec2 dest, float line_width, vec3 color, char *format, ...) {
 
   va_list argsf;
 
@@ -67,17 +69,17 @@ void text_draw(vec2 dest, int w, vec3 color, char *format, ...) {
   vsprintf(text_buffer, format, argsf);
   va_end(argsf);
 
-  int len = strlen(text_buffer);
+  size_t len = strlen(text_buffer);
   float initx = dest.x;
   float srcY = 0.0f;
   float srcX = 0.0f;
 
-  int space_bX = 0;
-  int space_bY = 2;
-  uint32_t width = TEXT.texture.width;
-  uint32_t height = TEXT.texture.height;
+  float space_bX = 0.0f;
+  float space_bY = 2.0f;
+  float width = (float)TEXT.texture.width;
+  float height = (float)TEXT.texture.height;
 
-  for (int i = 0; i < len; i++) {
+  for (size_t i = 0; i < len; i++) {
     char c = text_buffer[i];
     if (c == '\n') {
       dest.x = initx;
@@ -93,36 +95,36 @@ void text_draw(vec2 dest, int w, vec3 color, char *format, ...) {
 
       srcX = (c - ' ') * GLYPH_W;
 
-      arrput(TEXT.positions, vec3_new(dest.x, dest.y, 0.0f));           // top left
-      arrput(TEXT.positions, vec3_new(dest.x, dest.y + GLYPH_H, 0.0f)); // bottom left
-      arrput(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y, 0.0f)); // top right
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x, dest.y, 0.0f));           // top left
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x, dest.y + GLYPH_H, 0.0f)); // bottom left
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y, 0.0f)); // top right
 
-      arrput(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y + GLYPH_H, 0.0f)); // bottom right
-      arrput(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y, 0.0f));           // top right
-      arrput(TEXT.positions, vec3_new(dest.x, dest.y + GLYPH_H, 0.0f));           // bottom left
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y + GLYPH_H, 0.0f)); // bottom right
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y, 0.0f));           // top right
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x, dest.y + GLYPH_H, 0.0f));           // bottom left
 
       // OpenGL does store texture "upside-down", so flip it
-      arrput(TEXT.tex_coords, vec2_new(srcX / width, (srcY + GLYPH_H) / height));             // top left
-      arrput(TEXT.tex_coords, vec2_new(srcX / width, srcY / height));                         // bottom left
-      arrput(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, (srcY + GLYPH_H) / height)); // top right
+      SM_ARRAY_PUSH(TEXT.tex_coords, vec2_new(srcX / width, (srcY + GLYPH_H) / height));             // top left
+      SM_ARRAY_PUSH(TEXT.tex_coords, vec2_new(srcX / width, srcY / height));                         // bottom left
+      SM_ARRAY_PUSH(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, (srcY + GLYPH_H) / height)); // top right
 
-      arrput(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, srcY / height));             // bottom right
-      arrput(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, (srcY + GLYPH_H) / height)); // top right
-      arrput(TEXT.tex_coords, vec2_new(srcX / width, srcY / height));                         // bottom left
+      SM_ARRAY_PUSH(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, srcY / height));             // bottom right
+      SM_ARRAY_PUSH(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, (srcY + GLYPH_H) / height)); // top right
+      SM_ARRAY_PUSH(TEXT.tex_coords, vec2_new(srcX / width, srcY / height));                         // bottom left
 
-      arrput(TEXT.color, color);
-      arrput(TEXT.color, color);
-      arrput(TEXT.color, color);
+      SM_ARRAY_PUSH(TEXT.color, color);
+      SM_ARRAY_PUSH(TEXT.color, color);
+      SM_ARRAY_PUSH(TEXT.color, color);
 
-      arrput(TEXT.color, color);
-      arrput(TEXT.color, color);
-      arrput(TEXT.color, color);
+      SM_ARRAY_PUSH(TEXT.color, color);
+      SM_ARRAY_PUSH(TEXT.color, color);
+      SM_ARRAY_PUSH(TEXT.color, color);
 
-      if (dest.x + GLYPH_W + space_bX >= w) {
+      if (dest.x + GLYPH_W + space_bX >= line_width) {
         dest.x = initx;
-        dest.y += GLYPH_H + space_bY;
+        dest.y += (float)(GLYPH_H + space_bY);
       } else {
-        dest.x += GLYPH_W + space_bX;
+        dest.x += (float)(GLYPH_W + space_bX);
       }
     }
   }
@@ -130,12 +132,12 @@ void text_draw(vec2 dest, int w, vec3 color, char *format, ...) {
 
 void text_flush(void) {
 
-  if (arrlenu(TEXT.positions) > 0)
-    attribute_set(&TEXT.position_attr, TEXT.positions, arrlenu(TEXT.positions), GL_STREAM_DRAW);
-  if (arrlenu(TEXT.tex_coords) > 0)
-    attribute_set(&TEXT.uv_attr, TEXT.tex_coords, arrlenu(TEXT.tex_coords), GL_STREAM_DRAW);
-  if (arrlenu(TEXT.tex_coords) > 0)
-    attribute_set(&TEXT.color_attr, TEXT.color, arrlenu(TEXT.color), GL_STREAM_DRAW);
+  if (SM_ARRAY_SIZE(TEXT.positions) > 0)
+    attribute_set(&TEXT.position_attr, TEXT.positions, SM_ARRAY_SIZE(TEXT.positions), GL_STREAM_DRAW);
+  if (SM_ARRAY_SIZE(TEXT.tex_coords) > 0)
+    attribute_set(&TEXT.uv_attr, TEXT.tex_coords, SM_ARRAY_SIZE(TEXT.tex_coords), GL_STREAM_DRAW);
+  if (SM_ARRAY_SIZE(TEXT.color) > 0)
+    attribute_set(&TEXT.color_attr, TEXT.color, SM_ARRAY_SIZE(TEXT.color), GL_STREAM_DRAW);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -161,7 +163,7 @@ void text_flush(void) {
   attribute_bind_to(&TEXT.color_attr, text_attr_locs.color);
   texture_set(&TEXT.texture, glGetUniformLocation(SHADERS[TEXT_SHADER], "tex0"), 0);
 
-  glDrawArrays(GL_TRIANGLES, 0, arrlenu(TEXT.positions));
+  glDrawArrays(GL_TRIANGLES, 0, SM_ARRAY_SIZE(TEXT.positions));
 
   attribute_unbind_from(&TEXT.color_attr, text_attr_locs.color);
   attribute_unbind_from(&TEXT.uv_attr, text_attr_locs.tex_coord);
@@ -172,16 +174,16 @@ void text_flush(void) {
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
 
-  arrsetlen(TEXT.positions, 0);
-  arrsetlen(TEXT.tex_coords, 0);
-  arrsetlen(TEXT.color, 0);
+  SM_ARRAY_DEL(TEXT.positions, 0, -1);
+  SM_ARRAY_DEL(TEXT.tex_coords, 0, -1);
+  SM_ARRAY_DEL(TEXT.color, 0, -1);
 }
 
 void text_tear_down(void) {
 
   attribute_dtor(&TEXT.position_attr);
-  arrfree(TEXT.positions);
+  SM_ARRAY_DTOR(TEXT.positions);
 
   attribute_dtor(&TEXT.uv_attr);
-  arrfree(TEXT.tex_coords);
+  SM_ARRAY_DTOR(TEXT.tex_coords);
 }
