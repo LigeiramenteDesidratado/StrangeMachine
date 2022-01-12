@@ -153,30 +153,30 @@ float vec3_angle(vec3 a, vec3 b) {
   return acosf(dot / len);
 }
 
-void vec3_orthonorm(float left[3], float up[3], const float v[3]) {
+void vec3_orthonorm(vec3 *left, vec3 *up, const vec3 v) {
   float lenSqr, invLen;
-  if (fabs(v[2]) > 0.7f) {
-    lenSqr = v[1] * v[1] + v[2] * v[2];
+  if (fabs(v.z) > 0.7f) {
+    lenSqr = v.y * v.y + v.z * v.z;
     invLen = rev_sqrt(lenSqr);
 
-    up[0] = 0.0f;
-    up[1] = v[2] * invLen;
-    up[2] = -v[1] * invLen;
+    up->x = 0.0f;
+    up->y = v.z * invLen;
+    up->z = -v.y * invLen;
 
-    left[0] = lenSqr * invLen;
-    left[1] = -v[0] * up[2];
-    left[2] = v[0] * up[1];
+    left->x = lenSqr * invLen;
+    left->y = -v.x * up->z;
+    left->z = v.x * up->y;
   } else {
-    lenSqr = v[0] * v[0] + v[1] * v[1];
+    lenSqr = v.x * v.x + v.y * v.y;
     invLen = rev_sqrt(lenSqr);
 
-    left[0] = -v[1] * invLen;
-    left[1] = v[0] * invLen;
-    left[2] = 0.0f;
+    left->x = -v.y * invLen;
+    left->y = v.x * invLen;
+    left->z = 0.0f;
 
-    up[0] = -v[2] * left[1];
-    up[1] = v[2] * left[0];
-    up[2] = lenSqr * invLen;
+    up->x = -v.z * left->y;
+    up->y = v.z * left->x;
+    up->z = lenSqr * invLen;
   }
 }
 

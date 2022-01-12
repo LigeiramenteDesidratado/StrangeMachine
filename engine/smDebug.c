@@ -155,7 +155,7 @@ void debug_draw_capsule(capsule_s c) {
 
   forward = vec3_norm(forward);
 
-  vec3_orthonorm(right.v, up.v, forward.v);
+  vec3_orthonorm(&right, &up, forward);
 
   lastf = vec3_scale(up, c.radius);
   lastt = vec3_add(to, lastf);

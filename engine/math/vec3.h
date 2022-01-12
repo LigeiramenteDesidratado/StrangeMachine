@@ -63,6 +63,6 @@ vec3 vec3_nlerp(vec3 a, vec3 b, float t);
 bool vec3_is_equal(vec3 a, vec3 b);
 bool vec3_not_equal(vec3 a, vec3 b);
 float rev_sqrt(float number);
-void vec3_orthonorm(float left[3], float up[3], const float v[3]);
+void vec3_orthonorm(vec3 *left, vec3 *up, const vec3 v);
 
 #endif // VEC3_H
