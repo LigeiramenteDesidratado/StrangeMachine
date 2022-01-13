@@ -67,7 +67,7 @@ void *__smmem_realloc(void *ptr, size_t size) {
   char *newp = NULL;
   char *_ptr = (((char *)ptr) - SM_MEM_HEADER_SIZE);
 
-  if ((newp = realloc(_ptr, size)) == NULL)
+  if ((newp = realloc(_ptr, size + SM_MEM_HEADER_SIZE)) == NULL)
     return NULL;
 
   _ptr = newp;
