@@ -58,21 +58,37 @@ void __smmem_print(void);
 
 #define SM_ARRAY_NEW_EMPTY() (&((size_t *)SM_CALLOC(1, 2 * SM_MEM_HEADER_SIZE))[2])
 
-#define SM_ARRAY_RESIZE(arr, size)                                                                                     \
+#define SM_ARRAY_SET_SIZE(arr, size)                                                                                   \
   do {                                                                                                                 \
+    assert(size >= 0 && "negative size");                                                                              \
     size_t *raw = ((size_t *)(arr)-2);                                                                                 \
-    if (raw[1] == size)                                                                                                \
-      continue;                                                                                                        \
-    raw[1] = size;                                                                                                     \
-    raw[0] = (raw[0] > raw[1]) ? raw[1] : raw[0];                                                                      \
-    {                                                                                                                  \
+    if (size > raw[1]) {                                                                                               \
       void *__tmp = NULL;                                                                                              \
-      __tmp = SM_REALLOC(raw, 2 * SM_MEM_HEADER_SIZE + raw[1] * sizeof((*arr)));                                       \
+      __tmp = SM_REALLOC(raw, 2 * SM_MEM_HEADER_SIZE + size * sizeof((*arr)));                                         \
       if (__tmp == NULL)                                                                                               \
         err(EXIT_FAILURE, NULL);                                                                                       \
                                                                                                                        \
       raw = __tmp;                                                                                                     \
+      raw[1] = size;                                                                                                   \
     }                                                                                                                  \
+    raw[0] = size;                                                                                                     \
+    (arr) = (void *)&raw[2];                                                                                           \
+  } while (0)
+
+#define SM_ARRAY_SET_CAPACITY(arr, size)                                                                               \
+  do {                                                                                                                 \
+    assert(size > 0 && "negative size or non zero");                                                                   \
+    size_t *raw = ((size_t *)(arr)-2);                                                                                 \
+    {                                                                                                                  \
+      void *__tmp = NULL;                                                                                              \
+      __tmp = SM_REALLOC(raw, 2 * SM_MEM_HEADER_SIZE + size * sizeof((*arr)));                                         \
+      if (__tmp == NULL)                                                                                               \
+        err(EXIT_FAILURE, NULL);                                                                                       \
+                                                                                                                       \
+      raw = __tmp;                                                                                                     \
+      raw[1] = size;                                                                                                   \
+    }                                                                                                                  \
+    raw[0] = (raw[0] > raw[1]) ? raw[1] : raw[0];                                                                      \
     (arr) = (void *)&raw[2];                                                                                           \
   } while (0)
 
@@ -92,7 +108,7 @@ void __smmem_print(void);
   do {                                                                                                                 \
     size_t *raw = ((size_t *)(arr)-2);                                                                                 \
     raw[0] = raw[0] + 1;                                                                                               \
-    if (raw[1] == 0) {                                                                                                 \
+    if (raw[1] == 0) { /* TODO : remove this check ? */                                                                \
       raw[1] = 1;                                                                                                      \
       {                                                                                                                \
         void *__tmp = NULL;                                                                                            \
@@ -104,7 +120,7 @@ void __smmem_print(void);
       }                                                                                                                \
       (arr) = (void *)&raw[2];                                                                                         \
     }                                                                                                                  \
-    if (raw[0] >= raw[1] - 1) {                                                                                        \
+    if (raw[0] > raw[1]) {                                                                                             \
       raw[1] = (size_t)(2 * raw[1]);                                                                                   \
       {                                                                                                                \
         void *__tmp = NULL;                                                                                            \
