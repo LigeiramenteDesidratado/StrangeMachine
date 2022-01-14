@@ -90,7 +90,7 @@ static void __one_draw(void *ptr) {
   player_draw(center->player);
   model_draw(center->world);
 
-  /* player_draw_debug(center->player); */
+  player_draw_debug(center->player);
 }
 
 static vec3 __one_get_look_at(void *ptr) {

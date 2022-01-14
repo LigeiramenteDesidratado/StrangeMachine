@@ -1,5 +1,6 @@
 #include "smMesh.h"
 #include "smDebug.h"
+#include "smMem.h"
 #include "util/bitmask.h"
 #include "util/common.h"
 
@@ -30,10 +31,6 @@ bool mesh_ctor(mesh_s *mesh) {
   if (!attribute_ctor(&mesh->debug_color_attr, VEC3_KIND))
     return false;
 
-  /* mesh->index_buffer = index_buffer_new(); */
-  /* if (!index_buffer_ctor(&mesh->index_buffer)) */
-  /* return fail; */
-
   return true;
 }
 
@@ -46,37 +43,41 @@ void mesh_dtor(mesh_s *mesh) {
   /* free(mesh->indices); */
 
   attribute_dtor(&mesh->vertex.normal_attr);
-  arrfree(mesh->vertex.normals);
+  SM_ARRAY_DTOR(mesh->vertex.normals);
 
   attribute_dtor(&mesh->vertex.uv_attr);
-  arrfree(mesh->vertex.tex_coords);
+  SM_ARRAY_DTOR(mesh->vertex.tex_coords);
 
   attribute_dtor(&mesh->vertex.position_attr);
-  arrfree(mesh->vertex.positions);
+  SM_ARRAY_DTOR(mesh->vertex.positions);
 }
 
-void mesh_do(mesh_s *mesh) { assert(mesh != NULL); }
+void mesh_do(mesh_s *mesh) {
+  assert(mesh != NULL);
+}
 
 void mesh_draw(mesh_s *mesh) {
   assert(mesh != NULL);
-  /* draw_vertex(arrlenu(mesh->position), Triangles); */
+  /* draw_vertex(SM_ARRAY_SIZE(mesh->position), Triangles); */
 }
 
 void mesh_update_gl_buffers(mesh_s *mesh) {
 
   assert(mesh != NULL);
 
-  if (arrlenu(mesh->vertex.positions) > 0)
-    attribute_set(&mesh->vertex.position_attr, mesh->vertex.positions, arrlenu(mesh->vertex.positions), GL_STATIC_DRAW);
+  if (SM_ARRAY_SIZE(mesh->vertex.positions) > 0)
+    attribute_set(&mesh->vertex.position_attr, mesh->vertex.positions, SM_ARRAY_SIZE(mesh->vertex.positions),
+                  GL_STATIC_DRAW);
 
-  if (arrlenu(mesh->vertex.normals) > 0)
-    attribute_set(&mesh->vertex.normal_attr, mesh->vertex.normals, arrlenu(mesh->vertex.normals), GL_STATIC_DRAW);
+  if (SM_ARRAY_SIZE(mesh->vertex.normals) > 0)
+    attribute_set(&mesh->vertex.normal_attr, mesh->vertex.normals, SM_ARRAY_SIZE(mesh->vertex.normals), GL_STATIC_DRAW);
 
-  if (arrlenu(mesh->vertex.tex_coords) > 0)
-    attribute_set(&mesh->vertex.uv_attr, mesh->vertex.tex_coords, arrlenu(mesh->vertex.tex_coords), GL_STATIC_DRAW);
+  if (SM_ARRAY_SIZE(mesh->vertex.tex_coords) > 0)
+    attribute_set(&mesh->vertex.uv_attr, mesh->vertex.tex_coords, SM_ARRAY_SIZE(mesh->vertex.tex_coords),
+                  GL_STATIC_DRAW);
 
-  if (arrlenu(mesh->indices) > 0)
-    index_buffer_set(&mesh->index_buffer, mesh->indices, arrlenu(mesh->indices));
+  if (SM_ARRAY_SIZE(mesh->indices) > 0)
+    index_buffer_set(&mesh->index_buffer, mesh->indices, SM_ARRAY_SIZE(mesh->indices));
 }
 
 void mesh_bind(const mesh_s *const mesh, uint8_t flag) {
@@ -117,7 +118,7 @@ bounding_box_s mesh_get_bounding_box(mesh_s *mesh) {
     minVertex = mesh->vertex.positions[0];
     maxVertex = mesh->vertex.positions[0];
 
-    for (size_t i = 1; i < arrlenu(mesh->vertex.positions); i++) {
+    for (size_t i = 1; i < SM_ARRAY_SIZE(mesh->vertex.positions); i++) {
       minVertex = vec3_min(minVertex, mesh->vertex.positions[i]);
       maxVertex = vec3_max(maxVertex, mesh->vertex.positions[i]);
     }

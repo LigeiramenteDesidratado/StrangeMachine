@@ -1,20 +1,21 @@
 #include "smPose.h"
+#include "smMem.h"
 #include "util/common.h"
 
 // Destructor
 void pose_dtor(pose_s *pose) {
   assert(pose != NULL);
 
-  arrfree(pose->nodes);
+  SM_ARRAY_DTOR(pose->nodes);
 }
 
 void pose_resize(pose_s *pose, size_t size) {
 
   assert(pose != NULL);
 
-  size_t nodes_old_size = arrlenu(pose->nodes);
-  arrsetlen(pose->nodes, size);
-  size_t nodes_new_size = arrlenu(pose->nodes);
+  size_t nodes_old_size = SM_ARRAY_SIZE(pose->nodes);
+  SM_ARRAY_SET_SIZE(pose->nodes, size);
+  size_t nodes_new_size = SM_ARRAY_SIZE(pose->nodes);
 
   for (size_t i = 0; i < (nodes_new_size - nodes_old_size); ++i) {
     pose->nodes[nodes_old_size + i].joint = transform_zero();
@@ -25,33 +26,33 @@ void pose_resize(pose_s *pose, size_t size) {
 int32_t pose_get_parent(const pose_s *const pose, size_t index) {
   assert(pose != NULL);
 
-  assert(index < arrlenu(pose->nodes));
+  assert(index < SM_ARRAY_SIZE(pose->nodes));
   return pose->nodes[index].parent;
 }
 
 void pose_set_parent(pose_s *pose, uint32_t index, int parent) {
   assert(pose != NULL);
-  assert(index < arrlenu(pose->nodes));
+  assert(index < SM_ARRAY_SIZE(pose->nodes));
 
   pose->nodes[index].parent = parent;
 }
 
 transform_s pose_get_local_transform(const pose_s *const pose, uint32_t index) {
   assert(pose != NULL);
-  assert(index < arrlenu(pose->nodes));
+  assert(index < SM_ARRAY_SIZE(pose->nodes));
   return pose->nodes[index].joint;
 }
 
 void pose_set_local_transform(pose_s *pose, uint32_t index, transform_s transform) {
   assert(pose != NULL);
-  assert(index < arrlenu(pose->nodes));
+  assert(index < SM_ARRAY_SIZE(pose->nodes));
 
   pose->nodes[index].joint = transform;
 }
 
 transform_s pose_get_global_transform(const pose_s *const pose, uint32_t index) {
   assert(pose != NULL);
-  assert(index < arrlenu(pose->nodes));
+  assert(index < SM_ARRAY_SIZE(pose->nodes));
 
   transform_s result = pose->nodes[index].joint;
   for (int32_t p = pose->nodes[index].parent; p >= 0; p = pose->nodes[p].parent) {
@@ -63,9 +64,9 @@ transform_s pose_get_global_transform(const pose_s *const pose, uint32_t index) 
 #if 0
 void pose_get_matrix_palette(pose_t *pose, mat4 **out, unsigned int length) {
 
-  unsigned int size = arrlenu(pose->joints);
+  unsigned int size = SM_ARRAY_SIZE(pose->joints);
   if (length != size) {
-    arrsetlen(*out, size);
+    SM_ARRAY_SET_SIZE(*out, size);
   }
 
   for (unsigned int i = 0; i < size; ++i) {
@@ -76,12 +77,12 @@ void pose_get_matrix_palette(pose_t *pose, mat4 **out, unsigned int length) {
 #else
 
 void pose_get_matrix_palette(const pose_s *const pose, mat4 **out) {
-  int32_t size = (int32_t)arrlenu(pose->nodes);
-  int32_t length = (int32_t)arrlenu((*out));
+  int32_t size = (int32_t)SM_ARRAY_SIZE(pose->nodes);
+  int32_t length = (int32_t)SM_ARRAY_SIZE((*out));
 
   if (length != size) {
-    arrsetlen(*out, size);
-    for (size_t i = 0; i < (arrlenu((*out)) - length); ++i) {
+    SM_ARRAY_SET_SIZE(*out, (size_t)size);
+    for (size_t i = 0; i < (SM_ARRAY_SIZE((*out)) - length); ++i) {
       (*out)[length + i] = mat4_identity();
     }
   }
@@ -114,11 +115,11 @@ bool pose_is_equal(const pose_s *const a, const pose_s *const b) {
   if (a == NULL || b == NULL)
     return false;
 
-  if (arrlenu(a->nodes) != arrlenu(b->nodes)) {
+  if (SM_ARRAY_SIZE(a->nodes) != SM_ARRAY_SIZE(b->nodes)) {
     return false;
   }
 
-  size_t size = arrlenu(a->nodes);
+  size_t size = SM_ARRAY_SIZE(a->nodes);
   for (size_t i = 0; i < size; ++i) {
     transform_s a_local = a->nodes[i].joint;
     transform_s b_local = b->nodes[i].joint;
@@ -150,7 +151,7 @@ void pose_copy(pose_s *dest, const pose_s *const src) {
 
   assert((src != dest) || pose_not_equal(src, dest));
 
-  size_t size = arrlenu(src->nodes);
+  size_t size = SM_ARRAY_SIZE(src->nodes);
   pose_resize(dest, size);
 
   if (size != 0)
@@ -174,7 +175,7 @@ bool pose_is_in_hierarchy(const pose_s *const pose, uint32_t root, uint32_t sear
 }
 
 void pose_blend(pose_s *output, const pose_s *const a, const pose_s *const b, float t, int root) {
-  size_t num_joints = arrlenu(output->nodes);
+  size_t num_joints = SM_ARRAY_SIZE(output->nodes);
   for (size_t i = 0; i < num_joints; ++i) {
     if (root >= 0) {
       // don't blend if they aren't within the same hierarchy

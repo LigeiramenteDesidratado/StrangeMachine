@@ -136,7 +136,7 @@ void text_flush(void) {
     attribute_set(&TEXT.position_attr, TEXT.positions, SM_ARRAY_SIZE(TEXT.positions), GL_STREAM_DRAW);
   if (SM_ARRAY_SIZE(TEXT.tex_coords) > 0)
     attribute_set(&TEXT.uv_attr, TEXT.tex_coords, SM_ARRAY_SIZE(TEXT.tex_coords), GL_STREAM_DRAW);
-  if (SM_ARRAY_SIZE(TEXT.color) > 0)
+  if (((TEXT.color) == ((void *)0) ? 0 : *((size_t *)TEXT.color - 2)) > 0)
     attribute_set(&TEXT.color_attr, TEXT.color, SM_ARRAY_SIZE(TEXT.color), GL_STREAM_DRAW);
 
   glEnable(GL_BLEND);
@@ -186,4 +186,7 @@ void text_tear_down(void) {
 
   attribute_dtor(&TEXT.uv_attr);
   SM_ARRAY_DTOR(TEXT.tex_coords);
+
+  attribute_dtor(&TEXT.color_attr);
+  SM_ARRAY_DTOR(TEXT.color);
 }

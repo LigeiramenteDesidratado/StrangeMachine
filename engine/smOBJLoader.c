@@ -1,3 +1,4 @@
+#include "smMem.h"
 #include "smMesh.h"
 #include "util/common.h"
 
@@ -41,39 +42,31 @@ bool obj_loader_load(mesh_s **meshes, const char *path) {
     }
   }
 
-  // move the file pointer to the beggining
+  // move the file pointer to the begining
   fseek(fp, 0, SEEK_SET);
   vec3 *tmp_v = NULL;
-  arrsetcap(tmp_v, tmp_v_len);
+  SM_ARRAY_SET_CAPACITY(tmp_v, tmp_v_len);
 
   vec2 *tmp_uv = NULL;
-  arrsetcap(tmp_uv, tmp_uv_len);
+  SM_ARRAY_SET_CAPACITY(tmp_uv, tmp_uv_len);
 
   vec3 *tmp_n = NULL;
-  arrsetcap(tmp_n, tmp_n_len);
+  SM_ARRAY_SET_CAPACITY(tmp_n, tmp_n_len);
 
   size_t *iv = NULL, *iu = NULL, *in = NULL;
-  arrsetcap(iv, iv_len);
-  arrsetcap(iu, iu_len);
-  arrsetcap(in, in_len);
+  SM_ARRAY_SET_CAPACITY(iv, iv_len);
+  SM_ARRAY_SET_CAPACITY(iu, iu_len);
+  SM_ARRAY_SET_CAPACITY(in, in_len);
 
-  arrsetlen((*meshes), objects);
+  SM_ARRAY_SET_SIZE((*meshes), objects);
 
-  for (size_t i = 0; i < arrlenu((*meshes)); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE((*meshes)); ++i) {
     mesh_s *mesh = &(*meshes)[i];
     (*mesh) = mesh_new();
 
-    arrsetcap(mesh->vertex.positions, iv_len);
-    // mesh->vertex.positions_len = iv_len;
-    // mesh->vertex.positions = malloc(sizeof(vec3) * iv_len);
-
-    arrsetcap(mesh->vertex.tex_coords, iu_len);
-    // mesh->vertex.tex_coords_len = iu_len;
-    // mesh->vertex.tex_coords = malloc(sizeof(vec2) * iu_len);
-
-    arrsetcap(mesh->vertex.normals, in_len);
-    // mesh->vertex.normals_len = in_len;
-    // mesh->vertex.normals = malloc(sizeof(vec3) * in_len);
+    SM_ARRAY_SET_CAPACITY(mesh->vertex.positions, iv_len);
+    SM_ARRAY_SET_CAPACITY(mesh->vertex.tex_coords, iu_len);
+    SM_ARRAY_SET_CAPACITY(mesh->vertex.normals, in_len);
   }
 
   while (1) {
@@ -87,73 +80,73 @@ bool obj_loader_load(mesh_s **meshes, const char *path) {
     if (strcmp(lineHeader, "v") == 0) {
       vec3 v = {0};
       fscanf(fp, "%f %f %f\n", &v.x, &v.y, &v.z);
-      arrput(tmp_v, v);
+      SM_ARRAY_PUSH(tmp_v, v);
     } else if (strcmp(lineHeader, "vt") == 0) {
       vec2 uv;
       fscanf(fp, "%f %f\n", &uv.x, &uv.y);
-      arrput(tmp_uv, uv);
+      SM_ARRAY_PUSH(tmp_uv, uv);
     } else if (strcmp(lineHeader, "vn") == 0) {
       vec3 n;
       fscanf(fp, "%f %f %f\n", &n.x, &n.y, &n.z);
-      arrput(tmp_n, n);
+      SM_ARRAY_PUSH(tmp_n, n);
     } else if (strcmp(lineHeader, "f") == 0) {
       uint32_t vi[3], ui[3], ni[3];
 
-      int matches = fscanf(fp, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vi[0], &ui[0], &ni[0], &vi[1], &ui[1], &ni[1], &vi[2],
+      int matches = fscanf(fp, "%u/%u/%u %u/%u/%u %u/%u/%u\n", &vi[0], &ui[0], &ni[0], &vi[1], &ui[1], &ni[1], &vi[2],
                            &ui[2], &ni[2]);
 
       assert(matches == 9 && "should export your model with 'Triangulate faces' checked" &&
              "make sure that vertex, uv and normals are being exported");
 
-      arrput(iv, vi[0]);
-      arrput(iv, vi[1]);
-      arrput(iv, vi[2]);
+      SM_ARRAY_PUSH(iv, vi[0]);
+      SM_ARRAY_PUSH(iv, vi[1]);
+      SM_ARRAY_PUSH(iv, vi[2]);
 
-      arrput(iu, ui[0]);
-      arrput(iu, ui[1]);
-      arrput(iu, ui[2]);
+      SM_ARRAY_PUSH(iu, ui[0]);
+      SM_ARRAY_PUSH(iu, ui[1]);
+      SM_ARRAY_PUSH(iu, ui[2]);
 
-      arrput(in, ni[0]);
-      arrput(in, ni[1]);
-      arrput(in, ni[2]);
+      SM_ARRAY_PUSH(in, ni[0]);
+      SM_ARRAY_PUSH(in, ni[1]);
+      SM_ARRAY_PUSH(in, ni[2]);
     } else { // Probably a comment, eat up the rest of the line
       char stupidBuffer[512];
       fgets(stupidBuffer, 512, fp);
     }
   }
 
-  for (size_t i = 0; i < arrlenu((*meshes)); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE((*meshes)); ++i) {
 
     mesh_s *mesh = &(*meshes)[i];
 
     for (uint32_t j = 0; j < iv_len; ++j) {
       size_t vertex_index = iv[j];
       vec3 vertex = tmp_v[vertex_index - 1];
-      arrput(mesh->vertex.positions, vertex);
+      SM_ARRAY_PUSH(mesh->vertex.positions, vertex);
     }
 
     for (uint32_t j = 0; j < in_len; ++j) {
       size_t nv_index = in[j];
       vec3 normal = tmp_n[nv_index - 1];
-      arrput(mesh->vertex.normals, normal);
+      SM_ARRAY_PUSH(mesh->vertex.normals, normal);
     }
 
     for (uint32_t j = 0; j < iu_len; ++j) {
       size_t uv_index = iu[j];
       vec2 uv = tmp_uv[uv_index - 1];
       /* uv.y = 1.0f - uv.y; */
-      arrput(mesh->vertex.tex_coords, uv);
+      SM_ARRAY_PUSH(mesh->vertex.tex_coords, uv);
     }
   }
 
   fclose(fp);
-  arrfree(tmp_uv);
-  arrfree(tmp_v);
-  arrfree(tmp_n);
+  SM_ARRAY_DTOR(tmp_uv);
+  SM_ARRAY_DTOR(tmp_v);
+  SM_ARRAY_DTOR(tmp_n);
 
-  arrfree(iv);
-  arrfree(iu);
-  arrfree(in);
+  SM_ARRAY_DTOR(iv);
+  SM_ARRAY_DTOR(iu);
+  SM_ARRAY_DTOR(in);
 
   return true;
 }

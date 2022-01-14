@@ -1,9 +1,9 @@
 #include "util/common.h"
 
-#include "smShaderProgram.h"
-#include "smShader.h"
-#include "smSkinnedMesh.h"
 #include "smMesh.h"
+#include "smShader.h"
+#include "smShaderProgram.h"
+#include "smSkinnedMesh.h"
 #include "smText.h"
 
 GLuint SHADERS[MAX_SHADERS];
@@ -11,8 +11,7 @@ GLuint SHADERS[MAX_SHADERS];
 void shaders_init(void) {
 
   GLuint static_shader = 0;
-  if (!shader_ctor(&static_shader, "engine/glsl/static.vs",
-                   "engine/glsl/static.fs")) {
+  if (!shader_ctor(&static_shader, "engine/glsl/static.vs", "engine/glsl/static.fs")) {
     log_error("failed to create a new static shader");
     exit(1);
   }
@@ -25,8 +24,7 @@ void shaders_init(void) {
     exit(1);
 
   GLuint skinned_shader = 0;
-  if (!shader_ctor(&skinned_shader, "engine/glsl/skinned.vs",
-                   "engine/glsl/skinned.fs")) {
+  if (!shader_ctor(&skinned_shader, "engine/glsl/skinned.vs", "engine/glsl/skinned.fs")) {
     log_error("failed to create a new skinned shader");
     exit(1);
   }
@@ -46,7 +44,7 @@ void shaders_init(void) {
     exit(1);
   }
   SHADERS[TEXT_SHADER] = text_shader;
-  
+
   shader_bind_attrib_loc(SHADERS[TEXT_SHADER], text_attr_locs.position, "position");
   shader_bind_attrib_loc(SHADERS[TEXT_SHADER], text_attr_locs.tex_coord, "tex_coord");
   shader_bind_attrib_loc(SHADERS[TEXT_SHADER], text_attr_locs.color, "color");
@@ -64,7 +62,6 @@ void shaders_init(void) {
   shader_bind_attrib_loc(SHADERS[DEBUG_SHADER], 2, "color");
   if (!shader_relink_program(SHADERS[DEBUG_SHADER]))
     exit(1);
-
 }
 
 void shaders_tear_down(void) {

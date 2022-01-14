@@ -1,4 +1,5 @@
 #include "smTrack.h"
+#include "smMem.h"
 #include "util/common.h"
 
 typedef enum { SCALAR_TRACK_KIND = 0x01, VECTOR_TRACK_KIND = 0x02, QUATERNION_TRACK_KIND = 0x04 } track_kind_e;
@@ -28,14 +29,14 @@ void track_index_look_up_table(track_s *track);
 void track_dtor(track_s *track) {
   assert(track != NULL);
 
-  for (size_t i = 0; i < arrlenu(track->frames); ++i) {
-    arrfree(track->frames[i].value);
-    arrfree(track->frames[i].in);
-    arrfree(track->frames[i].out);
+  for (size_t i = 0; i < SM_ARRAY_SIZE(track->frames); ++i) {
+    SM_ARRAY_DTOR(track->frames[i].value);
+    SM_ARRAY_DTOR(track->frames[i].in);
+    SM_ARRAY_DTOR(track->frames[i].out);
   }
 
-  arrfree(track->frames);
-  arrfree(track->sampled_frames);
+  SM_ARRAY_DTOR(track->frames);
+  SM_ARRAY_DTOR(track->sampled_frames);
 }
 
 float track_get_start_time(const track_s *const track) {
@@ -49,7 +50,7 @@ float track_get_end_time(const track_s *const track) {
 
   assert(track != NULL);
 
-  return track->frames[arrlenu(track->frames) - 1].t;
+  return track->frames[SM_ARRAY_SIZE(track->frames) - 1].t;
 }
 
 float track_sample_float(track_s *track, float time, bool looping) {
@@ -107,9 +108,9 @@ quat track_sample_quat(track_s *track, float time, bool looping) {
 void track_resize_sampled_frames(track_s *track, size_t size) {
   assert(track != NULL);
 
-  size_t old_length = arrlenu(track->sampled_frames);
-  arrsetlen(track->sampled_frames, size);
-  size_t new_length = arrlenu(track->sampled_frames);
+  size_t old_length = SM_ARRAY_SIZE(track->sampled_frames);
+  SM_ARRAY_SET_SIZE(track->sampled_frames, size);
+  size_t new_length = SM_ARRAY_SIZE(track->sampled_frames);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->sampled_frames[old_length + i] = 0;
@@ -121,9 +122,9 @@ void track_resize_frame(track_s *track, size_t size) {
 
   assert(track != NULL);
 
-  size_t old_length = arrlenu(track->frames);
-  arrsetlen(track->frames, size);
-  size_t new_length = arrlenu(track->frames);
+  size_t old_length = SM_ARRAY_SIZE(track->frames);
+  SM_ARRAY_SET_SIZE(track->frames, size);
+  size_t new_length = SM_ARRAY_SIZE(track->frames);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->frames[old_length + i] = frame_zero();
@@ -133,14 +134,14 @@ void track_resize_frame(track_s *track, size_t size) {
 void track_resize_frame_in(track_s *track, size_t size, uint32_t frame_index) {
 
   assert(track != NULL);
-  if (frame_index > arrlenu(track->frames)) {
+  if (frame_index > SM_ARRAY_SIZE(track->frames)) {
     log_warn("trying to access invalid index");
     return;
   }
 
-  size_t old_length = arrlenu(track->frames[frame_index].in);
-  arrsetlen(track->frames[frame_index].in, size);
-  size_t new_length = arrlenu(track->frames[frame_index].in);
+  size_t old_length = SM_ARRAY_SIZE(track->frames[frame_index].in);
+  SM_ARRAY_SET_SIZE(track->frames[frame_index].in, size);
+  size_t new_length = SM_ARRAY_SIZE(track->frames[frame_index].in);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->frames[frame_index].in[old_length + i] = 0.0f;
@@ -150,14 +151,14 @@ void track_resize_frame_in(track_s *track, size_t size, uint32_t frame_index) {
 void track_resize_frame_out(track_s *track, size_t size, uint32_t frame_index) {
 
   assert(track != NULL);
-  if (frame_index >= arrlenu(track->frames)) {
+  if (frame_index >= SM_ARRAY_SIZE(track->frames)) {
     log_warn("trying to access invalid index");
     return;
   }
 
-  size_t old_length = arrlenu(track->frames[frame_index].out);
-  arrsetlen(track->frames[frame_index].out, size);
-  size_t new_length = arrlenu(track->frames[frame_index].out);
+  size_t old_length = SM_ARRAY_SIZE(track->frames[frame_index].out);
+  SM_ARRAY_SET_SIZE(track->frames[frame_index].out, size);
+  size_t new_length = SM_ARRAY_SIZE(track->frames[frame_index].out);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->frames[frame_index].out[old_length + i] = 0.0f;
@@ -166,14 +167,14 @@ void track_resize_frame_out(track_s *track, size_t size, uint32_t frame_index) {
 
 void track_resize_frame_value(track_s *track, size_t size, uint32_t frame_index) {
   assert(track != NULL);
-  if (frame_index > arrlenu(track->frames)) {
+  if (frame_index > SM_ARRAY_SIZE(track->frames)) {
     log_warn("trying to access invalid index");
     return;
   }
 
-  size_t old_length = arrlenu(track->frames[frame_index].value);
-  arrsetlen(track->frames[frame_index].value, size);
-  size_t new_length = arrlenu(track->frames[frame_index].value);
+  size_t old_length = SM_ARRAY_SIZE(track->frames[frame_index].value);
+  SM_ARRAY_SET_SIZE(track->frames[frame_index].value, size);
+  size_t new_length = SM_ARRAY_SIZE(track->frames[frame_index].value);
 
   for (size_t i = 0; i < (new_length - old_length); ++i) {
     track->frames[frame_index].value[old_length + i] = 0.0f;
@@ -184,7 +185,7 @@ size_t track_get_frame_size(track_s *track) {
 
   assert(track != NULL);
 
-  return arrlenu(track->frames);
+  return SM_ARRAY_SIZE(track->frames);
 }
 
 interpolation_e track_get_interpolation(track_s *track) {
@@ -207,7 +208,7 @@ void track_set_interpolation(track_s *track, interpolation_e interpolation) {
 int track_frame_index(track_t *track, float t, bool looping) {
   // If the track has one frame or less, it is invalid. If an invalid track is
   // encountered,
-  unsigned int size = arrlenu(track->frames);
+  unsigned int size = SM_ARRAY_SIZE(track->frames);
   if (size < 1)
     return -1;
 
@@ -255,7 +256,7 @@ int track_frame_index(track_t *track, float t, bool looping) {
 
 int32_t track_frame_index(track_s *track, float time, bool looping) {
 
-  size_t size = arrlenu(track->frames);
+  size_t size = SM_ARRAY_SIZE(track->frames);
   if (size <= 1) {
     log_debug("returning -1");
     return -1;
@@ -285,10 +286,10 @@ int32_t track_frame_index(track_s *track, float time, bool looping) {
   float num_samples = (duration * 60.0f);
   uint32_t index = (uint32_t)(t * num_samples);
 
-  if (index >= arrlenu(track->sampled_frames)) {
+  if (index >= SM_ARRAY_SIZE(track->sampled_frames)) {
     /* log_debug("index (%d) is gt array length (%lu)", index, */
-    /* arrlenu(track->sampled_frames)); */
-    return (int32_t)track->sampled_frames[arrlenu(track->sampled_frames) - 1];
+    /* SM_ARRAY_SIZE(track->sampled_frames)); */
+    return (int32_t)track->sampled_frames[SM_ARRAY_SIZE(track->sampled_frames) - 1];
     // return -1;
   }
 
@@ -301,7 +302,7 @@ float track_adjust_time(track_s *track, float t, bool looping) {
 
   // If a track has less than one frame, the track is invalid. If an invalid
   // track is used, retun 0
-  size_t size = arrlenu(track->frames);
+  size_t size = SM_ARRAY_SIZE(track->frames);
   if (size <= 1)
     return 0.0f;
 
@@ -360,7 +361,7 @@ static float __track_sample_constant_float(track_s *track, float t, bool looping
   // track_frame_index helper. Make sure the frame is valid, then cast the value
   // of that frame to the correct data type and return it
   int32_t frame = track_frame_index(track, t, looping);
-  if (frame < 0 || frame >= arrlen(track->frames)) {
+  if (frame < 0 || frame >= (int32_t)SM_ARRAY_SIZE(track->frames)) {
     return 0.0f;
   }
 
@@ -369,7 +370,7 @@ static float __track_sample_constant_float(track_s *track, float t, bool looping
 
 static float __track_sample_linear_float(track_s *track, float t, bool looping) {
   int32_t this_frame = track_frame_index(track, t, looping);
-  if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
+  if (this_frame < 0 || this_frame >= (int32_t)(SM_ARRAY_SIZE(track->frames) - 1))
     return 0.0f;
 
   int32_t next_frame = this_frame + 1;
@@ -397,7 +398,7 @@ static float __track_sample_linear_float(track_s *track, float t, bool looping) 
 static float __track_sample_cubic_float(track_s *track, float time, bool looping) {
 
   int32_t this_frame = track_frame_index(track, time, looping);
-  if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
+  if (this_frame < 0 || this_frame >= (int32_t)(SM_ARRAY_SIZE(track->frames) - 1))
     return 0.0f;
 
   int32_t next_frame = this_frame + 1;
@@ -436,7 +437,7 @@ static vec3 __track_sample_constant_vec3(track_s *track, float t, bool looping) 
   // track_frame_index helper. Make sure the frame is valid, then cast the value
   // of that frame to the correct data type and return it
   int32_t frame = track_frame_index(track, t, looping);
-  if (frame < 0 || frame >= arrlen(track->frames))
+  if (frame < 0 || frame >= (int32_t)SM_ARRAY_SIZE(track->frames))
     return vec3_zero();
 
   return track_cast_vec3(&track->frames[frame].value[0]);
@@ -445,7 +446,7 @@ static vec3 __track_sample_constant_vec3(track_s *track, float t, bool looping) 
 static vec3 __track_sample_linear_vec3(track_s *track, float t, bool looping) {
   int32_t this_frame = track_frame_index(track, t, looping);
 
-  if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
+  if (this_frame < 0 || this_frame >= (int32_t)(SM_ARRAY_SIZE(track->frames) - 1))
     return vec3_zero();
 
   int next_frame = this_frame + 1;
@@ -473,7 +474,7 @@ static vec3 __track_sample_linear_vec3(track_s *track, float t, bool looping) {
 static vec3 __track_sample_cubic_vec3(track_s *track, float time, bool looping) {
 
   int32_t this_frame = track_frame_index(track, time, looping);
-  if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
+  if (this_frame < 0 || this_frame >= (int32_t)(SM_ARRAY_SIZE(track->frames) - 1))
     return vec3_zero();
 
   int32_t next_frame = this_frame + 1;
@@ -512,7 +513,7 @@ static quat __track_sample_constant_quat(track_s *track, float t, bool looping) 
   // track_frame_index helper. Make sure the frame is valid, then cast the value
   // of that frame to the correct data type and return it
   int32_t frame = track_frame_index(track, t, looping);
-  if (frame < 0 || frame >= arrlen(track->frames))
+  if (frame < 0 || frame >= (int32_t)SM_ARRAY_SIZE(track->frames))
     return quat_identity();
 
   return track_cast_quat(&track->frames[frame].value[0]);
@@ -520,7 +521,7 @@ static quat __track_sample_constant_quat(track_s *track, float t, bool looping) 
 
 static quat __track_sample_linear_quat(track_s *track, float t, bool looping) {
   int32_t this_frame = track_frame_index(track, t, looping);
-  if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
+  if (this_frame < 0 || this_frame >= (int32_t)(SM_ARRAY_SIZE(track->frames) - 1))
     return quat_identity();
 
   int32_t next_frame = this_frame + 1;
@@ -548,7 +549,7 @@ static quat __track_sample_linear_quat(track_s *track, float t, bool looping) {
 static quat __track_sample_cubic_quat(track_s *track, float time, bool looping) {
 
   int32_t this_frame = track_frame_index(track, time, looping);
-  if (this_frame < 0 || this_frame >= (arrlen(track->frames) - 1))
+  if (this_frame < 0 || this_frame >= (int32_t)(SM_ARRAY_SIZE(track->frames) - 1))
     return quat_identity();
 
   int32_t next_frame = this_frame + 1;
@@ -654,7 +655,7 @@ static quat quat_iterpolate(quat a, quat b, float t) {
 void track_index_look_up_table(track_s *track) {
 
   assert(track != NULL);
-  int32_t num_frames = arrlen(track->frames);
+  int32_t num_frames = SM_ARRAY_SIZE(track->frames);
   if (num_frames <= 1)
     return;
 

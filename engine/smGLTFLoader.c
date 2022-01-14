@@ -2,6 +2,7 @@
 #include "util/common.h"
 
 #include "smClip.h"
+#include "smMem.h"
 #include "smPose.h"
 #include "smSkeleton.h"
 #include "smSkinnedMesh.h"
@@ -104,8 +105,8 @@ void gltf_loader_load_rest_pose(cgltf_data *data, pose_s *pose) {
 char **__gltf_loader_load_joint_names(cgltf_data *data) {
 
   size_t bone_count = data->nodes_count;
-  char **result = NULL; // malloc(bone_count * sizeof(char *));
-  arrsetlen(result, bone_count);
+  char **result = (char **)SM_ARRAY_NEW_EMPTY(); // malloc(bone_count * sizeof(char *));
+  SM_ARRAY_SET_SIZE(result, bone_count);
 
   for (size_t i = 0; i < bone_count; ++i) {
     cgltf_node *node = &(data->nodes[i]);
@@ -133,19 +134,19 @@ void __gltf_track_from_channel(track_s *result, int32_t stride, const cgltf_anim
   result->interpolation = interpolation;
 
   float *time = NULL;
-  arrsetlen(time, sampler->input->count * 1);
+  SM_ARRAY_SET_SIZE(time, sampler->input->count * 1);
   for (size_t i = 0; i < sampler->input->count; ++i) {
     cgltf_accessor_read_float(sampler->input, i, &time[i], 1);
   }
 
   float *val = NULL;
-  arrsetlen(val, sampler->output->count * stride);
+  SM_ARRAY_SET_SIZE(val, sampler->output->count * stride);
   for (size_t i = 0; i < sampler->output->count; ++i) {
     cgltf_accessor_read_float(sampler->output, i, &val[i * stride], stride);
   }
 
   size_t num_frames = sampler->input->count;
-  size_t comp_count = arrlenu(val) / arrlenu(time);
+  size_t comp_count = SM_ARRAY_SIZE(val) / SM_ARRAY_SIZE(time);
 
   track_resize_frame(result, num_frames);
 
@@ -174,8 +175,8 @@ void __gltf_track_from_channel(track_s *result, int32_t stride, const cgltf_anim
     }
   }
 
-  arrfree(time);
-  arrfree(val);
+  SM_ARRAY_DTOR(time);
+  SM_ARRAY_DTOR(val);
 }
 
 // Loop through all the clips in the provided gltf_data. For every clip, set its
@@ -187,7 +188,7 @@ struct clip_s **gltf_loader_load_animation_clips(cgltf_data *data) {
   size_t num_nodes = data->nodes_count;
 
   struct clip_s **result = NULL;
-  arrsetlen(result, num_clips);
+  SM_ARRAY_SET_SIZE(result, num_clips);
 
   for (size_t i = 0; i < num_clips; ++i) {
     size_t num_channels = data->animations[i].channels_count;
@@ -222,7 +223,7 @@ struct clip_s **gltf_loader_load_animation_clips(cgltf_data *data) {
     clip_recalculate_duration(result[i]);
   } // End clips loop
 
-  for (size_t i = 0; i < arrlenu(result); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(result); ++i) {
     for (size_t j = 0; j < clip_get_size(result[i]); ++j) {
       int32_t joint = clip_get_id_at_index(result[i], j);
 
@@ -247,9 +248,9 @@ void gltf_loader_load_bind_pose(cgltf_data *data, pose_s *bind_pose) {
 
   pose_s rest_pose = pose_new();
   gltf_loader_load_rest_pose(data, &rest_pose);
-  size_t num_bones = arrlenu(rest_pose.nodes);
+  size_t num_bones = SM_ARRAY_SIZE(rest_pose.nodes);
   transform_s *world_bind_pose = NULL;
-  arrsetlen(world_bind_pose, num_bones);
+  SM_ARRAY_SET_SIZE(world_bind_pose, num_bones);
 
   for (size_t i = 0; i < num_bones; ++i) {
     world_bind_pose[i] = pose_get_global_transform(&rest_pose, i);
@@ -268,7 +269,7 @@ void gltf_loader_load_bind_pose(cgltf_data *data, pose_s *bind_pose) {
   }
 
   float *inverse_bind_accessor = NULL;
-  arrsetlen(inverse_bind_accessor, max_size * 16);
+  SM_ARRAY_SET_SIZE(inverse_bind_accessor, max_size * 16);
 
   for (size_t i = 0; i < num_skins; ++i) {
     cgltf_skin *skin = &(data->skins[i]);
@@ -301,7 +302,7 @@ void gltf_loader_load_bind_pose(cgltf_data *data, pose_s *bind_pose) {
 
     } // end for each joints
   }   // end for each skin
-  arrfree(inverse_bind_accessor);
+  SM_ARRAY_DTOR(inverse_bind_accessor);
 
   // convert the world bind pose to regular bind pose
 
@@ -319,13 +320,11 @@ void gltf_loader_load_bind_pose(cgltf_data *data, pose_s *bind_pose) {
 
     pose_set_local_transform(bind_pose, i, current);
   }
-  arrfree(world_bind_pose);
+  SM_ARRAY_DTOR(world_bind_pose);
 }
 
 struct skeleton_s *gltf_loader_load_skeleton(cgltf_data *data) {
 
-  // TODO: investigate: constructing and destructing bind_pose and rest_pose is
-  // slowing down?
   pose_s rest_pose = pose_new();
   pose_s bind_pose = pose_new();
   gltf_loader_load_rest_pose(data, &rest_pose);
@@ -340,10 +339,10 @@ struct skeleton_s *gltf_loader_load_skeleton(cgltf_data *data) {
   pose_dtor(&rest_pose);
   pose_dtor(&bind_pose);
 
-  for (size_t i = 0; i < arrlenu(names); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(names); ++i) {
     free(names[i]);
   }
-  arrfree(names);
+  SM_ARRAY_DTOR(names);
 
   return skeleton;
 }
@@ -362,7 +361,7 @@ void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh, cgltf_attribute *at
     component_count = 4;
 
   float *values = NULL;
-  arrsetlen(values, accessor->count * component_count);
+  SM_ARRAY_SET_SIZE(values, accessor->count * component_count);
   for (cgltf_size i = 0; i < accessor->count; ++i) {
     cgltf_accessor_read_float(accessor, i, &values[i * component_count], component_count);
   }
@@ -380,27 +379,27 @@ void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh, cgltf_attribute *at
     switch (attr_type) {
     case cgltf_attribute_type_position:
       if (i == 0)
-        arrsetlen(mesh->vertex.positions, accessor_count);
+        SM_ARRAY_SET_SIZE(mesh->vertex.positions, accessor_count);
 
       mesh->vertex.positions[i] = vec3_new(values[index + 0], values[index + 1], values[index + 2]);
 
       break;
     case cgltf_attribute_type_texcoord:
       if (i == 0)
-        arrsetlen(mesh->vertex.tex_coords, accessor_count);
+        SM_ARRAY_SET_SIZE(mesh->vertex.tex_coords, accessor_count);
 
       mesh->vertex.tex_coords[i] = vec2_new(values[index + 0], (1.0f - values[index + 1]));
       break;
     case cgltf_attribute_type_weights:
       if (i == 0)
-        arrsetlen(mesh->weights, accessor_count);
+        SM_ARRAY_SET_SIZE(mesh->weights, accessor_count);
 
       mesh->weights[i] = vec4_new(values[index + 0], values[index + 1], values[index + 2], values[index + 3]);
       break;
 
     case cgltf_attribute_type_normal: {
       if (i == 0)
-        arrsetlen(mesh->vertex.normals, accessor_count);
+        SM_ARRAY_SET_SIZE(mesh->vertex.normals, accessor_count);
 
       vec3 norm = vec3_new(values[index + 0], values[index + 1], values[index + 2]);
       if (vec3_len_sq(norm) < EPSILON) {
@@ -410,7 +409,7 @@ void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh, cgltf_attribute *at
     } break;
     case cgltf_attribute_type_joints: {
       if (i == 0)
-        arrsetlen(mesh->influences, accessor_count);
+        SM_ARRAY_SET_SIZE(mesh->influences, accessor_count);
       // These indices are skin relative. This function has no information about
       // the skin that is being parsed. Add +0.5f to round, since we can't read
       // integers
@@ -430,7 +429,7 @@ void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh, cgltf_attribute *at
     }
   }
 
-  arrfree(values);
+  SM_ARRAY_DTOR(values);
 }
 
 // Loop through all of the nodes
@@ -452,8 +451,8 @@ skinned_mesh_s *gltf_loader_load_meshes(cgltf_data *data) {
     }
   }
 
-  skinned_mesh_s *meshes = NULL;
-  arrsetcap(meshes, msize);
+  skinned_mesh_s *meshes = (skinned_mesh_s *)SM_ARRAY_NEW_EMPTY();
+  SM_ARRAY_SET_CAPACITY(meshes, msize);
   for (size_t i = 0; i < node_count; ++i) {
     cgltf_node *node = &nodes[i];
     if (node->mesh == NULL || node->skin == NULL)
@@ -476,14 +475,14 @@ skinned_mesh_s *gltf_loader_load_meshes(cgltf_data *data) {
       // buffer of the mesh needs to be filled out as well
       if (primitive->indices != 0) {
         size_t ic = primitive->indices->count;
-        arrsetlen(m.indices, ic);
+        SM_ARRAY_SET_SIZE(m.indices, ic);
         for (uint32_t k = 0; k < ic; ++k) {
           m.indices[k] = cgltf_accessor_read_index(primitive->indices, k);
         }
       }
 
       skinned_mesh_update_gl_buffers(&m);
-      arrput(meshes, m);
+      SM_ARRAY_PUSH(meshes, m);
     }
   }
 

@@ -39,7 +39,7 @@ void controller_dtor(controller_s *controller) {
 
   assert(controller != NULL);
 
-  arrfree(controller->targets);
+  SM_ARRAY_DTOR(controller->targets);
   controller->targets = NULL;
 
   pose_dtor(&controller->pose);
@@ -55,7 +55,7 @@ void controller_do(controller_s *controller, float dt) {
   if (controller->clip == NULL || !controller->was_skeleton_set)
     return;
 
-  size_t num_targets = arrlenu(controller->targets);
+  size_t num_targets = SM_ARRAY_SIZE(controller->targets);
 
   for (size_t i = 0; i < num_targets; ++i) {
     float duration = controller->targets[i].duration;
@@ -69,12 +69,12 @@ void controller_do(controller_s *controller, float dt) {
 
       // TODO: arr delete like erase cpp
       // arrdel(controller->targets, i);
-      arrdel(controller->targets, i);
+      SM_ARRAY_DEL(controller->targets, i, 1);
       break;
     }
   }
 
-  num_targets = arrlenu(controller->targets);
+  num_targets = SM_ARRAY_SIZE(controller->targets);
   pose_copy(&controller->pose, skeleton_get_rest_pose(controller->skeleton));
   controller->time = clip_sample(controller->clip, &controller->pose, controller->time + dt);
 
@@ -107,7 +107,7 @@ void controller_skeleton_set(controller_s *controller, struct skeleton_s *skelet
 void controller_play(controller_s *controller, struct clip_s *target) {
 
   assert(controller != NULL);
-  arrsetlen(controller->targets, 0);
+  SM_ARRAY_SET_SIZE(controller->targets, 0);
 
   controller->clip = target;
 
@@ -124,7 +124,7 @@ void controller_fade_to(controller_s *controller, struct clip_s *target, float f
     return;
   }
 
-  size_t targets = arrlenu(controller->targets);
+  size_t targets = SM_ARRAY_SIZE(controller->targets);
   if (targets >= 1) {
     struct clip_s *clip = controller->targets[targets - 1].clip;
 
@@ -142,7 +142,7 @@ void controller_fade_to(controller_s *controller, struct clip_s *target, float f
   if (!cross_fade_target_ctor(&cross_targ, target, skeleton_get_rest_pose(controller->skeleton), fade_time))
     return;
 
-  arrput(controller->targets, cross_targ);
+  SM_ARRAY_PUSH(controller->targets, cross_targ);
 }
 
 pose_s *controller_get_current_pose(controller_s *controller) {

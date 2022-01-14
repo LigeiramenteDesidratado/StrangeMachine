@@ -8,6 +8,7 @@
 
 #include "smDebug.h"
 #include "smMesh.h"
+#include "smMem.h"
 #include "smShapes.h"
 
 #define FLT_EPSILON 1.192092896e-07
@@ -279,7 +280,7 @@ void collision_check_sphere_mesh(sphere_s s, mesh_s *mesh, intersect_result_s *r
   if (!check_collision_bounding_box(s_aabb, mesh_aabb))
     return;
 
-  for (size_t i = 0; i < arrlenu(mesh->vertex.positions); i += 3) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(mesh->vertex.positions); i += 3) {
 
     t.p0 = mesh->vertex.positions[i + 0];
     t.p1 = mesh->vertex.positions[i + 1];
@@ -308,7 +309,7 @@ void collision_check_capsule_mesh(capsule_s c, mesh_s *mesh, intersect_result_s 
   if (!check_collision_bounding_box(c_aabb, mesh_aabb))
     return;
 
-  for (size_t i = 0; i < arrlenu(mesh->vertex.positions); i += 3) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(mesh->vertex.positions); i += 3) {
 
     t.p0 = mesh->vertex.positions[i + 0];
     t.p1 = mesh->vertex.positions[i + 1];

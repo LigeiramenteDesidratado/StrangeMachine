@@ -8,8 +8,8 @@ affect, you can have a minimal number of tracks per clip. The Clip class should
 also keep track of metadata, such as the name of the clip, whether the clip is
 looping, and information about the time or duration of the clip. */
 
-#include "smPose.h"
 #include "smMem.h"
+#include "smPose.h"
 #include "smTransformTrack.h"
 #include "util/common.h"
 #include <assert.h>
@@ -47,6 +47,7 @@ clip_s *clip_new(void) {
 bool clip_ctor(clip_s *clip, const char *name) {
 
   assert(clip != NULL);
+  clip->tracks = (transform_track_s *)SM_ARRAY_NEW_EMPTY();
   __clip_set_name(clip, name);
 
   return true;
@@ -57,10 +58,10 @@ void clip_dtor(clip_s *clip) {
 
   assert(clip != NULL);
 
-  for (size_t i = 0; i < arrlenu(clip->tracks); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(clip->tracks); ++i) {
     transform_track_dtor(&clip->tracks[i]);
   }
-  arrfree(clip->tracks);
+  SM_ARRAY_DTOR(clip->tracks);
   clip->tracks = NULL;
 
   if (clip->name != NULL) {
@@ -103,7 +104,7 @@ static float __clip_adjust_time(const clip_s *const clip, float t) {
 uint32_t clip_get_id_at_index(const clip_s *const clip, uint32_t index) {
   assert(clip != NULL);
 
-  if (index >= arrlenu(clip->tracks))
+  if (index >= SM_ARRAY_SIZE(clip->tracks))
     return 0;
 
   return clip->tracks[index].id;
@@ -112,20 +113,20 @@ uint32_t clip_get_id_at_index(const clip_s *const clip, uint32_t index) {
 void clip_set_id_at_index(clip_s *clip, uint32_t index, uint32_t id) {
   assert(clip != NULL);
 
-  if (index < arrlenu(clip->tracks))
+  if (index < SM_ARRAY_SIZE(clip->tracks))
     clip->tracks[index].id = id;
 }
 
 size_t clip_get_size(const clip_s *const clip) {
   assert(clip != NULL);
 
-  return arrlenu(clip->tracks);
+  return SM_ARRAY_SIZE(clip->tracks);
 }
 
 void clip_set_cap_tracks(clip_s *clip, size_t value) {
   assert(clip != NULL);
 
-  arrsetcap(clip->tracks, value);
+  SM_ARRAY_SET_CAPACITY(clip->tracks, value);
 }
 
 // The Sample function takes a  posere ference and a time and returns a float
@@ -141,7 +142,7 @@ float clip_sample(const clip_s *const clip, pose_s *pose, float t) {
 
   t = __clip_adjust_time(clip, t);
 
-  size_t size = arrlenu(clip->tracks);
+  size_t size = SM_ARRAY_SIZE(clip->tracks);
   for (size_t i = 0; i < size; ++i) {
     uint32_t j = clip->tracks[i].id; // joint
     transform_s local = pose_get_local_transform(pose, j);
@@ -168,7 +169,7 @@ void clip_recalculate_duration(clip_s *clip) {
   bool start_set = false;
   bool end_set = false;
 
-  size_t track_size = arrlen(clip->tracks);
+  size_t track_size = SM_ARRAY_SIZE(clip->tracks);
   for (size_t i = 0; i < track_size; ++i) {
     if (transform_track_is_valid(&clip->tracks[i])) {
       float start_time = transform_track_get_start_time(&clip->tracks[i]);
@@ -198,7 +199,7 @@ void clip_recalculate_duration(clip_s *clip) {
 transform_track_s *clip_get_transform_track_from_joint(clip_s *clip, uint32_t joint) {
   assert(clip != NULL);
 
-  for (size_t i = 0, s = arrlenu(clip->tracks); i < s; ++i) {
+  for (size_t i = 0, s = SM_ARRAY_SIZE(clip->tracks); i < s; ++i) {
     if (clip->tracks[i].id == joint) {
       return &clip->tracks[i];
     }
@@ -207,14 +208,15 @@ transform_track_s *clip_get_transform_track_from_joint(clip_s *clip, uint32_t jo
   transform_track_s tr = transform_track_new();
   tr.id = joint;
 
-  arrput(clip->tracks, tr);
-  return &arrlast(clip->tracks);
+  SM_ARRAY_PUSH(clip->tracks, tr);
+  return &clip->tracks[SM_ARRAY_SIZE(clip->tracks) - 1];
+  /* return &arrlast(clip->tracks); */
 }
 
 void clip_resize_tracks(clip_s *clip, size_t size) {
   assert(clip != NULL);
 
-  arrsetcap(clip->tracks, size);
+  SM_ARRAY_SET_CAPACITY(clip->tracks, size);
 }
 
 char *clip_get_name(const clip_s *const clip) {

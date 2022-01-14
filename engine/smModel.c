@@ -1,13 +1,13 @@
 #include "util/bitmask.h"
 #include "util/common.h"
 
+#include "smMem.h"
 #include "smMesh.h"
 #include "smOBJLoader.h"
 #include "smShader.h"
 #include "smShaderProgram.h"
 #include "smTexture.h"
 #include "smUniform.h"
-#include "smMem.h"
 
 typedef struct {
 
@@ -44,7 +44,7 @@ bool model_ctor(model_s *model, const char *obj_path, const char *texture_path) 
     return false;
   }
 
-  for (uint32_t i = 0; i < arrlenu(model->meshes); ++i) {
+  for (uint32_t i = 0; i < SM_ARRAY_SIZE(model->meshes); ++i) {
     if (!mesh_ctor(&model->meshes[i])) {
       log_error("failed to construct model");
       return false;
@@ -65,10 +65,10 @@ bool model_ctor(model_s *model, const char *obj_path, const char *texture_path) 
 }
 
 void model_dtor(model_s *model) {
-  for (size_t i = 0; i < arrlenu(model->meshes); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(model->meshes); ++i) {
     mesh_dtor(&model->meshes[i]);
   }
-  arrfree(model->meshes);
+  SM_ARRAY_DTOR(model->meshes);
 
   texture_dtor(&model->texture);
 
@@ -101,17 +101,17 @@ void model_draw(const model_s *const model) {
   MASK_SET(flags, 1 << mesh_attr_locs.tex_coord);
   MASK_SET(flags, 1 << mesh_attr_locs.normal);
 
-  for (size_t i = 0; i < arrlenu(model->meshes); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(model->meshes); ++i) {
     mesh_bind(&model->meshes[i], flags);
     /* mesh_draw(model->meshes[i]); */
-    glDrawArrays(GL_TRIANGLES, 0, arrlenu(model->meshes[i].vertex.positions));
+    glDrawArrays(GL_TRIANGLES, 0, SM_ARRAY_SIZE(model->meshes[i].vertex.positions));
     mesh_unbind(&model->meshes[i], flags);
   }
   texture_unset(0);
 
   shader_unbind();
 
-  /* for (size_t i = 0; i < arrlenu(model->meshes); ++i) { */
+  /* for (size_t i = 0; i < SM_ARRAY_SIZE(model->meshes); ++i) { */
   /* mesh_draw_debug(&model->meshes[i]); */
   /* }; */
 }
@@ -132,4 +132,6 @@ static bool string_suffix(const char *str, const char *suffix) {
   return false;
 }
 
-mesh_s **model_get_meshes(model_s *model) { return &model->meshes; }
+mesh_s **model_get_meshes(model_s *model) {
+  return &model->meshes;
+}

@@ -97,7 +97,11 @@ void __smmem_free(void *ptr) {
   }
 }
 
+#define BYTES2KB ((float)(1 << 10))
+#define BYTES2MB ((float)(1 << 20))
+#define BYTES2GB ((float)(1 << 30))
+
 void __smmem_print(void) {
-  printf("allocations: %lu\ntotal alloctions:%lu\nbytes: %lu\ntotal bytes:%lu\nfree calls:%lu\n", mem_info.allocs,
-         mem_info.total_allocs, mem_info.bytes, mem_info.total_bytes, mem_info.frees);
+  printf("allocations: %lu\ntotal alloctions: %lu\nbytes: %lu\ntotal bytes: %.3fMB\nfree calls: %lu\n", mem_info.allocs,
+         mem_info.total_allocs, mem_info.bytes, ((float)mem_info.total_bytes / BYTES2MB), mem_info.frees);
 }

@@ -61,7 +61,7 @@ void __smmem_print(void);
 #define SM_ARRAY_SET_SIZE(arr, size)                                                                                   \
   do {                                                                                                                 \
     assert(size >= 0 && "negative size");                                                                              \
-    size_t *raw = ((size_t *)(arr)-2);                                                                                 \
+    size_t *raw = (!arr) ? SM_CALLOC(1, 2 * SM_MEM_HEADER_SIZE + sizeof((*arr)) * (size)) : ((size_t *)(arr)-2);       \
     if (size > raw[1]) {                                                                                               \
       void *__tmp = NULL;                                                                                              \
       __tmp = SM_REALLOC(raw, 2 * SM_MEM_HEADER_SIZE + size * sizeof((*arr)));                                         \
@@ -78,7 +78,7 @@ void __smmem_print(void);
 #define SM_ARRAY_SET_CAPACITY(arr, size)                                                                               \
   do {                                                                                                                 \
     assert(size > 0 && "negative size or non zero");                                                                   \
-    size_t *raw = ((size_t *)(arr)-2);                                                                                 \
+    size_t *raw = (!arr) ? SM_CALLOC(1, 2 * SM_MEM_HEADER_SIZE + sizeof((*arr)) * (size)) : ((size_t *)(arr)-2);       \
     {                                                                                                                  \
       void *__tmp = NULL;                                                                                              \
       __tmp = SM_REALLOC(raw, 2 * SM_MEM_HEADER_SIZE + size * sizeof((*arr)));                                         \
@@ -106,7 +106,7 @@ void __smmem_print(void);
 
 #define SM_ARRAY_PUSH(arr, value)                                                                                      \
   do {                                                                                                                 \
-    size_t *raw = ((size_t *)(arr)-2);                                                                                 \
+    size_t *raw = (!arr) ? SM_CALLOC(1, 2 * SM_MEM_HEADER_SIZE + sizeof((*arr))) : ((size_t *)(arr)-2);                \
     raw[0] = raw[0] + 1;                                                                                               \
     if (raw[1] == 0) { /* TODO : remove this check ? */                                                                \
       raw[1] = 1;                                                                                                      \
@@ -147,5 +147,7 @@ void __smmem_print(void);
     memmove(&(arr)[(i)], &(arr)[(i) + (n)], sizeof((*arr)) * ((raw)[0] - ((i) + (n))));                                \
     raw[0] = ((i) + (n) >= raw[0]) ? (raw[0] - (raw[0] - (i))) : raw[0] - (n);                                         \
   } while (0)
+
+/* TODO: HASH TABLE */
 
 #endif // SM_MEM_H

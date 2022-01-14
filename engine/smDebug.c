@@ -1,4 +1,5 @@
 #include "smAttribute.h"
+#include "smMem.h"
 #include "smShader.h"
 #include "smShaderProgram.h"
 #include "smShapes.h"
@@ -27,15 +28,18 @@ bool debug_init() {
   if (!attribute_ctor(&DEBUG.color_attr, VEC3_KIND))
     return false;
 
+  DEBUG.colors = (vec3 *)SM_ARRAY_NEW_EMPTY();
+  DEBUG.positions = (vec3 *)SM_ARRAY_NEW_EMPTY();
+
   return true;
 }
 
 void debug_tear_down(void) {
   attribute_dtor(&DEBUG.position_attr);
-  arrfree(DEBUG.positions);
+  SM_ARRAY_DTOR(DEBUG.positions);
 
   attribute_dtor(&DEBUG.color_attr);
-  arrfree(DEBUG.colors);
+  SM_ARRAY_DTOR(DEBUG.colors);
 }
 
 // Draw aabb wires.
@@ -138,8 +142,8 @@ void debug_draw_aabb(bounding_box_s aabb, vec3 color) {
 // Maybe I fix this later in favor of using transformation_s
 void debug_draw_capsule(capsule_s c) {
 
-  vec3 *vert = NULL;
-  vec3 *colors = NULL;
+  vec3 *vert = (vec3 *)SM_ARRAY_NEW_EMPTY();
+  vec3 *colors = (vec3 *)SM_ARRAY_NEW_EMPTY();
 
   // Since we only have a description of the capsule we need to generate
   // all the vertices of the capsule
@@ -173,12 +177,12 @@ void debug_draw_capsule(capsule_s c) {
     pt = vec3_add(vec3_scale(tmp, c.radius), to);
     pf = vec3_add(vec3_scale(tmp, c.radius), from);
 
-    arrput(vert, lastf);
-    arrput(vert, pf);
-    arrput(vert, lastt);
-    arrput(vert, pt);
-    arrput(vert, pf);
-    arrput(vert, pt);
+    SM_ARRAY_PUSH(vert, lastf);
+    SM_ARRAY_PUSH(vert, pf);
+    SM_ARRAY_PUSH(vert, lastt);
+    SM_ARRAY_PUSH(vert, pt);
+    SM_ARRAY_PUSH(vert, pf);
+    SM_ARRAY_PUSH(vert, pt);
 
     lastf = pf;
     lastt = pt;
@@ -201,8 +205,8 @@ void debug_draw_capsule(capsule_s c) {
       t = vec3_add(ax, ay);
       pf = vec3_add(vec3_scale(t, c.radius), to);
 
-      arrput(vert, pf);
-      arrput(vert, prevt);
+      SM_ARRAY_PUSH(vert, pf);
+      SM_ARRAY_PUSH(vert, prevt);
 
       prevt = pf;
 
@@ -212,17 +216,17 @@ void debug_draw_capsule(capsule_s c) {
       t = vec3_add(ax, ay);
       pf = vec3_add(vec3_scale(t, c.radius), from);
 
-      arrput(vert, pf);
-      arrput(vert, prevf);
+      SM_ARRAY_PUSH(vert, pf);
+      SM_ARRAY_PUSH(vert, prevf);
 
       prevf = pf;
     }
   }
 
-  size_t s = arrlenu(vert);
-  arrsetlen(colors, s);
+  size_t s = SM_ARRAY_SIZE(vert);
+  SM_ARRAY_SET_CAPACITY(colors, s);
   for (size_t i = 0; i < s; ++i) {
-    colors[i] = vec3_new(1.0f, 1.0f, 1.0f);
+    SM_ARRAY_PUSH(colors, vec3_new(0.6f, 0.5f, 0.7f));
   }
 
   shader_bind(SHADERS[DEBUG_SHADER]);
@@ -242,8 +246,8 @@ void debug_draw_capsule(capsule_s c) {
 
   shader_unbind();
 
-  arrfree(vert);
-  arrfree(colors);
+  SM_ARRAY_DTOR(vert);
+  SM_ARRAY_DTOR(colors);
 }
 
 void debug_draw_line(vec3 from, vec3 to, vec3 color) {

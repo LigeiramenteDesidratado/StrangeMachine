@@ -29,6 +29,8 @@ bool skeleton_ctor(skeleton_s *skeleton, pose_s *rest, pose_s *bind, const char 
 
   assert(skeleton != NULL);
 
+  skeleton->inverse_bind_pose = (mat4 *)SM_ARRAY_NEW_EMPTY();
+  skeleton->joint_names = (char **)SM_ARRAY_NEW_EMPTY();
   skeleton_set(skeleton, rest, bind, names);
 
   return true;
@@ -38,8 +40,8 @@ bool skeleton_ctor(skeleton_s *skeleton, pose_s *rest, pose_s *bind, const char 
 void skeleton_dtor(skeleton_s *skeleton) {
   assert(skeleton != NULL);
 
-  arrfree(skeleton->joint_names);
-  arrfree(skeleton->inverse_bind_pose);
+  SM_ARRAY_DTOR(skeleton->joint_names);
+  SM_ARRAY_DTOR(skeleton->inverse_bind_pose);
 
   pose_dtor(&skeleton->bind_pose);
   pose_dtor(&skeleton->rest_pose);
@@ -61,13 +63,13 @@ void skeleton_set(skeleton_s *skeleton, pose_s *rest, pose_s *bind, const char *
   pose_copy(&skeleton->rest_pose, rest);
   pose_copy(&skeleton->bind_pose, bind);
 
-  size_t length = arrlenu(names);
-  if (arrlenu(skeleton->joint_names) > 0)
-    arrfree(skeleton->joint_names);
+  size_t length = SM_ARRAY_SIZE(names);
+  if (SM_ARRAY_SIZE(skeleton->joint_names) > 0)
+    SM_ARRAY_SET_SIZE(skeleton->joint_names, 0);
 
-  arrsetcap(skeleton->joint_names, length);
+  SM_ARRAY_SET_CAPACITY(skeleton->joint_names, length);
   for (size_t i = 0; i < length; ++i) {
-    arrput(skeleton->joint_names, (char *)names[i]);
+    SM_ARRAY_PUSH(skeleton->joint_names, (char *)names[i]);
   }
 
   skeleton_update_inverse_bind_pose(skeleton);
@@ -77,8 +79,8 @@ void skeleton_update_inverse_bind_pose(skeleton_s *skeleton) {
 
   assert(skeleton != NULL);
 
-  size_t size = arrlenu(skeleton->bind_pose.nodes);
-  arrsetlen(skeleton->inverse_bind_pose, size);
+  size_t size = SM_ARRAY_SIZE(skeleton->bind_pose.nodes);
+  SM_ARRAY_SET_SIZE(skeleton->inverse_bind_pose, size);
   assert(skeleton->inverse_bind_pose != NULL);
 
   for (size_t i = 0; i < size; ++i) {

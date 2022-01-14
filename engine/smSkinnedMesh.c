@@ -1,4 +1,5 @@
 #include "smSkinnedMesh.h"
+#include "smMem.h"
 #include "util/bitmask.h"
 #include "util/common.h"
 
@@ -42,6 +43,18 @@ bool skinned_mesh_ctor(skinned_mesh_s *mesh) {
     return false;
   mesh->index_buffer = index_buffer;
 
+  mesh->vertex.positions = (vec3 *)SM_ARRAY_NEW_EMPTY();
+  mesh->vertex.tex_coords = (vec2 *)SM_ARRAY_NEW_EMPTY();
+  mesh->vertex.normals = (vec3 *)SM_ARRAY_NEW_EMPTY();
+
+  mesh->weights = (vec4 *)SM_ARRAY_NEW_EMPTY();
+  mesh->influences = (ivec4 *)SM_ARRAY_NEW_EMPTY();
+  mesh->indices = (uint32_t *)SM_ARRAY_NEW_EMPTY();
+
+  mesh->skinned_position = (vec3 *)SM_ARRAY_NEW_EMPTY();
+  mesh->skinned_normal = (vec3 *)SM_ARRAY_NEW_EMPTY();
+  mesh->pose_palette = (mat4 *)SM_ARRAY_NEW_EMPTY();
+
   return true;
 }
 
@@ -56,15 +69,15 @@ void skinned_mesh_dtor(skinned_mesh_s *mesh) {
   attribute_dtor(&mesh->vertex.normal_attr);
   attribute_dtor(&mesh->vertex.position_attr);
 
-  arrfree(mesh->vertex.positions);
-  arrfree(mesh->vertex.tex_coords);
-  arrfree(mesh->vertex.normals);
-  arrfree(mesh->weights);
-  arrfree(mesh->influences);
-  arrfree(mesh->indices);
-  arrfree(mesh->skinned_position);
-  arrfree(mesh->skinned_normal);
-  arrfree(mesh->pose_palette);
+  SM_ARRAY_DTOR(mesh->vertex.positions);
+  SM_ARRAY_DTOR(mesh->vertex.tex_coords);
+  SM_ARRAY_DTOR(mesh->vertex.normals);
+  SM_ARRAY_DTOR(mesh->weights);
+  SM_ARRAY_DTOR(mesh->influences);
+  SM_ARRAY_DTOR(mesh->indices);
+  SM_ARRAY_DTOR(mesh->skinned_position);
+  SM_ARRAY_DTOR(mesh->skinned_normal);
+  SM_ARRAY_DTOR(mesh->pose_palette);
 }
 
 // mesh_copy which copy out the CPU-side members
@@ -77,23 +90,23 @@ void skinned_mesh_copy(skinned_mesh_s *dest, const skinned_mesh_s *const src) {
   if (src == dest)
     return;
 
-  arrsetlen(dest->vertex.positions, arrlenu(src->vertex.positions));
-  memcpy(dest->vertex.positions, src->vertex.positions, sizeof(vec3) * arrlenu(src->vertex.positions));
+  SM_ARRAY_SET_SIZE(dest->vertex.positions, SM_ARRAY_SIZE(src->vertex.positions));
+  memcpy(dest->vertex.positions, src->vertex.positions, sizeof(vec3) * SM_ARRAY_SIZE(src->vertex.positions));
 
-  arrsetlen(dest->vertex.normals, arrlenu(src->vertex.normals));
-  memcpy(dest->vertex.normals, src->vertex.normals, sizeof(vec3) * arrlenu(src->vertex.normals));
+  SM_ARRAY_SET_SIZE(dest->vertex.normals, SM_ARRAY_SIZE(src->vertex.normals));
+  memcpy(dest->vertex.normals, src->vertex.normals, sizeof(vec3) * SM_ARRAY_SIZE(src->vertex.normals));
 
-  arrsetlen(dest->vertex.tex_coords, arrlenu(src->vertex.tex_coords));
-  memcpy(dest->vertex.tex_coords, src->vertex.tex_coords, sizeof(vec2) * arrlenu(src->vertex.tex_coords));
+  SM_ARRAY_SET_SIZE(dest->vertex.tex_coords, SM_ARRAY_SIZE(src->vertex.tex_coords));
+  memcpy(dest->vertex.tex_coords, src->vertex.tex_coords, sizeof(vec2) * SM_ARRAY_SIZE(src->vertex.tex_coords));
 
-  arrsetlen(dest->weights, arrlenu(src->weights));
-  memcpy(dest->weights, src->weights, sizeof(vec4) * arrlenu(src->weights));
+  SM_ARRAY_SET_SIZE(dest->weights, SM_ARRAY_SIZE(src->weights));
+  memcpy(dest->weights, src->weights, sizeof(vec4) * SM_ARRAY_SIZE(src->weights));
 
-  arrsetlen(dest->influences, arrlenu(src->influences));
-  memcpy(dest->influences, src->influences, sizeof(ivec4) * arrlenu(src->influences));
+  SM_ARRAY_SET_SIZE(dest->influences, SM_ARRAY_SIZE(src->influences));
+  memcpy(dest->influences, src->influences, sizeof(ivec4) * SM_ARRAY_SIZE(src->influences));
 
-  arrsetlen(dest->indices, arrlenu(src->indices));
-  memcpy(dest->indices, src->indices, sizeof(uint32_t) * arrlenu(src->indices));
+  SM_ARRAY_SET_SIZE(dest->indices, SM_ARRAY_SIZE(src->indices));
+  memcpy(dest->indices, src->indices, sizeof(uint32_t) * SM_ARRAY_SIZE(src->indices));
 
   skinned_mesh_update_gl_buffers(dest);
 }
@@ -101,23 +114,25 @@ void skinned_mesh_copy(skinned_mesh_s *dest, const skinned_mesh_s *const src) {
 void skinned_mesh_update_gl_buffers(skinned_mesh_s *mesh) {
   assert(mesh != NULL);
 
-  if (arrlenu(mesh->vertex.positions) > 0)
-    attribute_set(&mesh->vertex.position_attr, mesh->vertex.positions, arrlenu(mesh->vertex.positions), GL_STREAM_DRAW);
+  if (SM_ARRAY_SIZE(mesh->vertex.positions) > 0)
+    attribute_set(&mesh->vertex.position_attr, mesh->vertex.positions, SM_ARRAY_SIZE(mesh->vertex.positions),
+                  GL_STREAM_DRAW);
 
-  if (arrlenu(mesh->vertex.normals) > 0)
-    attribute_set(&mesh->vertex.normal_attr, mesh->vertex.normals, arrlenu(mesh->vertex.normals), GL_STREAM_DRAW);
+  if (SM_ARRAY_SIZE(mesh->vertex.normals) > 0)
+    attribute_set(&mesh->vertex.normal_attr, mesh->vertex.normals, SM_ARRAY_SIZE(mesh->vertex.normals), GL_STREAM_DRAW);
 
-  if (arrlenu(mesh->vertex.tex_coords) > 0)
-    attribute_set(&mesh->vertex.uv_attr, mesh->vertex.tex_coords, arrlenu(mesh->vertex.tex_coords), GL_STREAM_DRAW);
+  if (SM_ARRAY_SIZE(mesh->vertex.tex_coords) > 0)
+    attribute_set(&mesh->vertex.uv_attr, mesh->vertex.tex_coords, SM_ARRAY_SIZE(mesh->vertex.tex_coords),
+                  GL_STREAM_DRAW);
 
-  if (arrlenu(mesh->weights) > 0)
-    attribute_set(&mesh->weight_attr, mesh->weights, arrlenu(mesh->weights), GL_STREAM_DRAW);
+  if (SM_ARRAY_SIZE(mesh->weights) > 0)
+    attribute_set(&mesh->weight_attr, mesh->weights, SM_ARRAY_SIZE(mesh->weights), GL_STREAM_DRAW);
 
-  if (arrlenu(mesh->influences) > 0)
-    attribute_set(&mesh->influence_attr, mesh->influences, arrlenu(mesh->influences), GL_STREAM_DRAW);
+  if (SM_ARRAY_SIZE(mesh->influences) > 0)
+    attribute_set(&mesh->influence_attr, mesh->influences, SM_ARRAY_SIZE(mesh->influences), GL_STREAM_DRAW);
 
-  if (arrlenu(mesh->indices) > 0)
-    index_buffer_set(&mesh->index_buffer, &mesh->indices[0], arrlenu(mesh->indices));
+  if (SM_ARRAY_SIZE(mesh->indices) > 0)
+    index_buffer_set(&mesh->index_buffer, &mesh->indices[0], SM_ARRAY_SIZE(mesh->indices));
 }
 
 void skinned_mesh_bind(const skinned_mesh_s *const mesh, uint8_t flag) {
@@ -161,10 +176,10 @@ void skinned_mesh_unbind(const skinned_mesh_s *const mesh, uint8_t flag) {
 
 // void skinned_mesh_draw(skinned_mesh_s *mesh) {
 //   assert(mesh != NULL);
-//   if (arrlenu(mesh->indices) > 0) {
+//   if (SM_ARRAY_SIZE(mesh->indices) > 0) {
 //     draw_index_buffer(mesh->index_buffer, Triangles);
 //   } else {
-//     draw_vertex(arrlenu(mesh->position), Triangles);
+//     draw_vertex(SM_ARRAY_SIZE(mesh->position), Triangles);
 //   }
 // }
 //
@@ -172,11 +187,11 @@ void skinned_mesh_unbind(const skinned_mesh_s *const mesh, uint8_t flag) {
 // num_instances) {
 //   assert(mesh != NULL);
 //
-//   if (arrlenu(mesh->indices) > 0) {
+//   if (SM_ARRAY_SIZE(mesh->indices) > 0) {
 //     // TODO: waiting for draw_index_buffer_instanced impl...
 //     log_warn("not implemented..\n");
 //   } else {
-//     draw_vertex_instanced(arrlenu(mesh->position), Triangles, num_instances);
+//     draw_vertex_instanced(SM_ARRAY_SIZE(mesh->position), Triangles, num_instances);
 //   }
 // }
 
@@ -184,11 +199,11 @@ void skinned_mesh_CPU_skin_matrix_opt(skinned_mesh_s *mesh, mat4 *animated_pose)
 
   assert(mesh != NULL);
 
-  size_t num_verts = arrlenu(mesh->vertex.positions);
+  size_t num_verts = SM_ARRAY_SIZE(mesh->vertex.positions);
   assert(num_verts != 0);
 
-  arrsetlen(mesh->skinned_position, num_verts);
-  arrsetlen(mesh->skinned_normal, num_verts);
+  SM_ARRAY_SET_SIZE(mesh->skinned_position, num_verts);
+  SM_ARRAY_SET_SIZE(mesh->skinned_normal, num_verts);
 
   for (size_t i = 0; i < num_verts; ++i) {
 
@@ -212,6 +227,7 @@ void skinned_mesh_CPU_skin_matrix_opt(skinned_mesh_s *mesh, mat4 *animated_pose)
                                        vec3_add(vec3_scale(n2, w.z), vec3_scale(n3, w.w)));
   }
 
-  attribute_set(&mesh->vertex.position_attr, mesh->skinned_position, arrlenu(mesh->skinned_position), GL_STREAM_DRAW);
-  attribute_set(&mesh->vertex.normal_attr, mesh->skinned_normal, arrlenu(mesh->skinned_normal), GL_STREAM_DRAW);
+  attribute_set(&mesh->vertex.position_attr, mesh->skinned_position, SM_ARRAY_SIZE(mesh->skinned_position),
+                GL_STREAM_DRAW);
+  attribute_set(&mesh->vertex.normal_attr, mesh->skinned_normal, SM_ARRAY_SIZE(mesh->skinned_normal), GL_STREAM_DRAW);
 }

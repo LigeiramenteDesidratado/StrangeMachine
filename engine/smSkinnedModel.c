@@ -2,9 +2,9 @@
 #include "util/common.h"
 
 #include "smController.h"
-#include "smMem.h"
 #include "smGLTFLoader.h"
 #include "smInput.h"
+#include "smMem.h"
 #include "smRearrangeBones.h"
 #include "smShader.h"
 #include "smShaderProgram.h"
@@ -48,11 +48,11 @@ bool skinned_model_ctor(skinned_model_s *skinned_model, const char *gltf_path, c
   gltf_loader_free_data(data);
 
   bone_map_s *opt_maps = rearrange_skeleton(skinned_model->skeleton);
-  for (size_t i = 0; i < arrlenu(skinned_model->meshes); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(skinned_model->meshes); ++i) {
     rearrange_mesh(&skinned_model->meshes[i], opt_maps);
   }
 
-  for (size_t i = 0; i < arrlenu(skinned_model->clips); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(skinned_model->clips); ++i) {
     rearrange_clip(skinned_model->clips[i], opt_maps);
   }
   hmfree(opt_maps);
@@ -84,19 +84,19 @@ void skinned_model_dtor(skinned_model_s *skinned_model) {
 
   controller_dtor(skinned_model->fade_controller);
 
-  arrfree(skinned_model->pose_palette);
+  SM_ARRAY_DTOR(skinned_model->pose_palette);
 
   skeleton_dtor(skinned_model->skeleton);
 
-  for (size_t i = 0; i < arrlenu(skinned_model->clips); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(skinned_model->clips); ++i) {
     clip_dtor(skinned_model->clips[i]);
   }
-  arrfree(skinned_model->clips);
+  SM_ARRAY_DTOR(skinned_model->clips);
 
-  for (size_t i = 0; i < arrlenu(skinned_model->meshes); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(skinned_model->meshes); ++i) {
     skinned_mesh_dtor(&skinned_model->meshes[i]);
   }
-  arrfree(skinned_model->meshes);
+  SM_ARRAY_DTOR(skinned_model->meshes);
 
   SM_FREE(skinned_model);
   skinned_model = NULL;
@@ -119,7 +119,7 @@ void skinned_model_do(skinned_model_s *skinned_model, float dt) {
   pose_get_matrix_palette(controller_get_current_pose(skinned_model->fade_controller), &skinned_model->pose_palette);
 
   mat4 **inverse_bind_pose = skeleton_get_inverse_bind_pose(skinned_model->skeleton);
-  for (size_t i = 0; i < arrlenu(skinned_model->pose_palette); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(skinned_model->pose_palette); ++i) {
     skinned_model->pose_palette[i] = mat4_mul(skinned_model->pose_palette[i], (*inverse_bind_pose)[i]);
   }
 }
@@ -129,7 +129,7 @@ void skinned_model_draw(skinned_model_s *skinned_model) {
 
   shader_bind(SHADERS[SKINNED_SHADER]);
   uniform_set_array(glGetUniformLocation(SHADERS[SKINNED_SHADER], "animated"), skinned_model->pose_palette,
-                    (int32_t)arrlenu(skinned_model->pose_palette));
+                    (int32_t)SM_ARRAY_SIZE(skinned_model->pose_palette));
 
   texture_set(&skinned_model->texture, glGetUniformLocation(SHADERS[SKINNED_SHADER], "tex0"), 0);
 
@@ -140,7 +140,7 @@ void skinned_model_draw(skinned_model_s *skinned_model) {
   MASK_SET(flags, 1 << skinned_mesh_attr_locs.weight);
   MASK_SET(flags, 1 << skinned_mesh_attr_locs.joint);
 
-  for (size_t i = 0; i < arrlenu(skinned_model->meshes); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_SIZE(skinned_model->meshes); ++i) {
     skinned_mesh_bind(&skinned_model->meshes[i], flags);
 
     GLuint handle = skinned_model->meshes[i].index_buffer.ebo;
@@ -159,7 +159,7 @@ void skinned_model_draw(skinned_model_s *skinned_model) {
 
 bool skinned_model_set_animation(skinned_model_s *skinned_model, const char *animation) {
 
-  for (unsigned int i = 0; i < arrlenu(skinned_model->clips); ++i) {
+  for (unsigned int i = 0; i < SM_ARRAY_SIZE(skinned_model->clips); ++i) {
     if (strcmp(clip_get_name(skinned_model->clips[i]), animation) == 0) {
       skinned_model->next_clip = i;
       return true;
@@ -171,6 +171,6 @@ bool skinned_model_set_animation(skinned_model_s *skinned_model, const char *ani
 
 void next_animation(skinned_model_s *sample) {
   sample->next_clip++;
-  if (sample->next_clip >= arrlenu(sample->clips))
+  if (sample->next_clip >= SM_ARRAY_SIZE(sample->clips))
     sample->next_clip = 0;
 }
