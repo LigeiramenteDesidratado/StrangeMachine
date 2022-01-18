@@ -5,10 +5,10 @@
 #include "smUniform.h"
 
 #include "smAttribute.h"
-#include "smMem.h"
 #include "smCamera.h"
 #include "smDebug.h"
 #include "smInput.h"
+#include "smMem.h"
 #include "smMesh.h"
 #include "smModel.h"
 #include "smShaderProgram.h"
