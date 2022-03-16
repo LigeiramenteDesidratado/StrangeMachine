@@ -3,3 +3,4 @@ AlignConsecutiveMacros: AcrossComments
 AllowShortBlocksOnASingleLine: Empty
 AllowShortFunctionsOnASingleLine: Empty
 AlignTrailingComments: true
+IndentPPDirectives: BeforeHash
