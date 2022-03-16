@@ -1,12 +1,16 @@
-#include "smText.h"
-#include "smAttribute.h"
-#include "smShader.h"
-#include "smShaderProgram.h"
-#include "smTexture.h"
-#include "smUniform.h"
 #include "util/common.h"
 
+#include "data/array.h"
+
+#include "smAttribute.h"
 #include "smMem.h"
+#include "smShader.h"
+#include "smShaderProgram.h"
+#include "smText.h"
+#include "smTexture.h"
+#include "smUniform.h"
+
+#include <stdarg.h>
 
 #define GLYPH_W 7
 #define GLYPH_H 7
@@ -70,7 +74,7 @@ void text_draw(vec2 dest, float line_width, vec3 color, char *format, ...) {
   va_end(argsf);
 
   size_t len = strlen(text_buffer);
-  float initx = dest.x;
+  float initx = dest[0];
   float srcY = 0.0f;
   float srcX = 0.0f;
 
@@ -79,29 +83,31 @@ void text_draw(vec2 dest, float line_width, vec3 color, char *format, ...) {
   float width = (float)TEXT.texture.width;
   float height = (float)TEXT.texture.height;
 
+  uint32_t c_index = 0;
+
   for (size_t i = 0; i < len; i++) {
     char c = text_buffer[i];
     if (c == '\n') {
-      dest.x = initx;
-      dest.y += GLYPH_H + space_bY;
+      dest[0] = initx;
+      dest[1] += GLYPH_H + space_bY;
       continue;
     }
 
     if (c >= ' ' && c <= '~') {
       if (c == ' ') {
-        dest.x += GLYPH_W + space_bX;
+        dest[0] += GLYPH_W + space_bX;
         continue;
       }
 
       srcX = (c - ' ') * GLYPH_W;
 
-      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x, dest.y, 0.0f));           // top left
-      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x, dest.y + GLYPH_H, 0.0f)); // bottom left
-      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y, 0.0f)); // top right
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest[0], dest[1], 0.0f));           // top left
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest[0], dest[1] + GLYPH_H, 0.0f)); // bottom left
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest[0] + GLYPH_W, dest[1], 0.0f)); // top right
 
-      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y + GLYPH_H, 0.0f)); // bottom right
-      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x + GLYPH_W, dest.y, 0.0f));           // top right
-      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest.x, dest.y + GLYPH_H, 0.0f));           // bottom left
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest[0] + GLYPH_W, dest[1] + GLYPH_H, 0.0f)); // bottom right
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest[0] + GLYPH_W, dest[1], 0.0f));           // top right
+      SM_ARRAY_PUSH(TEXT.positions, vec3_new(dest[0], dest[1] + GLYPH_H, 0.0f));           // bottom left
 
       // OpenGL does store texture "upside-down", so flip it
       SM_ARRAY_PUSH(TEXT.tex_coords, vec2_new(srcX / width, (srcY + GLYPH_H) / height));             // top left
@@ -112,19 +118,19 @@ void text_draw(vec2 dest, float line_width, vec3 color, char *format, ...) {
       SM_ARRAY_PUSH(TEXT.tex_coords, vec2_new((srcX + GLYPH_W) / width, (srcY + GLYPH_H) / height)); // top right
       SM_ARRAY_PUSH(TEXT.tex_coords, vec2_new(srcX / width, srcY / height));                         // bottom left
 
-      SM_ARRAY_PUSH(TEXT.color, color);
-      SM_ARRAY_PUSH(TEXT.color, color);
-      SM_ARRAY_PUSH(TEXT.color, color);
+      SM_ARRAY_PUSH(TEXT.color, vec3_new(color[0], color[1], color[2]));
+      SM_ARRAY_PUSH(TEXT.color, vec3_new(color[0], color[1], color[2]));
+      SM_ARRAY_PUSH(TEXT.color, vec3_new(color[0], color[1], color[2]));
 
-      SM_ARRAY_PUSH(TEXT.color, color);
-      SM_ARRAY_PUSH(TEXT.color, color);
-      SM_ARRAY_PUSH(TEXT.color, color);
+      SM_ARRAY_PUSH(TEXT.color, vec3_new(color[0], color[1], color[2]));
+      SM_ARRAY_PUSH(TEXT.color, vec3_new(color[0], color[1], color[2]));
+      SM_ARRAY_PUSH(TEXT.color, vec3_new(color[0], color[1], color[2]));
 
-      if (dest.x + GLYPH_W + space_bX >= line_width) {
-        dest.x = initx;
-        dest.y += (float)(GLYPH_H + space_bY);
+      if (dest[0] + GLYPH_W + space_bX >= line_width) {
+        dest[0] = initx;
+        dest[0] += (float)(GLYPH_H + space_bY);
       } else {
-        dest.x += (float)(GLYPH_W + space_bX);
+        dest[0] += (float)(GLYPH_W + space_bX);
       }
     }
   }
@@ -151,9 +157,11 @@ void text_flush(void) {
 
   transform_s transf = transform_zero();
   /* transf.rotation = quat_angle_axis(DEG2RAD * angle, vec3_new(0.0f, 1.0f, 0.0f)); */
-  transf.scale = vec3_new(3, 3, 3);
+  /* transf.scale = vec3_new(3, 3, 3); */
+  glm_vec3_copy(vec3_new(3, 3, 3), transf.scale);
   /* transf.position = vec3_new(-420, 250, 0); */
-  mat4 model = transform_to_mat4(transf);
+  mat4 model;
+  transform_to_mat4(transf, model);
   /* model = mat4_identity(); */
 
   uniform_set_value(glGetUniformLocation(SHADERS[TEXT_SHADER], "model"), model);

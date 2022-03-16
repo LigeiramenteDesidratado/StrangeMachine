@@ -8,11 +8,13 @@ affect, you can have a minimal number of tracks per clip. The Clip class should
 also keep track of metadata, such as the name of the clip, whether the clip is
 looping, and information about the time or duration of the clip. */
 
+#include "util/common.h"
+
+#include "data/array.h"
+
 #include "smMem.h"
 #include "smPose.h"
 #include "smTransformTrack.h"
-#include "util/common.h"
-#include <assert.h>
 
 typedef struct {
   //  The clip_t struct needs to maintain an array of transform tracks. This is

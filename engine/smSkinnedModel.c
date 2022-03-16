@@ -119,8 +119,8 @@ void skinned_model_do(skinned_model_s *skinned_model, float dt) {
   pose_get_matrix_palette(controller_get_current_pose(skinned_model->fade_controller), &skinned_model->pose_palette);
 
   mat4 **inverse_bind_pose = skeleton_get_inverse_bind_pose(skinned_model->skeleton);
-  for (size_t i = 0; i < SM_ARRAY_SIZE(skinned_model->pose_palette); ++i) {
-    skinned_model->pose_palette[i] = mat4_mul(skinned_model->pose_palette[i], (*inverse_bind_pose)[i]);
+  for (size_t i = 0; i < SM_ALIGNED_ARRAY_SIZE(skinned_model->pose_palette); ++i) {
+    glm_mat4_mul(skinned_model->pose_palette[i], (*inverse_bind_pose)[i], skinned_model->pose_palette[i]);
   }
 }
 
@@ -128,8 +128,10 @@ void skinned_model_draw(skinned_model_s *skinned_model) {
   assert(skinned_model != NULL);
 
   shader_bind(SHADERS[SKINNED_SHADER]);
-  uniform_set_array(glGetUniformLocation(SHADERS[SKINNED_SHADER], "animated"), skinned_model->pose_palette,
-                    (int32_t)SM_ARRAY_SIZE(skinned_model->pose_palette));
+  if (skinned_model->pose_palette) {
+    GLuint loc = glGetUniformLocation(SHADERS[SKINNED_SHADER], "animated");
+    uniform_set_array(loc, skinned_model->pose_palette, (int32_t)SM_ALIGNED_ARRAY_SIZE(skinned_model->pose_palette));
+  }
 
   texture_set(&skinned_model->texture, glGetUniformLocation(SHADERS[SKINNED_SHADER], "tex0"), 0);
 

@@ -2,7 +2,8 @@
 #define STAGE_H
 
 #include "scene.h"
-#include "math/mat4.h"
+
+#include "math/smMath.h"
 
 struct stage_s;
 
@@ -18,7 +19,7 @@ void stage_dtor(struct stage_s *stage);
 // Behavior
 void stage_draw(struct stage_s *stage, float aspect_ratio);
 void stage_do(struct stage_s *stage, float dt);
-mat4 stage_get_camera_view(struct stage_s* stage);
+void stage_get_camera_view(struct stage_s* stage, mat4 out);
 /* void stage_set_scene(struct stage_t *stage, scenes_id id); */
 
 #endif // STAGE_H

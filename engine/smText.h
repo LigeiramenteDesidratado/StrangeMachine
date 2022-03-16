@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 
-#include "math/vec2.h"
-#include "math/vec3.h"
+#include "math/smMath.h"
 
 struct text_attr {
   const uint8_t position;

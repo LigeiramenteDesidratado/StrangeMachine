@@ -6,9 +6,7 @@
 
 #include "glad/glad.h"
 
-#include "math/vec2.h"
-#include "math/vec3.h"
-#include "math/vec4.h"
+#include "math/smMath.h"
 
 typedef enum {
   FLOAT_KIND = 0x01,

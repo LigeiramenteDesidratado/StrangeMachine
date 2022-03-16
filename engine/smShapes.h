@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "math/vec3.h"
+#include "math/smMath.h"
 
 typedef struct {
   vec3 center;

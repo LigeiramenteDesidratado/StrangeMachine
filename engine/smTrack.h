@@ -7,8 +7,7 @@
 
 #include "smInterpolation.h"
 
-#include "math/quat.h"
-#include "math/vec3.h"
+#include "math/smMath.h"
 
 /* The frame_s struct is used to store keyframes in a animation track. An animation track is a collection of keyframes.
  */
@@ -40,8 +39,8 @@ float track_get_start_time(const track_s *const track);
 float track_get_end_time(const track_s *const track);
 
 float track_sample_float(track_s *track, float time, bool looping);
-vec3 track_sample_vec3(track_s *track, float time, bool looping);
-quat track_sample_quat(track_s *track, float time, bool looping);
+void track_sample_vec3(track_s *track, float time, bool looping, vec3 out);
+void track_sample_quat(track_s *track, float time, bool looping, versor out);
 
 void track_resize_sampled_frames(track_s *track, size_t size);
 void track_resize_frame(track_s *track, size_t size);

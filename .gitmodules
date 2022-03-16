@@ -1,0 +1,9 @@
+[submodule "engine/vendor/cimgui"]
+	path = engine/vendor/cimgui
+	url = https://github.com/cimgui/cimgui.git
+[submodule "engine/vendor/logc"]
+	path = engine/vendor/logc
+	url = git@github.com:rxi/log.c.git
+[submodule "engine/vendor/cglm"]
+	path = engine/vendor/cglm
+	url = https://github.com/recp/cglm.git

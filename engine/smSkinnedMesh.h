@@ -7,8 +7,7 @@
 #include "smIndexBuffer.h"
 #include "smVertex.h"
 
-#include "math/mat4.h"
-#include "math/vec4.h"
+#include "math/smMath.h"
 
 // NOTE: in case of change make sure to update the src/shader/glsl/static.vs as
 // well
@@ -21,7 +20,7 @@ struct skinned_mesh_attrs {
 };
 extern const struct skinned_mesh_attrs skinned_mesh_attr_locs;
 
-// Start declaring the Mesh class. It should maintain a copy of the mesh data on
+// mesh_s should maintain a copy of the mesh data on
 // the CPU as well as on the GPU. Store vectors for the position, normal, tex
 // coordinates, weights, and influences that define each vertex. Include an
 // optional vector for indices
@@ -42,8 +41,6 @@ typedef struct {
 
   // Add an additional copy of the pose and normal data, as well as a matrix
   // palette to use for CPU skinning.
-  vec3 *skinned_position;
-  vec3 *skinned_normal;
   mat4 *pose_palette;
 
 } skinned_mesh_s;
@@ -60,6 +57,5 @@ void skinned_mesh_copy(skinned_mesh_s *dest, const skinned_mesh_s *const src);
 void skinned_mesh_update_gl_buffers(skinned_mesh_s *mesh);
 void skinned_mesh_bind(const skinned_mesh_s *const mesh, uint8_t flag);
 void skinned_mesh_unbind(const skinned_mesh_s *const mesh, uint8_t flag);
-void skinned_mesh_CPU_skin_matrix_opt(skinned_mesh_s *mesh, mat4 *animated_pose);
 
 #endif // SM_SKINNED_MESH_H

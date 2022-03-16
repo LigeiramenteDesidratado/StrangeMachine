@@ -130,9 +130,11 @@ bool physics_capsule_ctor(physics_s *physics, vec3 pos, float radius, float heig
   physics->__id = entity.count;
   physics->entity_type = CAPSULE;
 
-  physics->position = pos;
+  glm_vec3_copy(pos, physics->position);
 
-  sphere_s s = {pos, radius};
+  sphere_s s; /* {pos, radius}; */
+  s.radius = radius;
+  glm_vec3_copy(pos, s.center);
   physics->entity_body.capsule = shapes_capsule_new(s, height);
 
   entity.bodies[entity.count] = physics;
@@ -156,7 +158,7 @@ bool physics_terrain_ctor(physics_s *physics, vec3 pos, mesh_s *terrain_model) {
   physics->entity_type = MESH;
 
   physics->entity_body.mesh_ref = terrain_model;
-  physics->position = pos;
+  glm_vec3_copy(pos, physics->position);
 
   entity.bodies[entity.count] = physics;
 
@@ -178,23 +180,61 @@ void physics_do_late(physics_s *physics) {
 
 void physics_add_force(physics_s *physics, vec3 force) {
   assert(physics != NULL);
-  physics->force = vec3_add(physics->force, force);
 }
 
 void physics_scale_force(physics_s *physics, float by) {
   assert(physics != NULL);
-  physics->force = vec3_scale(physics->force, by);
+  glm_vec3_scale(physics->force, by, physics->force);
 }
 
 void physics_apply_force(physics_s *physics) {
   assert(physics != NULL);
-  physics->velocity = vec3_add(physics->velocity, physics->force);
-  physics->force = vec3_zero();
+  /* physics->velocity = vec3_add(physics->velocity, physics->force); */
+  glm_vec3_add(physics->velocity, physics->force, physics->velocity);
+  glm_vec3_zero(physics->force);
+  /* physics->force = vec3_zero(); */
 }
 
 void physics_add_gravity(physics_s *physics, vec3 gravity) {
   assert(physics != NULL);
-  physics->gravity = vec3_add(physics->gravity, gravity);
+  glm_vec3_add(physics->gravity, gravity, physics->gravity);
+}
+
+static void __handle_capsules(physics_s *physics, physics_s *against) {
+  SM_ASSERT(physics != NULL);
+  SM_ASSERT(against != NULL);
+
+  intersect_result_s result = {0};
+
+  // retrieve intersection result
+  collision_check_capsules(physics->entity_body.capsule, against->entity_body.capsule, &result);
+  // if collided then apply impulse to both bodies
+  if (result.valid) {
+    vec3 impulse;
+    glm_vec3_scale(result.normal, result.depth, impulse);
+    /* vec3 impulse = vec3_scale(result.normal, result.depth); */
+    glm_vec3_add(physics->velocity, impulse, physics->velocity);
+    glm_vec3_sub(against->velocity, impulse, against->velocity);
+  }
+}
+
+// TODO: improve this
+static void __handle_spheres(physics_s *physics, physics_s *against) {
+  SM_ASSERT(physics != NULL);
+  SM_ASSERT(against != NULL);
+
+  intersect_result_s result = {0};
+
+  // retrieve intersection result
+  collision_check_spheres(physics->entity_body.sphere, against->entity_body.sphere, &result);
+  // if collided then apply impulse to both bodies
+  if (result.valid) {
+    vec3 impulse;
+    glm_vec3_scale(result.normal, result.depth, impulse);
+
+    glm_vec3_add(physics->velocity, impulse, physics->velocity);
+    glm_vec3_sub(against->velocity, impulse, against->velocity);
+  }
 }
 
 static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
@@ -203,9 +243,14 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
 
   mesh_s *mesh = against->entity_body.mesh_ref;
 
-  vec3 original_capsulepos = physics->position;
-  vec3 capsulepos = original_capsulepos;
-  float height = vec3_len(vec3_sub(physics->entity_body.capsule.tip, physics->entity_body.capsule.base));
+  vec3 original_capsulepos;
+  glm_vec3_copy(physics->position, original_capsulepos);
+  vec3 capsulepos;
+  glm_vec3_copy(original_capsulepos, capsulepos);
+
+  vec3 c;
+  glm_vec3_sub(physics->entity_body.capsule.tip, physics->entity_body.capsule.base, c);
+  float height = glm_vec3_norm(c);
 
   float radius = physics->entity_body.capsule.radius;
   bool ground_intersection = false;
@@ -215,27 +260,39 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
   intersect_result_s result = {0};
   for (uint8_t i = 0; i < ccd_max; ++i) {
 
-    vec3 step = vec3_scale(physics->velocity, 1.0f / ccd_max * 0.016f);
-    capsulepos = vec3_add(capsulepos, step);
-    sphere_s s = {.center = capsulepos, .radius = radius};
+    vec3 step;
+    glm_vec3_scale(physics->velocity, 1.0f / ccd_max * 0.016f, step);
+    glm_vec3_add(capsulepos, step, capsulepos);
+    sphere_s s; /*{.center = capsulepos, .radius = radius}; */
+    s.radius = radius;
+    glm_vec3_copy(capsulepos, s.center);
     physics->entity_body.capsule = shapes_capsule_new(s, height);
 
     collision_check_capsule_mesh(physics->entity_body.capsule, mesh, &result);
 
     if (result.valid) {
 
-      vec3 rNorm = result.normal;
+      vec3 rNorm;
+      glm_vec3_copy(result.normal, rNorm);
 
-      float velocityLen = vec3_len(physics->velocity);
-      vec3 velocityNorm = vec3_norm(physics->velocity);
-      vec3 undesiredMotion = vec3_scale(rNorm, vec3_dot(velocityNorm, rNorm));
+      float velocityLen = glm_vec3_norm(physics->velocity);
 
-      vec3 desiredMotion = vec3_sub(velocityNorm, undesiredMotion);
-      physics->velocity = vec3_scale(desiredMotion, velocityLen);
+      vec3 velocityNorm;
+      glm_vec3_normalize_to(physics->velocity, velocityNorm);
+
+      vec3 undesiredMotion;
+      glm_vec3_scale(rNorm, glm_vec3_dot(velocityNorm, rNorm), undesiredMotion);
+
+      vec3 desiredMotion;
+      glm_vec3_sub(velocityNorm, undesiredMotion, desiredMotion);
+
+      glm_vec3_scale(desiredMotion, velocityLen, physics->velocity);
 
       // Remove penetration (penetration epsilon added to handle infinitely
       // small penetration)
-      capsulepos = vec3_add(capsulepos, vec3_scale(rNorm, result.depth + 0.0001f));
+      vec3 penetration;
+      glm_vec3_scale(rNorm, result.depth + 0.0001f, penetration);
+      glm_vec3_add(capsulepos, penetration, capsulepos);
     }
   }
 
@@ -246,12 +303,17 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
   // slopes/stairs 	Unlike normal character motion collision, surface
   // sliding is not computed
   physics->gravity = vec3_add(physics->gravity, vec3_new(0, -GRAVITY * 0.3f, 0));
+  glm_vec3_add(physics->gravity, vec3_new(0, -GRAVITY * 0.3f, 0), physics->gravity);
 
   for (uint8_t i = 0; i < ccd_max; ++i) {
 
-    vec3 step = vec3_scale(physics->gravity, 1.0f / ccd_max * 0.016f);
-    capsulepos = vec3_add(capsulepos, step);
-    sphere_s s = {.center = capsulepos, .radius = radius};
+    vec3 step;
+    glm_vec3_scale(physics->gravity, 1.0f / ccd_max * 0.016f, step);
+    glm_vec3_add(capsulepos, step, capsulepos);
+    /* sphere_s s = {.center = capsulepos, .radius = radius}; */
+    sphere_s s;
+    s.radius = radius;
+    glm_vec3_copy(capsulepos, s.center);
     physics->entity_body.capsule = shapes_capsule_new(s, height);
 
     collision_check_capsule_mesh(physics->entity_body.capsule, mesh, &result);
@@ -260,46 +322,51 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
 
       // Remove penetration (penetration epsilon added to handle infinitely
       // small penetration):
-      capsulepos = vec3_add(capsulepos, vec3_scale(result.normal, result.depth + 0.0001f));
+      vec3 penetration;
+      glm_vec3_scale(result.normal, result.depth + 0.0001f, penetration);
+      glm_vec3_add(capsulepos, penetration, capsulepos);
 
       // Check whether it is intersecting the ground (ground normal is
       // upwards)
-      if (vec3_dot(result.normal, vec3_new(0.0f, 1.0f, 0.0f)) > 0.3f) {
+      if (glm_vec3_dot(result.normal, vec3_new(0.0f, 1.0f, 0.0f)) > 0.3f) {
         ground_intersection = true;
-        physics->gravity = vec3_scale(physics->gravity, 0);
+        glm_vec3_scale(physics->gravity, 0, physics->gravity);
         break;
       }
     }
   }
 
   if (ground_intersection)
-    physics->velocity = vec3_scale(physics->velocity, GROUND_FRICTION);
+    glm_vec3_scale(physics->velocity, GROUND_FRICTION, physics->velocity);
   else
-    physics->velocity = vec3_scale(physics->velocity, AIR_FRICTION);
+    glm_vec3_scale(physics->velocity, AIR_FRICTION, physics->velocity);
 
-  physics->position = vec3_add(physics->position, vec3_sub(capsulepos, original_capsulepos));
+  vec3 sub;
+  glm_vec3_sub(capsulepos, original_capsulepos, sub);
+  glm_vec3_add(physics->position, sub, physics->position);
 
   /* if (result.valid) { */
   /* debug_draw_line(result.position, vec3_add(result.position, result.normal), vec3_new(1, 0, 0)); */
   /* } */
 
-  float vel = vec3_len(physics->velocity);
+  float vel = glm_vec3_norm(physics->velocity);
   static float max_vel = 0;
   if (vel > max_vel)
     max_vel = vel;
 
   text_draw(vec2_new(10, 10), 800 - 10, vec3_new(0.2f, 0.7f, 0.9f), "Grounded: %s\nVelocity: %.2f\n",
-            ground_intersection ? "True" : "False", vec3_len(physics->velocity));
+            ground_intersection ? "True" : "False", glm_vec3_norm(physics->velocity));
 }
 
 vec3 physics_get_pos(physics_s *physics) {
   assert(physics != NULL);
-  vec3 pos = physics->position;
+void physics_get_pos(physics_s *physics, vec3 out) {
 
-  if (MASK_CHK(physics->entity_type, CAPSULE) > 0)
-    pos.y -= physics->entity_body.capsule.radius;
+  glm_vec3_copy(physics->position, out);
 
   return pos;
+  if (MASK_CHK(physics->entity_type, CAPSULE) > 0)
+    out[1] -= physics->entity_body.capsule.radius;
 }
 
 static void __handle_sphere_mesh(physics_s *physics, physics_s *against) {
@@ -309,17 +376,25 @@ static void __handle_sphere_mesh(physics_s *physics, physics_s *against) {
 
   mesh_s *mesh = against->entity_body.mesh_ref;
 
-  vec3 original_pos = physics->position;
-  vec3 sphere_pos = original_pos;
+  vec3 original_pos;
+  vec3 sphere_pos;
+
+  glm_vec3_copy(physics->position, original_pos);
+  glm_vec3_copy(original_pos, sphere_pos);
+
   float radius = physics->entity_body.sphere.radius;
   /* bool ground_intersection = false; */
   uint8_t const ccd_max = 5;
 
   for (uint8_t i = 0; i < ccd_max; ++i) {
 
-    vec3 step = vec3_scale(physics->velocity, 1.0f / ccd_max * 0.016f);
-    sphere_pos = vec3_add(sphere_pos, step);
-    sphere_s s = {.center = sphere_pos, .radius = radius};
+    vec3 step;
+    glm_vec3_scale(physics->velocity, 1.0f / ccd_max * 0.016f, step);
+    glm_vec3_add(sphere_pos, step, sphere_pos);
+    sphere_s s;
+    /* sphere_s s = {.center = sphere_pos, .radius = radius}; */
+    s.radius = radius;
+    glm_vec3_copy(sphere_pos, s.center);
     physics->entity_body.sphere = s;
     intersect_result_s result = {0};
 
@@ -327,18 +402,24 @@ static void __handle_sphere_mesh(physics_s *physics, physics_s *against) {
 
     if (result.valid) {
 
-      vec3 rNorm = result.normal;
+      vec3 rNorm;
+      glm_vec3_copy(result.normal, rNorm);
 
-      float velocityLen = vec3_len(physics->velocity);
-      vec3 velocityNorm = vec3_norm(physics->velocity);
-      vec3 undesiredMotion = vec3_scale(rNorm, vec3_dot(velocityNorm, rNorm));
+      float velocityLen = glm_vec3_norm(physics->velocity);
+      vec3 velocityNorm;
+      glm_vec3_normalize_to(physics->velocity, velocityNorm);
+      vec3 undesiredMotion;
+      glm_vec3_scale(rNorm, glm_vec3_dot(velocityNorm, rNorm), undesiredMotion);
 
-      vec3 desiredMotion = vec3_sub(velocityNorm, undesiredMotion);
-      physics->velocity = vec3_scale(desiredMotion, velocityLen);
+      vec3 desiredMotion;
+      glm_vec3_sub(velocityNorm, undesiredMotion, desiredMotion);
+      glm_vec3_scale(desiredMotion, velocityLen, physics->velocity);
 
       // Remove penetration (penetration epsilon added to handle infinitely
       // small penetration)
-      sphere_pos = vec3_add(sphere_pos, vec3_scale(rNorm, result.depth + 0.0001f));
+      vec3 scal;
+      glm_vec3_scale(rNorm, result.depth + 0.0001f, scal);
+      glm_vec3_add(sphere_pos, scal, sphere_pos);
     }
   }
 }
@@ -347,7 +428,10 @@ capsule_s physics_get_capsule(physics_s *physics) {
 
   if (physics->entity_type != CAPSULE) {
     log_error("not a capsule body");
-    return shapes_capsule_new((sphere_s){.center = vec3_zero(), .radius = 1.0f}, 2.0f);
+    sphere_s s;
+    s.radius = 1.0f;
+    glm_vec3_copy(s.center, vec3_new(0.0f, 0.0f, 0.0f));
+    return shapes_capsule_new(s, 2.0f);
   }
 
   return physics->entity_body.capsule;
@@ -355,10 +439,27 @@ capsule_s physics_get_capsule(physics_s *physics) {
 
 vec3 physics_get_force(physics_s *physics) {
   return physics->force;
+sphere_s physics_get_sphere(physics_s *physics) {
+
+  if (physics->entity_type != SPHERE) {
+    SM_LOG_ERROR("not a sphere body");
+    sphere_s s;
+    s.radius = 1.0f;
+    glm_vec3_copy(s.center, vec3_new(0.0f, 0.0f, 0.0f));
+    return s;
+  }
+
+  return physics->entity_body.sphere;
 }
 
 vec3 physics_get_velocity(physics_s *physics) {
   return physics->velocity;
+void physics_get_force(physics_s *physics, vec3 out) {
+  glm_vec3_copy(physics->force, out);
+}
+
+void physics_get_velocity(physics_s *physics, vec3 out) {
+  glm_vec3_copy(physics->velocity, out);
 }
 
 void physics_draw(physics_s *physics) {
@@ -366,6 +467,19 @@ void physics_draw(physics_s *physics) {
 
   /* if (physics->physics_entity_type == CAPSULE) */
   /*   DrawCapsule(physics->physics_entity_body.capsule); */
+}
+
+static char const *__physics_type_to_str(body_e type) {
+  switch (type) {
+  case CAPSULE:
+    return "capsule";
+  case SPHERE:
+    return "sphere";
+  case MESH:
+    return "mesh";
+  default:
+    return "unknown";
+  }
 }
 
 static void __handle_default(physics_s *physics, physics_s *against) {

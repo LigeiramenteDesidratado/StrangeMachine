@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include "cglm/mat4.h"
 #include "smAttribute.h"
 #include "smCamera.h"
 #include "smCameraP.h"
@@ -12,8 +13,7 @@
 #include "center.h"
 #include "scene.h"
 
-#include "math/vec2.h"
-#include "math/vec3.h"
+#include "math/smMath.h"
 
 typedef struct {
 
@@ -68,14 +68,15 @@ void stage_do(stage_s *stage, float dt) {
     __stage_build_scene(stage);
   }
 
-  if (input_scan_key_lock(SDL_SCANCODE_F))
+  if (input_scan_key_lock(sm_key_f))
     camera_set_mode(FREE);
 
-  if (input_scan_key_lock(SDL_SCANCODE_T))
+  if (input_scan_key_lock(sm_key_t))
     camera_set_mode(THIRD_PERSON);
 
-  vec3 loc = scene_get_look_at(stage->scene);
-  loc.y += 4.5f;
+  vec3 loc;
+  scene_get_look_at(stage->scene, loc);
+  loc[1] += 4.5f;
   camera_set_target(loc);
 
   text_draw(vec2_new(10, 70), 800, vec3_new(1.0f, 1.0f, 1.0f), "Draw calls: %d\nFrames: %d\nDC/F: %d\n", stats.uploads,
@@ -91,14 +92,16 @@ void stage_do(stage_s *stage, float dt) {
 void stage_draw(stage_s *stage, float aspect_ratio) {
   assert(stage != NULL);
 
-  if (input_scan_key_lock(SDL_SCANCODE_J))
+  if (input_scan_key_lock(sm_key_j))
     camera_set_projection(PERSPECTIVE);
 
-  if (input_scan_key_lock(SDL_SCANCODE_K))
+  if (input_scan_key_lock(sm_key_k))
     camera_set_projection(ORTHOGONAL);
 
-  mat4 projection = camera_get_projection_matrix(aspect_ratio);
-  mat4 view = camera_get_view();
+  mat4 projection;
+  camera_get_projection_matrix(aspect_ratio, projection);
+  mat4 view;
+  camera_get_view(view);
 
   shader_bind(SHADERS[STATIC_SHADER]);
   uniform_set_value(glGetUniformLocation(SHADERS[STATIC_SHADER], "view"), view);
@@ -111,7 +114,8 @@ void stage_draw(stage_s *stage, float aspect_ratio) {
   shader_unbind();
 
   shader_bind(SHADERS[TEXT_SHADER]);
-  mat4 ui = mat4_ortho(0.0f, 800.0f, 600.0f, 0.0f, -0.1f, 100.0f);
+  mat4 ui;
+  glm_ortho(0.0f, 800.0f, 600.0f, 0.0f, -0.1f, 100.0f, ui);
   /* uniform_set_value(glGetUniformLocation(SHADERS[TEXT_SHADER], "view"), view); */
   uniform_set_value(glGetUniformLocation(SHADERS[TEXT_SHADER], "projection"), ui);
   shader_unbind();
@@ -119,6 +123,17 @@ void stage_draw(stage_s *stage, float aspect_ratio) {
   shader_bind(SHADERS[DEBUG_SHADER]);
   uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "view"), view);
   uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "projection"), projection);
+  shader_unbind();
+
+  mat4 new_view;
+  glm_mat4_copy(view, new_view);
+  new_view[3][0] = 0.0f;
+  new_view[3][1] = 0.0f;
+  new_view[3][2] = 0.0f;
+
+  shader_bind(SHADERS[SKYBOX_SHADER]);
+  uniform_set_value(glGetUniformLocation(SHADERS[SKYBOX_SHADER], "view"), new_view);
+  uniform_set_value(glGetUniformLocation(SHADERS[SKYBOX_SHADER], "projection"), projection);
   shader_unbind();
 
   scene_draw(stage->scene);

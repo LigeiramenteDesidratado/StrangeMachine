@@ -1,5 +1,6 @@
-#include "smTexture.h"
 #include "util/common.h"
+
+#include "smTexture.h"
 
 bool __texture_load(texture_s *texture, const char *path);
 

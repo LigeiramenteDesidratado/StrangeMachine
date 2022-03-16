@@ -1,6 +1,7 @@
-#include "smTransformTrack.h"
-#include "smMem.h"
+#include "data/array.h"
 #include "util/common.h"
+
+#include "smTransformTrack.h"
 
 // Destructor
 void transform_track_dtor(transform_track_s *transform_track) {
@@ -104,13 +105,13 @@ transform_s transform_track_sample(transform_track_s *transform_track, transform
   transform_s result = *transform_ref; // Assign default values
 
   if (SM_ARRAY_SIZE(transform_track->position.frames) > 1) // only if valid
-    result.position = track_sample_vec3(&transform_track->position, time, looping);
+    track_sample_vec3(&transform_track->position, time, looping, result.position);
 
   if (SM_ARRAY_SIZE(transform_track->rotation.frames) > 1) // only if valid
-    result.rotation = track_sample_quat(&transform_track->rotation, time, looping);
+    track_sample_quat(&transform_track->rotation, time, looping, result.rotation);
 
   if (SM_ARRAY_SIZE(transform_track->scale.frames) > 1) // only if valid
-    result.scale = track_sample_vec3(&transform_track->scale, time, looping);
+    track_sample_vec3(&transform_track->scale, time, looping, result.scale);
 
   return result;
 }

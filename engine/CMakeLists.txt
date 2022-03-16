@@ -53,9 +53,20 @@ if(NOT WIN32)
 endif()
 
 
-add_subdirectory(math)
-target_include_directories(${PROJECT_NAME} PUBLIC "include" ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC StrangeMachineMath SDL2 m)
+# cimgui library
+option(IMGUI_STATIC "Static build" ON)
+add_subdirectory(vendor/cimgui)
+
+# My math library
+#  add_subdirectory(math_deprec)
+
+# cglm library
+option(CGLM_STATIC "Static build" ON)
+add_subdirectory(vendor/cglm)
+
+target_include_directories(${PROJECT_NAME} PRIVATE "include" ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} PUBLIC cglm PRIVATE assimp stdc++ cimgui SDL2 m )
+
 # Copy content to build folder:
 add_custom_command(
   TARGET ${PROJECT_NAME} POST_BUILD

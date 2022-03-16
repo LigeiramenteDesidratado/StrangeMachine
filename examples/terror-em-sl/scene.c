@@ -1,3 +1,4 @@
+#include "math/smMath.h"
 #include "scene_p.h"
 #include <assert.h>
 #include <stdio.h>
@@ -18,12 +19,12 @@ void __scene_draw(void *this_ptr) {
   printf("Draw nothing. You should overwrite this function\n");
 }
 
-vec3 __scene_get_look_at(void *this_ptr) {
+void __scene_get_look_at(void *this_ptr, vec3 out) {
   /* scene_t* scene = (scene_t*)this_ptr; */
   (void)this_ptr;
 
   printf("Return nothing. You should overwrite this function\n");
-  return vec3_zero();
+  glm_vec3_copy(out, (vec3){0.0f, 0.0f, 0.0f});
 }
 
 scene_s *scene_new(void) {
@@ -43,8 +44,7 @@ void scene_ctor(scene_s *scene, scenes_e id) {
   scene->scene_get_look_at = __scene_get_look_at;
 }
 
-void scene_dtor(scene_s *scene) {
-}
+void scene_dtor(scene_s *scene) {}
 
 void scene_do(scene_s *scene, float dt) {
   assert(scene != NULL);
@@ -58,10 +58,10 @@ void scene_draw(scene_s *scene) {
   scene->scene_draw(scene);
 }
 
-vec3 scene_get_look_at(scene_s *scene) {
+void scene_get_look_at(scene_s *scene, vec3 out) {
   assert(scene != NULL);
 
-  return scene->scene_get_look_at(scene);
+  scene->scene_get_look_at(scene, out);
 }
 
 scenes_e scene_get_id(scene_s *scene) {

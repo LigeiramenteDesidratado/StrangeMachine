@@ -25,9 +25,10 @@ extern void physics_draw(struct physics_s *physics);
 extern void physics_add_force(struct physics_s *physics, vec3 force);
 extern void physics_scale_force(struct physics_s *physics, float by);
 extern void physics_apply_force(struct physics_s *physics);
-extern vec3 physics_get_pos(struct physics_s *physics);
-extern vec3 physics_get_force(struct physics_s *physics);
-extern vec3 physics_get_velocity(struct physics_s *physics);
+extern void physics_get_pos(struct physics_s *physics, vec3 out);
+extern void physics_get_force(struct physics_s *physics, vec3 out);
+extern void physics_get_velocity(struct physics_s *physics, vec3 out);
 capsule_s physics_get_capsule(struct physics_s *physics);
+sphere_s physics_get_sphere(struct physics_s *physics);
 
 #endif // SM_PHYSICS_H

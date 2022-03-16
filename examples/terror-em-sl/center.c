@@ -93,10 +93,11 @@ static void __one_draw(void *ptr) {
   player_draw_debug(center->player);
 }
 
-static vec3 __one_get_look_at(void *ptr) {
+static void __one_get_look_at(void *ptr, vec3 out) {
 
   assert(ptr != NULL);
   center_s *center = (center_s *)ptr;
 
-  return player_get_position(center->player);
+  /* glm_vec3_zero(out); */
+  player_get_position(center->player, out);
 }

@@ -1,14 +1,14 @@
 #ifndef SCENE_P_H
 #define SCENE_P_H
 
-#include "math/vec3.h"
+#include "math/smMath.h"
 #include "scene_defs.h"
 
 // Polymorphic behavior functions
 typedef void (*do_f)(void *ptr, float dt);
 /* typedef void (*do_late_t)(void *ptr); */
 typedef void (*draw_f)(void *ptr);
-typedef vec3 (*get_look_at_f)(void *ptr);
+typedef void (*get_look_at_f)(void *ptr, vec3 out);
 
 /*
    The scene_s "class" has three behavior functions. The draw_f, do_f and get_look_at_f functions

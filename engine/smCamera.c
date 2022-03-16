@@ -1,6 +1,8 @@
+#include "util/common.h"
+
 #include "smCameraP.h"
 #include "smInput.h"
-#include "util/common.h"
+
 #include <SDL2/SDL_events.h>
 
 #define CAMERA_THIRD_PERSON_DISTANCE_CLAMP 1.2f
@@ -39,9 +41,10 @@ void camera_init(vec3 position, vec3 target, vec3 up, cam_mode_e mode, cam_proje
   CAMERA.target_distance = 10.2f;
   CAMERA.fovy = 75.0f;
 
-  CAMERA.up = up;
-  CAMERA.position = position;
-  CAMERA.target = target;
+  glm_vec3_copy(position, CAMERA.position);
+  glm_vec3_copy(target, CAMERA.target);
+  glm_vec3_copy(up, CAMERA.up);
+
   CAMERA.mode = mode;
   CAMERA.projection = projection;
 }
@@ -59,49 +62,69 @@ void camera_do(float dt) {
     float offset_y = input_get_y_rel_mouse();
 
     if (offset_x != 0 || offset_y != 0) {
-      CAMERA.angle.x += (offset_x * -CAMERA.sensitive * dt);
-      CAMERA.angle.y += (offset_y * -CAMERA.sensitive * dt);
+      CAMERA.angle[0] += (offset_x * -CAMERA.sensitive * dt);
+      CAMERA.angle[1] += (offset_y * -CAMERA.sensitive * dt);
 
-      if (CAMERA.angle.y > CAMERA_THIRD_PERSON_MIN_CLAMP * DEG2RAD)
-        CAMERA.angle.y = CAMERA_THIRD_PERSON_MIN_CLAMP * DEG2RAD;
-      else if (CAMERA.angle.y < CAMERA_THIRD_PERSON_MAX_CLAMP * DEG2RAD)
-        CAMERA.angle.y = CAMERA_THIRD_PERSON_MAX_CLAMP * DEG2RAD;
+      if (CAMERA.angle[1] > glm_rad(CAMERA_THIRD_PERSON_MIN_CLAMP))
+        CAMERA.angle[1] = glm_rad(CAMERA_THIRD_PERSON_MIN_CLAMP);
+      else if (CAMERA.angle[1] < glm_rad(CAMERA_THIRD_PERSON_MAX_CLAMP))
+        CAMERA.angle[1] = glm_rad(CAMERA_THIRD_PERSON_MAX_CLAMP);
     }
   }
 
   if (CAMERA.mode == FREE) {
-    if (input_scan_key(SDL_SCANCODE_W))
-      CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.target, CAMERA.move_speed * dt));
 
-    if (input_scan_key(SDL_SCANCODE_S))
-      CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.target, CAMERA.move_speed * dt));
+    vec3 pos;
 
-    if (input_scan_key(SDL_SCANCODE_A))
-      CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt));
+    if (input_scan_key(sm_key_w)) {
+      glm_vec3_scale(CAMERA.target, CAMERA.move_speed * dt, pos);
+      glm_vec3_add(CAMERA.position, pos, CAMERA.position);
+      /* CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.target, CAMERA.move_speed * dt)); */
+    }
 
-    if (input_scan_key(SDL_SCANCODE_D))
-      CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt));
+    if (input_scan_key(sm_key_s)) {
+      glm_vec3_scale(CAMERA.target, CAMERA.move_speed * dt, pos);
+      glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
+      /* CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.target, CAMERA.move_speed * dt)); */
+    }
 
-    if (input_scan_key(SDL_SCANCODE_SPACE))
-      CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt));
+    if (input_scan_key(sm_key_a)) {
+      glm_vec3_scale(CAMERA.right, CAMERA.move_speed * dt, pos);
+      glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
+      /* CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt)); */
+    }
 
-    if (input_scan_key(SDL_SCANCODE_LSHIFT))
-      CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt));
+    if (input_scan_key(sm_key_d)) {
+      glm_vec3_scale(CAMERA.right, CAMERA.move_speed * dt, pos);
+      glm_vec3_add(CAMERA.position, pos, CAMERA.position);
+      /* CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt)); */
+    }
+
+    if (input_scan_key(sm_key_space)) {
+      glm_vec3_scale(CAMERA.up, CAMERA.move_speed * dt, pos);
+      glm_vec3_add(CAMERA.position, pos, CAMERA.position);
+      /* CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt)); */
+    }
+    if (input_scan_key(sm_key_lshift)) {
+      glm_vec3_scale(CAMERA.up, CAMERA.move_speed * dt, pos);
+      glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
+      /* CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt)); */
+    }
 
     float offset_x = input_get_x_rel_mouse();
     float offset_y = input_get_y_rel_mouse();
 
     if (offset_x != 0 || offset_y != 0) {
-      CAMERA.angle.yaw += offset_x * 11.3f * dt;
-      CAMERA.angle.pitch -= offset_y * 11.3f * dt;
+      CAMERA.angle[1] += offset_x * 11.3f * dt;
+      CAMERA.angle[0] -= offset_y * 11.3f * dt;
 
-      if (CAMERA.angle.pitch > 80.0f)
-        CAMERA.angle.pitch = 80.0f;
-      if (CAMERA.angle.pitch < -80.0f)
-        CAMERA.angle.pitch = -80.0f;
+      if (CAMERA.angle[0] > 80.0f)
+        CAMERA.angle[0] = 80.0f;
+      if (CAMERA.angle[0] < -80.0f)
+        CAMERA.angle[0] = -80.0f;
 
-      if (CAMERA.angle.yaw > 360.0f || CAMERA.angle.yaw < -360.0f)
-        CAMERA.angle.yaw = 0;
+      if (CAMERA.angle[1] > 360.0f || CAMERA.angle[1] < -360.0f)
+        CAMERA.angle[1] = 0.0f;
     }
   }
 
@@ -109,13 +132,14 @@ void camera_do(float dt) {
 }
 
 void camera_set_target(vec3 target) {
-  CAMERA._next_target = target;
+  glm_vec3_copy(target, CAMERA._next_target);
+  /* CAMERA._next_target = target; */
 }
 
 void camera_update_vectors(float dt) {
 
   if (CAMERA.mode == THIRD_PERSON) {
-    CAMERA.target = vec3_lerp(CAMERA.target, CAMERA._next_target, 10 * dt);
+    glm_vec3_lerp(CAMERA.target, CAMERA._next_target, 10 * dt, CAMERA.target);
 
     CAMERA.target_distance -= (input_get_mouse_scroll() * CAMERA_MOUSE_SCROLL_SENSITIVITY);
 
@@ -125,40 +149,46 @@ void camera_update_vectors(float dt) {
     // TODO: It seems camera.position is not correctly updated or some rounding
     // issue makes the camera move straight to camera.target...
     vec3 nex_position = {0};
-    nex_position.x = sinf(CAMERA.angle.x) * CAMERA.target_distance * cosf(CAMERA.angle.y) + CAMERA.target.x;
+    nex_position[0] = sinf(CAMERA.angle[0]) * CAMERA.target_distance * cosf(CAMERA.angle[1]) + CAMERA.target[0];
 
-    if (CAMERA.angle.y <= 0.0f)
-      nex_position.y = sinf(CAMERA.angle.y) * CAMERA.target_distance * sinf(CAMERA.angle.y) + CAMERA.target.y;
+    if (CAMERA.angle[1] <= 0.0f)
+      nex_position[1] = sinf(CAMERA.angle[1]) * CAMERA.target_distance * sinf(CAMERA.angle[1]) + CAMERA.target[1];
     else
-      nex_position.y = -sinf(CAMERA.angle.y) * CAMERA.target_distance * sinf(CAMERA.angle.y) + CAMERA.target.y;
+      nex_position[1] = -sinf(CAMERA.angle[1]) * CAMERA.target_distance * sinf(CAMERA.angle[1]) + CAMERA.target[1];
 
-    nex_position.z = cosf(CAMERA.angle.x) * CAMERA.target_distance * cosf(CAMERA.angle.y) + CAMERA.target.z;
+    nex_position[2] = cosf(CAMERA.angle[0]) * CAMERA.target_distance * cosf(CAMERA.angle[1]) + CAMERA.target[2];
 
-    CAMERA.position = vec3_lerp(CAMERA.position, nex_position, 10 * dt);
+    glm_vec3_lerp(CAMERA.position, nex_position, 10 * dt, CAMERA.position);
   }
 
   if (CAMERA.mode == FREE) {
 
     vec3 front;
-    front.x = (cosf(CAMERA.angle.yaw * DEG2RAD) * cosf(CAMERA.angle.pitch * DEG2RAD));
-    front.y = sinf(CAMERA.angle.pitch * DEG2RAD);
-    front.z = sinf(CAMERA.angle.yaw * DEG2RAD) * cosf(CAMERA.angle.pitch * DEG2RAD);
+    front[0] = cosf(glm_rad(CAMERA.angle[1])) * glm_rad(cosf(CAMERA.angle[0]));
+    front[1] = sinf(glm_rad(CAMERA.angle[0]));
+    front[2] = sinf(glm_rad(CAMERA.angle[1])) * cosf(glm_rad(CAMERA.angle[0]));
 
-    CAMERA.target = vec3_norm(front);
-    CAMERA.right = vec3_norm(vec3_cross(CAMERA.target, vec3_new(0.0f, 1.0f, 0.0f)));
-    CAMERA.up = vec3_norm(vec3_cross(CAMERA.right, CAMERA.target));
+    glm_vec3_normalize_to(front, CAMERA.target);
+    vec3 right;
+    glm_vec3_cross(CAMERA.target, (vec3){0.0f, 1.0f, 0.0f}, right);
+    glm_vec3_normalize_to(right, CAMERA.right);
+    vec3 up;
+    glm_vec3_cross(CAMERA.right, CAMERA.target, up);
+    glm_vec3_normalize_to(up, CAMERA.up);
   }
 }
 
-mat4 camera_get_view(void) {
+void camera_get_view(mat4 out_view) {
 
-  mat4 view;
   if (CAMERA.mode == THIRD_PERSON)
-    view = mat4_look_at(CAMERA.position, CAMERA.target, CAMERA.up);
-  else
-    view = mat4_look_at(CAMERA.position, vec3_add(CAMERA.position, CAMERA.target), CAMERA.up);
-
-  return view;
+    glm_lookat(CAMERA.position, CAMERA.target, CAMERA.up, out_view);
+  /* view = glm_mat4_look_at(CAMERA.position, CAMERA.target, CAMERA.up); */
+  else {
+    vec3 dist;
+    glm_vec3_sub(CAMERA.position, CAMERA.target, dist);
+    glm_lookat(CAMERA.position, dist, CAMERA.up, out_view);
+    /* view = mat4_look_at(CAMERA.position, vec3_add(CAMERA.position, CAMERA.target), CAMERA.up); */
+  }
 }
 
 void camera_set_projection(cam_projection_e projection) {
@@ -189,25 +219,28 @@ void camera_set_mode(cam_mode_e mode) {
   }
 }
 
-mat4 camera_get_projection_matrix(float aspect_ratio) {
+void camera_get_projection_matrix(float aspect_ratio, mat4 out_projection) {
 
-  mat4 projection;
   if (CAMERA.projection == PERSPECTIVE) {
-    projection = mat4_perspective(CAMERA.fovy, aspect_ratio, 0.01f, 100.0f);
+    glm_perspective(glm_rad(CAMERA.fovy), aspect_ratio, 0.01f, 100.0f, out_projection);
 
   } else {
 
     // https://stackoverflow.com/a/55009832
-    float ratio_size_per_depth = atanf(DEG2RAD * (CAMERA.fovy / 2.0f)) * 2.0f;
-    float distance = vec3_len(vec3_sub(CAMERA.target, CAMERA.position));
+    float ratio_size_per_depth = atanf(glm_rad(CAMERA.fovy / 2.0f)) * 2.0f;
+    /* float ratio_size_per_depth = atanf(DEG2RAD * (CAMERA.fovy / 2.0f)) * 2.0f; */
+    vec3 dist;
+    glm_vec3_sub(CAMERA.target, CAMERA.position, dist);
+    float distance = glm_vec3_norm(dist);
+
+    /* float distance = vec3_len(vec3_sub(CAMERA.target, CAMERA.position)); */
 
     float size_y = ratio_size_per_depth * distance;
     float size_x = ratio_size_per_depth * distance * aspect_ratio;
 
-    projection = mat4_ortho(-size_x, size_x, -size_y, size_y, -50.0f, 100.00f);
+    glm_ortho(-size_x, size_x, -size_y, size_y, 0.01f, 100.0f, out_projection);
+    /* projection = mat4_ortho(-size_x, size_x, -size_y, size_y, -50.0f, 100.00f); */
   }
-
-  return projection;
 }
 
 float camera_get_fovy() {

@@ -85,8 +85,10 @@ void skeleton_update_inverse_bind_pose(skeleton_s *skeleton) {
 
   for (size_t i = 0; i < size; ++i) {
     transform_s world = pose_get_global_transform(&skeleton->bind_pose, i);
-    mat4 temp = mat4_inverse(transform_to_mat4(world));
-    skeleton->inverse_bind_pose[i] = temp;
+
+    mat4 m;
+    transform_to_mat4(world, m);
+    glm_mat4_inv(m, skeleton->inverse_bind_pose[i]);
   }
 }
 

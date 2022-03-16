@@ -12,17 +12,23 @@
 #include <string.h> // memcpy and string manipulation
 
 #include "glad/glad.h"
-#include "logc/log.h"
 #include "stb_ds/stb_ds.h"
 #include "stb/stb_image.h"
 #include "cgltf/cgltf.h"
 
-#include "math/mat4.h"
-#include "math/quat.h"
-#include "math/scalar.h"
-#include "math/transform.h"
-#include "math/vec2.h"
-#include "math/vec3.h"
-#include "math/vec4.h"
+#include "core/smAssert.h"
+#include "core/smBase.h"
+#include "core/smLog.h"
+
+#include "math/smMath.h"
+#include "smMem.h"
+
+/* #include "math_deprec/mat4.h" */
+/* #include "math_deprec/quat.h" */
+/* #include "math_deprec/scalar.h" */
+/* #include "math_deprec/transform.h" */
+/* #include "math_deprec/vec2.h" */
+/* #include "math_deprec/vec3.h" */
+/* #include "math_deprec/vec4.h" */
 
 #endif // UTIL_COMMON_H

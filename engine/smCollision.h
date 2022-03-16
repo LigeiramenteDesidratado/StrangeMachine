@@ -1,7 +1,6 @@
 #ifndef SM_COLLISION_H
 #define SM_COLLISION_H
 
-#include "smMem.h"
 #include "smMesh.h"
 #include "smShapes.h"
 
@@ -16,5 +15,7 @@ void collision_check_capsules(capsule_s a, capsule_s b, intersect_result_s *resu
 void collision_check_sphere_triangle(sphere_s s, triangle_s t, intersect_result_s *result);
 void collision_check_capsule_triangle(capsule_s c, triangle_s t, intersect_result_s *result);
 void collision_check_spheres(sphere_s a, sphere_s b, intersect_result_s *result);
+void collision_check_capsule_mesh(capsule_s c, mesh_s *mesh, intersect_result_s *result);
+void collision_check_sphere_mesh(sphere_s s, mesh_s *mesh, intersect_result_s *result);
 
 #endif // SM_COLLISION_H

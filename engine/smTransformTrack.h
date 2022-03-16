@@ -6,7 +6,7 @@
 
 #include "glad/glad.h"
 
-#include "math/transform.h"
+#include "math/smMath.h"
 #include "smTrack.h"
 
 typedef struct {
