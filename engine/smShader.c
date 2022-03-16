@@ -1,7 +1,7 @@
-#include "glad/glad.h"
-#include "smMem.h"
 #include "util/common.h"
 #include "util/file.h"
+
+#include "glad/glad.h"
 
 // private helper functions
 static GLuint shader_compile_vert(char *vertex);
@@ -11,9 +11,9 @@ static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment);
 // Constructor
 bool shader_ctor(GLuint *shader, const char *vs, const char *fs) {
 
-  assert(shader != NULL);
-  assert(vs != NULL);
-  assert(fs != NULL);
+  SM_ASSERT(shader != NULL);
+  SM_ASSERT(vs != NULL);
+  SM_ASSERT(fs != NULL);
 
   char *v_source = read_file(vs);
   if (!v_source)
@@ -70,12 +70,12 @@ bool shader_relink_program(GLuint shader) {
   if (!success) {
     char info_log[2 * 512];
     glGetShaderInfoLog(shader, 2 * 512, NULL, info_log);
-    log_error("shader relinking failed.\n\t%s", info_log);
+    SM_LOG_ERROR("shader relinking failed.\n\t%s", info_log);
 
     return false;
   }
 
-  log_info("relinked shaders successfully");
+  SM_LOG_INFO("relinked shaders successfully");
   return true;
 }
 
@@ -91,7 +91,7 @@ static GLuint shader_compile_vert(char *vertex) {
   if (success != GL_TRUE) {
     char info_log[2 * 512];
     glGetShaderInfoLog(v, 2 * 512, NULL, info_log);
-    log_error("vertex compilation failed.\n\t%s", info_log);
+    SM_LOG_ERROR("vertex compilation failed.\n\t%s", info_log);
     glDeleteShader(v);
     return 0;
   }
@@ -111,7 +111,7 @@ static GLuint shader_compile_frag(char *fragment) {
   if (!success) {
     char info_log[2 * 512];
     glGetShaderInfoLog(f, 2 * 512, NULL, info_log);
-    log_error("fragment compilation failed.\n\t%s", info_log);
+    SM_LOG_ERROR("fragment compilation failed.\n\t%s", info_log);
     glDeleteShader(f);
     return 0;
   }
@@ -130,14 +130,14 @@ static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment) {
   if (!success) {
     char info_log[2 * 512];
     glGetShaderInfoLog(shader, 2 * 512, NULL, info_log);
-    log_error("shader linking failed.\n\t%s", info_log);
+    SM_LOG_ERROR("shader linking failed.\n\t%s", info_log);
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
     return false;
   }
 
-  log_info("compiled and linked shaders successfully");
+  SM_LOG_INFO("compiled and linked shaders successfully");
 
   glDeleteShader(vertex);
   glDeleteShader(fragment);

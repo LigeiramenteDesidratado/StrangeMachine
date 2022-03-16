@@ -9,10 +9,11 @@
 #include "smPhysics.h"
 #include "smShader.h"
 #include "smShaderProgram.h"
+#include "smSkyBox.h"
 
 static void __one_do(void *ptr, float dt);
 static void __one_draw(void *ptr);
-static vec3 __one_get_look_at(void *ptr);
+static void __one_get_look_at(void *ptr, vec3 out);
 
 typedef struct {
 
@@ -20,7 +21,7 @@ typedef struct {
   // structure.
   scene_s scene;
 
-  /* struct background_t *bg; */
+  skybox_s skybox;
   struct player_s *player;
   struct model_s *world;
   struct physics_s *terrain;
@@ -55,15 +56,24 @@ bool center_ctor(center_s *center, scenes_e id) {
   center->world = model;
 
   struct physics_s *terrain = physics_new();
-  if (!physics_terrain_ctor(terrain, vec3_zero(), *model_get_meshes(center->world))) {
+  if (!physics_terrain_ctor(terrain, (vec3){0}, *model_get_meshes(center->world))) {
     return false;
   }
   center->terrain = terrain;
+
+  const char *files[6] = {"skybox/posx.jpg", "skybox/negx.jpg", "skybox/posy.jpg",
+                          "skybox/negy.jpg", "skybox/posz.jpg", "skybox/negz.jpg"};
+
+  center->skybox = skybox_new();
+  if (!skybox_ctor(&center->skybox, files))
+    return false;
+
   return true;
 }
 
 void center_dtor(center_s *center) {
   assert(center != NULL);
+  skybox_dtor(&center->skybox);
   player_dtor(center->player);
   physics_dtor(center->terrain);
   model_dtor(center->world);
@@ -87,6 +97,7 @@ static void __one_draw(void *ptr) {
   assert(ptr != NULL);
   center_s *center = (center_s *)ptr;
 
+  skybox_draw(&center->skybox);
   player_draw(center->player);
   model_draw(center->world);
 

@@ -2,6 +2,7 @@
 #define UTIL_FILE_H
 
 #include "util/common.h"
+
 #include "smMem.h"
 
 char* read_file(const char* filename) {
@@ -33,15 +34,15 @@ char* read_file(const char* filename) {
         // Zero-terminate the char*
         text[count] = '\0';
 
-        log_info("[%s] text file loaded successfully", filename);
+        SM_LOG_INFO("[%s] text file loaded successfully", filename);
       } else
-        log_error("[%s] failed to read text file", filename);
+        SM_LOG_ERROR("[%s] failed to read text file", filename);
 
       fclose(f);
     } else
-      log_error("[%s] failed to open text file", filename);
+      SM_LOG_ERROR("[%s] failed to open text file", filename);
   } else
-    log_error("file name provided is not valid");
+    SM_LOG_ERROR("file name provided is not valid");
 
   return text;
 }

@@ -9,6 +9,8 @@ typedef enum {
   SKINNED_SHADER = 0x01,
   TEXT_SHADER = 0x02,
   DEBUG_SHADER = 0x03,
+  SKYBOX_SHADER = 0x04,
+  RENDER_3D_SHADER = 0x05,
   MAX_SHADERS
 
 } shaders_e;

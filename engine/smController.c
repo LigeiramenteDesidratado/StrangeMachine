@@ -1,7 +1,10 @@
+#include "util/common.h"
+
+#include "data/array.h"
+
 #include "smCrossFadeTarget.h"
 #include "smMem.h"
 #include "smSkeleton.h"
-#include "util/common.h"
 
 // Corss-fade controller
 typedef struct {
@@ -19,7 +22,7 @@ void controller_skeleton_set(controller_s *controller, struct skeleton_s *skelet
 // Allocate memory
 controller_s *controller_new(void) {
   controller_s *controller = (controller_s *)SM_CALLOC(1, sizeof(controller_s));
-  assert(controller != NULL);
+  SM_ASSERT(controller != NULL);
 
   return controller;
 }
@@ -27,8 +30,8 @@ controller_s *controller_new(void) {
 // Constructor
 bool controller_ctor(controller_s *controller, struct skeleton_s *skeleton) {
 
-  assert(controller != NULL);
-  assert(skeleton != NULL);
+  SM_ASSERT(controller != NULL);
+  SM_ASSERT(skeleton != NULL);
 
   controller_skeleton_set(controller, skeleton);
   return true;
@@ -37,7 +40,7 @@ bool controller_ctor(controller_s *controller, struct skeleton_s *skeleton) {
 // Destructor
 void controller_dtor(controller_s *controller) {
 
-  assert(controller != NULL);
+  SM_ASSERT(controller != NULL);
 
   SM_ARRAY_DTOR(controller->targets);
   controller->targets = NULL;
@@ -50,7 +53,7 @@ void controller_dtor(controller_s *controller) {
 
 void controller_do(controller_s *controller, float dt) {
 
-  assert(controller != NULL);
+  SM_ASSERT(controller != NULL);
 
   if (controller->clip == NULL || !controller->was_skeleton_set)
     return;
@@ -92,7 +95,7 @@ void controller_do(controller_s *controller, float dt) {
 
 void controller_skeleton_set(controller_s *controller, struct skeleton_s *skeleton) {
 
-  assert(controller != NULL);
+  SM_ASSERT(controller != NULL);
 
   controller->skeleton = skeleton;
 
@@ -106,7 +109,7 @@ void controller_skeleton_set(controller_s *controller, struct skeleton_s *skelet
 
 void controller_play(controller_s *controller, struct clip_s *target) {
 
-  assert(controller != NULL);
+  SM_ASSERT(controller != NULL);
   SM_ARRAY_SET_SIZE(controller->targets, 0);
 
   controller->clip = target;
@@ -117,7 +120,7 @@ void controller_play(controller_s *controller, struct clip_s *target) {
 }
 
 void controller_fade_to(controller_s *controller, struct clip_s *target, float fade_time) {
-  assert(controller != NULL);
+  SM_ASSERT(controller != NULL);
 
   if (controller->clip == NULL) {
     controller_play(controller, target);

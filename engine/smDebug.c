@@ -1,10 +1,14 @@
+#include "util/common.h"
+
+#include "data/array.h"
+
 #include "smAttribute.h"
 #include "smMem.h"
+#include "smMesh.h"
 #include "smShader.h"
 #include "smShaderProgram.h"
 #include "smShapes.h"
 #include "smUniform.h"
-#include "util/common.h"
 
 typedef struct {
 
@@ -45,9 +49,9 @@ void debug_tear_down(void) {
 // Draw aabb wires.
 void debug_draw_aabb(bounding_box_s aabb, vec3 color) {
 
-  float width = fabsf(aabb.max.x - aabb.min.x);
-  float height = fabsf(aabb.max.y - aabb.min.y);
-  float length = fabsf(aabb.max.z - aabb.min.z);
+  float width = fabsf(aabb.max[0] - aabb.min[0]);
+  float height = fabsf(aabb.max[1] - aabb.min[1]);
+  float length = fabsf(aabb.max[2] - aabb.min[2]);
 
   float x = 0.0f;
   float y = 0.0f;
@@ -57,66 +61,67 @@ void debug_draw_aabb(bounding_box_s aabb, vec3 color) {
 
       // Front Face -----------------------------------------------------
       // Bottom Line
-      vec3_new(x - width / 2, y - height / 2, z + length / 2), // Bottom Left
-      vec3_new(x + width / 2, y - height / 2, z + length / 2), // Bottom Right
+      {x - width / 2, y - height / 2, z + length / 2}, // Bottom Left
+      {x + width / 2, y - height / 2, z + length / 2}, // Bottom Right
 
       // Left Line
-      vec3_new(x + width / 2, y - height / 2, z + length / 2), // Bottom Right
-      vec3_new(x + width / 2, y + height / 2, z + length / 2), // Top Right
+      {x + width / 2, y - height / 2, z + length / 2}, // Bottom Right
+      {x + width / 2, y + height / 2, z + length / 2}, // Top Right
 
       // Top Line
-      vec3_new(x + width / 2, y + height / 2, z + length / 2), // Top Right
-      vec3_new(x - width / 2, y + height / 2, z + length / 2), // Top Left
+      {x + width / 2, y + height / 2, z + length / 2}, // Top Right
+      {x - width / 2, y + height / 2, z + length / 2}, // Top Left
 
       // Right Line
-      vec3_new(x - width / 2, y + height / 2, z + length / 2), // Top Left
-      vec3_new(x - width / 2, y - height / 2, z + length / 2), // Bottom Left
+      {x - width / 2, y + height / 2, z + length / 2}, // Top Left
+      {x - width / 2, y - height / 2, z + length / 2}, // Bottom Left
 
       // Back Face ------------------------------------------------------
       // Bottom Line
-      vec3_new(x - width / 2, y - height / 2, z - length / 2), // Bottom Left
-      vec3_new(x + width / 2, y - height / 2, z - length / 2), // Bottom Right
+      {x - width / 2, y - height / 2, z - length / 2}, // Bottom Left
+      {x + width / 2, y - height / 2, z - length / 2}, // Bottom Right
 
       // Left Line
-      vec3_new(x + width / 2, y - height / 2, z - length / 2), // Bottom Right
-      vec3_new(x + width / 2, y + height / 2, z - length / 2), // Top Right
+      {x + width / 2, y - height / 2, z - length / 2}, // Bottom Right
+      {x + width / 2, y + height / 2, z - length / 2}, // Top Right
 
       // Top Line
-      vec3_new(x + width / 2, y + height / 2, z - length / 2), // Top Right
-      vec3_new(x - width / 2, y + height / 2, z - length / 2), // Top Left
+      {x + width / 2, y + height / 2, z - length / 2}, // Top Right
+      {x - width / 2, y + height / 2, z - length / 2}, // Top Left
 
       // Right Line
-      vec3_new(x - width / 2, y + height / 2, z - length / 2), // Top Left
-      vec3_new(x - width / 2, y - height / 2, z - length / 2), // Bottom Left
+      {x - width / 2, y + height / 2, z - length / 2}, // Top Left
+      {x - width / 2, y - height / 2, z - length / 2}, // Bottom Left
 
       // Top Face -------------------------------------------------------
       // Left Line
-      vec3_new(x - width / 2, y + height / 2, z + length / 2), // Top Left Front
-      vec3_new(x - width / 2, y + height / 2, z - length / 2), // Top Left Back
+      {x - width / 2, y + height / 2, z + length / 2}, // Top Left Front
+      {x - width / 2, y + height / 2, z - length / 2}, // Top Left Back
 
       // Right Line
-      vec3_new(x + width / 2, y + height / 2, z + length / 2), // Top Right Front
-      vec3_new(x + width / 2, y + height / 2, z - length / 2), // Top Right Back
+      {x + width / 2, y + height / 2, z + length / 2}, // Top Right Front
+      {x + width / 2, y + height / 2, z - length / 2}, // Top Right Back
 
       // Bottom Face  ---------------------------------------------------
       // Left Line
-      vec3_new(x - width / 2, y - height / 2, z + length / 2), // Top Left Front
-      vec3_new(x - width / 2, y - height / 2, z - length / 2), // Top Left Back
+      {x - width / 2, y - height / 2, z + length / 2}, // Top Left Front
+      {x - width / 2, y - height / 2, z - length / 2}, // Top Left Back
 
       // Right Line
-      vec3_new(x + width / 2, y - height / 2, z + length / 2), // Top Right Front
-      vec3_new(x + width / 2, y - height / 2, z - length / 2), // Top Right Back
+      {x + width / 2, y - height / 2, z + length / 2}, // Top Right Front
+      {x + width / 2, y - height / 2, z - length / 2}, // Top Right Back
 
   };
 
   vec3 colors[24];
   for (uint8_t i = 0; i < 24; ++i) {
-    colors[i] = color;
+    glm_vec3_copy(color, colors[i]);
   }
 
   transform_s transform = transform_zero();
-  transform.position =
-      (vec3){.x = aabb.min.x + width / 2.0f, .y = aabb.min.y + height / 2.0f, .z = aabb.min.z + length / 2.0f};
+  transform.position[0] = aabb.min[0] + width / 2.0f;
+  transform.position[1] = aabb.min[1] + height / 2.0f;
+  transform.position[2] = aabb.min[2] + length / 2.0f;
 
   shader_bind(SHADERS[DEBUG_SHADER]);
   attribute_set(&DEBUG.position_attr, cube, 24, GL_STATIC_DRAW);
@@ -124,7 +129,8 @@ void debug_draw_aabb(bounding_box_s aabb, vec3 color) {
 
   /* mat4 model = mat4_identity(); */
   /* uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "model"), model); */
-  mat4 model = transform_to_mat4(transform);
+  mat4 model;
+  transform_to_mat4(transform, model);
   uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "model"), model);
 
   attribute_bind_to(&DEBUG.position_attr, 1);
@@ -138,12 +144,44 @@ void debug_draw_aabb(bounding_box_s aabb, vec3 color) {
   shader_unbind();
 }
 
+void vec3_orthonorm(vec3 left, vec3 up, const vec3 v) {
+  float lenSqr, invLen;
+  if (fabs(v[2]) > 0.7f) {
+    lenSqr = v[1] * v[1] + v[2] * v[2];
+    /* invLen = rev_sqrt(lenSqr); */
+    invLen = 1.0f / sqrt(lenSqr);
+
+    up[0] = 0.0f;
+    up[1] = v[2] * invLen;
+    up[2] = -v[1] * invLen;
+
+    left[0] = lenSqr * invLen;
+    left[1] = -v[0] * up[2];
+    left[2] = v[0] * up[1];
+  } else {
+    lenSqr = v[0] * v[0] + v[1] * v[1];
+    /* invLen = rev_sqrt(lenSqr); */
+    invLen = 1.0f / sqrt(lenSqr);
+
+    left[0] = -v[1] * invLen;
+    left[1] = v[0] * invLen;
+    left[2] = 0.0f;
+
+    up[0] = -v[2] * left[1];
+    up[1] = v[2] * left[0];
+    up[2] = lenSqr * invLen;
+  }
+}
+
 // The translation is already stored in the capsule tip and base component.
 // Maybe I fix this later in favor of using transformation_s
 void debug_draw_capsule(capsule_s c) {
 
-  vec3 *vert = (vec3 *)SM_ARRAY_NEW_EMPTY();
-  vec3 *colors = (vec3 *)SM_ARRAY_NEW_EMPTY();
+  vec3 *vert = NULL;
+  vec3 *colors = NULL;
+
+  SM_ARRAY_SET_SIZE(vert, 10800);
+  SM_ARRAY_SET_SIZE(colors, 10800);
 
   // Since we only have a description of the capsule we need to generate
   // all the vertices of the capsule
@@ -152,46 +190,47 @@ void debug_draw_capsule(capsule_s c) {
   vec3 from, to;
   vec3 lastf, lastt;
 
-  from = vec3_new(c.base.x, c.base.y + c.radius, c.base.z);
-  to = vec3_new(c.tip.x, c.tip.y - c.radius, c.tip.z);
+  glm_vec3_copy(vec3_new(c.base[0], c.base[1] + c.radius, c.base[2]), from);
+  glm_vec3_copy(vec3_new(c.tip[0], c.tip[1] - c.radius, c.tip[2]), to);
 
-  forward = vec3_sub(to, from);
+  glm_vec3_sub(to, from, forward);
+  glm_vec3_normalize(forward);
 
-  forward = vec3_norm(forward);
+  vec3_orthonorm(right, up, forward);
 
-  vec3_orthonorm(&right, &up, forward);
+  glm_vec3_scale(up, c.radius, lastf);
+  glm_vec3_add(to, lastf, lastt);
+  glm_vec3_add(from, lastf, lastf);
 
-  lastf = vec3_scale(up, c.radius);
-  lastt = vec3_add(to, lastf);
-  lastf = vec3_add(from, lastf);
-
+  uint16_t offset = 0;
   for (uint16_t i = step_size; i <= 360; i += step_size) {
 
     vec3 ax, ay, pf, pt, tmp;
 
-    ax = vec3_scale(right, sinf(i * DEG2RAD));
-    ay = vec3_scale(up, cosf(i * DEG2RAD));
+    glm_vec3_scale(right, sinf(glm_rad(i)), ax);
+    glm_vec3_scale(up, cosf(glm_rad(i)), ay);
 
-    tmp = vec3_add(ax, ay);
+    glm_vec3_add(ax, ay, tmp);
+    glm_vec3_scale(tmp, c.radius, pt);
+    glm_vec3_add(pt, to, pt);
+    glm_vec3_scale(tmp, c.radius, pf);
+    glm_vec3_add(pf, from, pf);
 
-    pt = vec3_add(vec3_scale(tmp, c.radius), to);
-    pf = vec3_add(vec3_scale(tmp, c.radius), from);
+    glm_vec3_copy(lastf, vert[offset++]);
+    glm_vec3_copy(pf, vert[offset++]);
+    glm_vec3_copy(lastt, vert[offset++]);
+    glm_vec3_copy(pt, vert[offset++]);
+    glm_vec3_copy(pf, vert[offset++]);
+    glm_vec3_copy(pt, vert[offset++]);
 
-    SM_ARRAY_PUSH(vert, lastf);
-    SM_ARRAY_PUSH(vert, pf);
-    SM_ARRAY_PUSH(vert, lastt);
-    SM_ARRAY_PUSH(vert, pt);
-    SM_ARRAY_PUSH(vert, pf);
-    SM_ARRAY_PUSH(vert, pt);
-
-    lastf = pf;
-    lastt = pt;
+    glm_vec3_copy(pf, lastf);
+    glm_vec3_copy(pt, lastt);
 
     vec3 prevt, prevf;
 
-    prevt = vec3_scale(tmp, c.radius);
-    prevf = vec3_add(prevt, from);
-    prevt = vec3_add(prevt, to);
+    glm_vec3_scale(tmp, c.radius, prevt);
+    glm_vec3_add(prevt, from, prevf);
+    glm_vec3_add(prevt, to, prevt);
 
     for (int j = 1; j < 180 / step_size; j++) {
 
@@ -199,41 +238,43 @@ void debug_draw_capsule(capsule_s c) {
       float fa = 360 - (float)(j * step_size);
       vec3 t;
 
-      ax = vec3_scale(forward, sinf(ta * DEG2RAD));
-      ay = vec3_scale(tmp, cosf(ta * DEG2RAD));
+      glm_vec3_scale(forward, sinf(glm_rad(ta)), ax);
+      glm_vec3_scale(tmp, cosf(glm_rad(ta)), ay);
 
-      t = vec3_add(ax, ay);
-      pf = vec3_add(vec3_scale(t, c.radius), to);
+      glm_vec3_add(ax, ay, t);
+      glm_vec3_scale(t, c.radius, pf);
+      glm_vec3_add(pf, to, pf);
 
-      SM_ARRAY_PUSH(vert, pf);
-      SM_ARRAY_PUSH(vert, prevt);
+      glm_vec3_copy(pf, vert[offset++]);
+      glm_vec3_copy(prevt, vert[offset++]);
 
-      prevt = pf;
+      glm_vec3_copy(pf, prevt);
 
-      ax = vec3_scale(forward, sinf(fa * DEG2RAD));
-      ay = vec3_scale(tmp, cosf(fa * DEG2RAD));
+      glm_vec3_scale(forward, sinf(glm_rad(fa)), ax);
+      glm_vec3_scale(tmp, cosf(glm_rad(fa)), ay);
 
-      t = vec3_add(ax, ay);
-      pf = vec3_add(vec3_scale(t, c.radius), from);
+      glm_vec3_add(ax, ay, t);
+      glm_vec3_scale(t, c.radius, pf);
+      glm_vec3_add(pf, from, pf);
 
-      SM_ARRAY_PUSH(vert, pf);
-      SM_ARRAY_PUSH(vert, prevf);
+      glm_vec3_copy(pf, vert[offset++]);
+      glm_vec3_copy(prevf, vert[offset++]);
 
-      prevf = pf;
+      glm_vec3_copy(pf, prevf);
     }
   }
 
   size_t s = SM_ARRAY_SIZE(vert);
-  SM_ARRAY_SET_CAPACITY(colors, s);
+  SM_ARRAY_SET_SIZE(colors, s);
   for (size_t i = 0; i < s; ++i) {
-    SM_ARRAY_PUSH(colors, vec3_new(0.6f, 0.5f, 0.7f));
+    glm_vec3_copy(vec3_new(0.6f, 0.5f, 0.7f), colors[i]);
   }
 
   shader_bind(SHADERS[DEBUG_SHADER]);
   attribute_set(&DEBUG.position_attr, vert, s, GL_STATIC_DRAW);
   attribute_set(&DEBUG.color_attr, colors, s, GL_STATIC_DRAW);
 
-  mat4 model = mat4_identity();
+  mat4 model = GLM_MAT4_IDENTITY_INIT;
   uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "model"), model);
 
   attribute_bind_to(&DEBUG.position_attr, 1);
@@ -253,13 +294,13 @@ void debug_draw_capsule(capsule_s c) {
 void debug_draw_line(vec3 from, vec3 to, vec3 color) {
 
   vec3 line[2] = {
-      from,
-      to,
+      {from[0], from[1], from[2]},
+      {to[0], to[1], to[2]},
   };
 
   vec3 colors[2] = {
-      color,
-      color,
+      {color[0], color[1], color[2]},
+      {color[0], color[1], color[2]},
   };
 
   glEnable(GL_BLEND);
@@ -270,7 +311,7 @@ void debug_draw_line(vec3 from, vec3 to, vec3 color) {
   attribute_set(&DEBUG.position_attr, line, 2, GL_STATIC_DRAW);
   attribute_set(&DEBUG.color_attr, colors, 2, GL_STATIC_DRAW);
 
-  mat4 model = mat4_identity();
+  mat4 model = GLM_MAT4_IDENTITY_INIT;
   uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "model"), model);
 
   attribute_bind_to(&DEBUG.position_attr, 1);
@@ -286,3 +327,95 @@ void debug_draw_line(vec3 from, vec3 to, vec3 color) {
   glLineWidth(1);
   glDisable(GL_BLEND);
 }
+
+// draw sphere wireframe
+// void debug_draw_sphere(sphere_s s1, vec3 c) {
+//
+//   // uv shpere mesh
+//   vec3 *vert = (vec3 *)SM_ARRAY_NEW_EMPTY();
+//   vec3 *colors = (vec3 *)SM_ARRAY_NEW_EMPTY();
+//
+//   float x, y, z, xy;
+//
+//   int slices = 20;
+//   int stacks = 20;
+//
+//   float sectorStep = 2 * GLM_PI / slices;
+//   float stackStep = GLM_PI / stacks;
+//   float sectorAngle, stackAngle;
+//
+//   for (int i = 0; i <= stacks; ++i) {
+//     stackAngle = GLM_PI / 2 - i * stackStep;
+//     xy = s1.radius * cosf(stackAngle);
+//     z = s1.radius * sinf(stackAngle);
+//
+//     for (int j = 0; j <= slices; ++j) {
+//       sectorAngle = j * sectorStep;
+//
+//       x = xy * cosf(sectorAngle);
+//       y = xy * sinf(sectorAngle);
+//       SM_ARRAY_PUSH(vert, vec3_new(x, y, z));
+//     }
+//   }
+//
+//   uint32_t *indices = (uint32_t *)SM_ARRAY_NEW_EMPTY();
+//   uint32_t *lineIndices = (uint32_t *)SM_ARRAY_NEW_EMPTY();
+//   int k1, k2;
+//   for (int i = 0; i < stacks; ++i) {
+//     k1 = i * (slices + 1);
+//     k2 = k1 + slices + 1;
+//
+//     for (int j = 0; j < slices; ++j, ++k1, ++k2) {
+//
+//       if (i != 0) {
+//         SM_ARRAY_PUSH(indices, k1);
+//         SM_ARRAY_PUSH(indices, k2);
+//         SM_ARRAY_PUSH(indices, k1 + 1);
+//       }
+//
+//       if (i != (stacks - 1)) {
+//         SM_ARRAY_PUSH(indices, k1 + 1);
+//         SM_ARRAY_PUSH(indices, k2);
+//         SM_ARRAY_PUSH(indices, k2 + 1);
+//       }
+//
+//       SM_ARRAY_PUSH(lineIndices, k1);
+//       SM_ARRAY_PUSH(lineIndices, k2);
+//       if (i != 0) {
+//         SM_ARRAY_PUSH(lineIndices, k1);
+//         SM_ARRAY_PUSH(lineIndices, k1 + 1);
+//       }
+//     }
+//   }
+//
+//   size_t s = SM_ARRAY_SIZE(vert);
+//   SM_ARRAY_SET_SIZE(colors, s);
+//   for (size_t i = 0; i < s; ++i) {
+//     glm_vec3_copy(c, colors[i]);
+//   }
+//
+//   shader_bind(SHADERS[DEBUG_SHADER]);
+//   attribute_set(&DEBUG.position_attr, vert, s, GL_STATIC_DRAW);
+//   attribute_set(&DEBUG.color_attr, colors, s, GL_STATIC_DRAW);
+//
+//   transform_s t = transform_zero();
+//   glm_vec3_copy(s1.center, t.position);
+//   mat4 model;
+//   transform_to_mat4(t, model);
+//   uniform_set_value(glGetUniformLocation(SHADERS[DEBUG_SHADER], "model"), model);
+//
+//   attribute_bind_to(&DEBUG.position_attr, 1);
+//   attribute_bind_to(&DEBUG.color_attr, 2);
+//
+//   glDrawElements(GL_TRIANGLES, (GLsizei)SM_ARRAY_SIZE(indices), GL_UNSIGNED_INT, indices);
+//
+//   attribute_unbind_from(&DEBUG.color_attr, 2);
+//   attribute_unbind_from(&DEBUG.position_attr, 1);
+//
+//   shader_unbind();
+//
+//   SM_ARRAY_DTOR(vert);
+//   SM_ARRAY_DTOR(colors);
+//   SM_ARRAY_DTOR(indices);
+//   SM_ARRAY_DTOR(lineIndices);
+// }

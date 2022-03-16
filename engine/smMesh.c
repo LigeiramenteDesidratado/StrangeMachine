@@ -1,15 +1,17 @@
-#include "smMesh.h"
-#include "smDebug.h"
-#include "smMem.h"
+#include "data/array.h"
 #include "util/bitmask.h"
 #include "util/common.h"
+
+#include "smDebug.h"
+#include "smMem.h"
+#include "smMesh.h"
 
 const struct mesh_attrs mesh_attr_locs = {.position = 1, .tex_coord = 2, .normal = 3};
 
 // Constructor
 bool mesh_ctor(mesh_s *mesh) {
 
-  assert(mesh != NULL);
+  SM_ASSERT(mesh != NULL);
 
   mesh->vertex.position_attr = attribute_new();
   if (!attribute_ctor(&mesh->vertex.position_attr, VEC3_KIND))
@@ -36,11 +38,7 @@ bool mesh_ctor(mesh_s *mesh) {
 
 // Destructor
 void mesh_dtor(mesh_s *mesh) {
-  assert(mesh != NULL);
-
-  /* index_buffer_dtor(&mesh->index_buffer); */
-  /* if (mesh->indices != NULL) */
-  /* free(mesh->indices); */
+  SM_ASSERT(mesh != NULL);
 
   attribute_dtor(&mesh->vertex.normal_attr);
   SM_ARRAY_DTOR(mesh->vertex.normals);
@@ -53,17 +51,19 @@ void mesh_dtor(mesh_s *mesh) {
 }
 
 void mesh_do(mesh_s *mesh) {
-  assert(mesh != NULL);
+  SM_ASSERT(mesh != NULL);
+  SM_UNUSED(mesh);
 }
 
 void mesh_draw(mesh_s *mesh) {
-  assert(mesh != NULL);
+  SM_ASSERT(mesh != NULL);
+  SM_UNUSED(mesh);
   /* draw_vertex(SM_ARRAY_SIZE(mesh->position), Triangles); */
 }
 
 void mesh_update_gl_buffers(mesh_s *mesh) {
 
-  assert(mesh != NULL);
+  SM_ASSERT(mesh != NULL);
 
   if (SM_ARRAY_SIZE(mesh->vertex.positions) > 0)
     attribute_set(&mesh->vertex.position_attr, mesh->vertex.positions, SM_ARRAY_SIZE(mesh->vertex.positions),
@@ -75,14 +75,11 @@ void mesh_update_gl_buffers(mesh_s *mesh) {
   if (SM_ARRAY_SIZE(mesh->vertex.tex_coords) > 0)
     attribute_set(&mesh->vertex.uv_attr, mesh->vertex.tex_coords, SM_ARRAY_SIZE(mesh->vertex.tex_coords),
                   GL_STATIC_DRAW);
-
-  if (SM_ARRAY_SIZE(mesh->indices) > 0)
-    index_buffer_set(&mesh->index_buffer, mesh->indices, SM_ARRAY_SIZE(mesh->indices));
 }
 
 void mesh_bind(const mesh_s *const mesh, uint8_t flag) {
 
-  assert(mesh != NULL);
+  SM_ASSERT(mesh != NULL);
 
   if (MASK_CHK(flag, (1 << mesh_attr_locs.position)))
     attribute_bind_to(&mesh->vertex.position_attr, mesh_attr_locs.position);
@@ -96,7 +93,7 @@ void mesh_bind(const mesh_s *const mesh, uint8_t flag) {
 
 void mesh_unbind(const mesh_s *const mesh, uint8_t flag) {
 
-  assert(mesh != NULL);
+  SM_ASSERT(mesh != NULL);
 
   if (MASK_CHK(flag, (1 << mesh_attr_locs.position)))
     attribute_unbind_from(&mesh->vertex.position_attr, mesh_attr_locs.position);
@@ -115,19 +112,23 @@ bounding_box_s mesh_get_bounding_box(mesh_s *mesh) {
   vec3 maxVertex = {0};
 
   if (mesh->vertex.positions != NULL) {
-    minVertex = mesh->vertex.positions[0];
-    maxVertex = mesh->vertex.positions[0];
+    glm_vec3_copy(mesh->vertex.positions[0], minVertex);
+    glm_vec3_copy(mesh->vertex.positions[0], maxVertex);
 
     for (size_t i = 1; i < SM_ARRAY_SIZE(mesh->vertex.positions); i++) {
-      minVertex = vec3_min(minVertex, mesh->vertex.positions[i]);
-      maxVertex = vec3_max(maxVertex, mesh->vertex.positions[i]);
+      glm_vec3_minv(minVertex, mesh->vertex.positions[i], minVertex);
+      glm_vec3_maxv(maxVertex, mesh->vertex.positions[i], maxVertex);
+      /* minVertex = vec3_min(minVertex, mesh->vertex.positions[i]); */
+      /* maxVertex = vec3_max(maxVertex, mesh->vertex.positions[i]); */
     }
   }
 
   // Create the bounding box
   bounding_box_s box;
-  box.min = minVertex;
-  box.max = maxVertex;
+  glm_vec3_copy(minVertex, box.min);
+  glm_vec3_copy(maxVertex, box.max);
+  /* box.min = minVertex; */
+  /* box.max = maxVertex; */
 
   return box;
 }

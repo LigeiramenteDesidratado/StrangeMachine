@@ -1,8 +1,10 @@
+#include "cglm/types.h"
 #include "cgltf/cgltf.h"
 #include "util/common.h"
 
+#include "data/array.h"
+
 #include "smClip.h"
-#include "smMem.h"
 #include "smPose.h"
 #include "smSkeleton.h"
 #include "smSkinnedMesh.h"
@@ -17,21 +19,21 @@ cgltf_data *gltf_loader_load_file(const char *path) {
   cgltf_data *data = NULL;
   cgltf_result result = cgltf_parse_file(&options, path, &data);
   if (result != cgltf_result_success) {
-    log_error("could not parse gltf file: %s", path);
+    SM_LOG_ERROR("could not parse gltf file: %s", path);
     return NULL;
   }
 
   result = cgltf_load_buffers(&options, data, path);
   if (result != cgltf_result_success) {
     cgltf_free(data);
-    log_error("could not load buffers: %s", path);
+    SM_LOG_ERROR("could not load buffers: %s", path);
     return NULL;
   }
 
   result = cgltf_validate(data);
   if (result != cgltf_result_success) {
     cgltf_free(data);
-    log_error("invalid gltf file: %s", path);
+    SM_LOG_ERROR("invalid gltf file: %s", path);
     return NULL;
   }
 
@@ -43,7 +45,7 @@ transform_s __gltf_get_local_transform(cgltf_node *n) {
   transform_s result = transform_zero();
   if (n->has_matrix) {
     mat4 mat;
-    memcpy(&mat.v, n->matrix, 16 * sizeof(float));
+    memcpy(&mat, n->matrix, 16 * sizeof(float));
     result = transform_mat4_to_transform(mat);
   }
 
@@ -66,7 +68,7 @@ transform_s __gltf_get_local_transform(cgltf_node *n) {
 // signal an invalid index
 int __gltf_get_node_index(cgltf_node *target, cgltf_node *all_nodes, uint32_t num_nodes) {
   if (target == NULL) {
-    log_debug("returning -1");
+    SM_LOG_DEBUG("returning -1");
     return -1;
   }
 
@@ -99,6 +101,7 @@ void gltf_loader_load_rest_pose(cgltf_data *data, pose_s *pose) {
 
     int32_t parent = __gltf_get_node_index(node->parent, data->nodes, bone_count);
     pose_set_parent(pose, i, parent);
+    pose_set_name(pose, i, node->name);
   }
 }
 
@@ -111,10 +114,11 @@ char **__gltf_loader_load_joint_names(cgltf_data *data) {
   for (size_t i = 0; i < bone_count; ++i) {
     cgltf_node *node = &(data->nodes[i]);
 
-    if (node->name == NULL)
+    if (node->name == NULL) {
       result[i] = strdup("EMPTY NODE");
-    else
+    } else {
       result[i] = strdup(node->name);
+    }
   }
 
   return result;
@@ -239,7 +243,7 @@ struct clip_s **gltf_loader_load_animation_clips(cgltf_data *data) {
 }
 
 void gltf_loader_free_data(cgltf_data *data) {
-  assert(data != NULL);
+  SM_ASSERT(data != NULL);
 
   cgltf_free(data);
 }
@@ -292,7 +296,8 @@ void gltf_loader_load_bind_pose(cgltf_data *data, pose_s *bind_pose) {
       memcpy(&inverse_bind_matrix, matrix, sizeof(float) * 16);
       // invert, convert to transform
 
-      mat4 bind_matrix = mat4_inverse(inverse_bind_matrix);
+      mat4 bind_matrix;
+      glm_mat4_inv(inverse_bind_matrix, bind_matrix);
       transform_s bind_transform = transform_mat4_to_transform(bind_matrix);
 
       // set that transform in the world_nind_pose
@@ -334,7 +339,7 @@ struct skeleton_s *gltf_loader_load_skeleton(cgltf_data *data) {
 
   struct skeleton_s *skeleton = skeleton_new();
   if (!skeleton_ctor(skeleton, &rest_pose, &bind_pose, (const char **)names))
-    log_warn("error building skeleton\n");
+    SM_LOG_WARN("error building skeleton\n");
 
   pose_dtor(&rest_pose);
   pose_dtor(&bind_pose);
@@ -381,31 +386,39 @@ void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh, cgltf_attribute *at
       if (i == 0)
         SM_ARRAY_SET_SIZE(mesh->vertex.positions, accessor_count);
 
-      mesh->vertex.positions[i] = vec3_new(values[index + 0], values[index + 1], values[index + 2]);
+      glm_vec3_copy(vec3_new(values[index + 0], values[index + 1], values[index + 2]), mesh->vertex.positions[i]);
 
       break;
     case cgltf_attribute_type_texcoord:
       if (i == 0)
         SM_ARRAY_SET_SIZE(mesh->vertex.tex_coords, accessor_count);
 
-      mesh->vertex.tex_coords[i] = vec2_new(values[index + 0], (1.0f - values[index + 1]));
+      glm_vec2_copy(vec2_new(values[index + 0], (1.0f - values[index + 1])), mesh->vertex.tex_coords[i]);
       break;
     case cgltf_attribute_type_weights:
-      if (i == 0)
-        SM_ARRAY_SET_SIZE(mesh->weights, accessor_count);
+      if (i == 0) {
+        SM_ALIGNED_ARRAY_NEW(mesh->weights, 16, accessor_count);
+      }
 
-      mesh->weights[i] = vec4_new(values[index + 0], values[index + 1], values[index + 2], values[index + 3]);
+      vec4 v = {values[index + 0], values[index + 1], values[index + 2], values[index + 3]};
+      /* mesh->weights[i][0] = values[index + 0]; */
+      /* mesh->weights[i][1] = values[index + 1]; */
+      /* mesh->weights[i][2] = values[index + 2]; */
+      /* mesh->weights[i][3] = values[index + 3]; */
+
+      glm_vec4_copy(v, mesh->weights[i]);
       break;
 
     case cgltf_attribute_type_normal: {
       if (i == 0)
         SM_ARRAY_SET_SIZE(mesh->vertex.normals, accessor_count);
 
-      vec3 norm = vec3_new(values[index + 0], values[index + 1], values[index + 2]);
-      if (vec3_len_sq(norm) < EPSILON) {
-        norm = vec3_new(0.0f, 1.0f, 0.0f);
+      vec3 norm;
+      glm_vec3_copy(vec3_new(values[index + 0], values[index + 1], values[index + 2]), norm);
+      if (glm_vec3_norm2(norm) < EPSILON) {
+        glm_vec3_copy(vec3_new(0.0f, 1.0f, 0.0f), norm);
       }
-      mesh->vertex.normals[i] = norm;
+      glm_vec3_copy(norm, mesh->vertex.normals[i]);
     } break;
     case cgltf_attribute_type_joints: {
       if (i == 0)
@@ -413,15 +426,21 @@ void __gltf_loader_mesh_from_attribute(skinned_mesh_s *mesh, cgltf_attribute *at
       // These indices are skin relative. This function has no information about
       // the skin that is being parsed. Add +0.5f to round, since we can't read
       // integers
-      ivec4 joints = ivec4_new((int)(values[index + 0] + 0.5f), (int)(values[index + 1] + 0.5f),
-                               (int)(values[index + 2] + 0.5f), (int)(values[index + 3] + 0.5f));
+      ivec4 joints;
+      joints[0] = (int)(values[index + 0] + 0.5f);
+      joints[1] = (int)(values[index + 1] + 0.5f);
+      joints[2] = (int)(values[index + 2] + 0.5f);
+      joints[3] = (int)(values[index + 3] + 0.5f);
 
-      joints.x = __gltf_get_node_index(skin->joints[joints.x], nodes, node_count);
-      joints.y = __gltf_get_node_index(skin->joints[joints.y], nodes, node_count);
-      joints.z = __gltf_get_node_index(skin->joints[joints.z], nodes, node_count);
-      joints.w = __gltf_get_node_index(skin->joints[joints.w], nodes, node_count);
+      joints[0] = __gltf_get_node_index(skin->joints[joints[0]], nodes, node_count);
+      joints[1] = __gltf_get_node_index(skin->joints[joints[1]], nodes, node_count);
+      joints[2] = __gltf_get_node_index(skin->joints[joints[2]], nodes, node_count);
+      joints[3] = __gltf_get_node_index(skin->joints[joints[3]], nodes, node_count);
 
-      mesh->influences[i] = joints;
+      mesh->influences[i][0] = joints[0];
+      mesh->influences[i][1] = joints[1];
+      mesh->influences[i][2] = joints[2];
+      mesh->influences[i][3] = joints[3];
 
     } break;
     default:
@@ -461,7 +480,7 @@ skinned_mesh_s *gltf_loader_load_meshes(cgltf_data *data) {
     for (int j = 0; j < num_prime; ++j) {
       skinned_mesh_s m = skinned_mesh_new();
       if (!skinned_mesh_ctor(&m))
-        log_warn("failed to contruct mesh");
+        SM_LOG_WARN("failed to construct mesh");
 
       /* arrput(meshes, m); */
       cgltf_primitive *primitive = &node->mesh->primitives[j];

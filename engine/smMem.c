@@ -1,5 +1,6 @@
-#include "smMem.h"
 #include "util/common.h"
+
+#include "smMem.h"
 
 static struct {
   uint64_t total_allocs;
@@ -10,6 +11,9 @@ static struct {
 
 } mem_info = {0};
 
+#define SM_MEM_HEADER_SIZE sizeof(size_t)
+
+static char *__smmem_human_readable_size(void);
 void *__smmem_malloc(size_t size) {
 
   /*
@@ -29,7 +33,7 @@ void *__smmem_malloc(size_t size) {
   mem_info.total_allocs++;
   mem_info.allocs++;
 
-  /* poiter arithmetic to return the array
+  /* pointer arithmetic to return the array
    * -------------------
    * |size|0|1|2|3|...|
    * -----^------------
@@ -97,12 +101,83 @@ void __smmem_free(void *ptr) {
   }
 }
 
+/* Alinged memory allocation */
+
+void *__smmem_aligned_alloc(size_t alignment, size_t size) {
+
+  void *ptr = NULL;
+
+  /* ensure align and size are non-zero values before we try to allocate any memory. We also need to check that our
+   * alignment request is a power of two */
+
+  SM_ASSERT((alignment & (alignment - 1)) == 0);
+
+  if (alignment && size) {
+
+    size_t _size = size + alignment - 1;
+
+    void *raw = (void *)malloc(_size + SM_MEM_HEADER_SIZE);
+    if (!raw)
+      return NULL;
+
+    /* store the size at the begining of the array */
+    *(size_t *)raw = size;
+
+    void *header_address = (void *)((((char *)raw) + SM_MEM_HEADER_SIZE)); /* not the actual address of the header */
+
+    void *aligned_address = (void *)((((uintptr_t)header_address) + alignment) & ~(alignment - 1));
+    /* void *aligned_address = (void *)(((size_t)header_address + alignment) & ~(alignment - 1)); */
+
+    uint8_t offset = (char *)aligned_address - (char *)header_address;
+
+    /* store the offset 1 byte before the aligned address */
+    *((char *)aligned_address - 1) = offset;
+
+    ptr = aligned_address;
+
+    mem_info.total_bytes += size;
+    mem_info.bytes += size;
+    mem_info.total_allocs++;
+    mem_info.allocs++;
+  }
+
+  return ptr;
+}
+
+void __smmem_aligned_free(void *ptr) {
+
+  if (ptr) {
+
+    /* get the offset by reading the byte before the aligned address */
+    uint8_t offset = *((char *)ptr - 1);
+
+    /* get the original address by subtracting the offset plus the header size from the aligned address */
+    void *_ptr = ((char *)ptr) - (offset + SM_MEM_HEADER_SIZE);
+
+    free(_ptr);
+  }
+}
+
 #define BYTES2KB ((float)(1 << 10))
 #define BYTES2MB ((float)(1 << 20))
 #define BYTES2GB ((float)(1 << 30))
 
 void __smmem_print(void) {
-  printf("allocations: %lu\ntotal (re)alloctions: %lu\nbytes: %lu\ntotal bytes: %.3fMB\nfree calls: %lu\n",
-         mem_info.allocs, mem_info.total_allocs, mem_info.bytes, ((float)mem_info.total_bytes / BYTES2MB),
-         mem_info.frees);
+  printf("allocations: %lu\ntotal (re)alloctions: %lu\nbytes: %lu\ntotal bytes: %s\nfree calls: %lu\n", mem_info.allocs,
+         mem_info.total_allocs, mem_info.bytes, __smmem_human_readable_size(), mem_info.frees);
+}
+
+// return a string with human readable memory size
+static char *__smmem_human_readable_size(void) {
+  static char buf[32];
+  float size = (float)mem_info.total_bytes;
+  if (size < BYTES2KB)
+    sprintf(buf, "%.3fB", size);
+  else if (size < BYTES2MB)
+    sprintf(buf, "%.3fKB", size / BYTES2KB);
+  else if (size < BYTES2GB)
+    sprintf(buf, "%.3fMB", size / BYTES2MB);
+  else
+    sprintf(buf, "%.3fGB", size / BYTES2GB);
+  return buf;
 }

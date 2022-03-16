@@ -1,6 +1,7 @@
-#include "smRearrangeBones.h"
-#include "smMem.h"
+#include "data/array.h"
 #include "util/common.h"
+
+#include "smRearrangeBones.h"
 
 bone_map_s *rearrange_skeleton(struct skeleton_s *skeleton) {
   pose_s *rest_pose = skeleton_get_rest_pose(skeleton);
@@ -90,10 +91,10 @@ bone_map_s *rearrange_skeleton(struct skeleton_s *skeleton) {
 void rearrange_mesh(skinned_mesh_s *mesh, bone_map_s *bone_map) {
 
   for (size_t i = 0; i < SM_ARRAY_SIZE(mesh->influences); ++i) {
-    mesh->influences[i].x = hmget(bone_map, mesh->influences[i].x);
-    mesh->influences[i].y = hmget(bone_map, mesh->influences[i].y);
-    mesh->influences[i].z = hmget(bone_map, mesh->influences[i].z);
-    mesh->influences[i].w = hmget(bone_map, mesh->influences[i].w);
+    mesh->influences[i][0] = hmget(bone_map, mesh->influences[i][0]);
+    mesh->influences[i][1] = hmget(bone_map, mesh->influences[i][1]);
+    mesh->influences[i][2] = hmget(bone_map, mesh->influences[i][2]);
+    mesh->influences[i][3] = hmget(bone_map, mesh->influences[i][3]);
   }
 
   skinned_mesh_update_gl_buffers(mesh);

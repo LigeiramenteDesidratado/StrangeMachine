@@ -12,5 +12,6 @@ void debug_tear_down(void);
 void debug_draw_aabb(bounding_box_s aabb, vec3 color);
 void debug_draw_line(vec3 from, vec3 to, vec3 color);
 void debug_draw_capsule(capsule_s c);
+void debug_draw_sphere(sphere_s s1, vec3 c);
 
 #endif // SM_DEBUG_H

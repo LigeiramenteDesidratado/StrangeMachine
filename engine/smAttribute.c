@@ -3,7 +3,7 @@
 
 bool attribute_ctor(attribute_s *attribute, type_kind_e kind) {
 
-  assert(attribute != NULL);
+  SM_ASSERT(attribute != NULL);
 
   glGenBuffers(1, &attribute->vbo);
   attribute->length = 0;
@@ -15,14 +15,14 @@ bool attribute_ctor(attribute_s *attribute, type_kind_e kind) {
 struct Statistics stats = {.uploads = 0, .frames = 0};
 
 void attribute_dtor(attribute_s *attribute) {
-  assert(attribute != NULL);
+  SM_ASSERT(attribute != NULL);
 
   glDeleteBuffers(1, &attribute->vbo);
 }
 
 #define DEFINE_ATTRIBUTE_SET(X)                                                                                        \
   void attribute_set_##X(attribute_s *const attr, const X *const input_array, size_t array_length, GLenum usage) {     \
-    assert(attr != NULL);                                                                                              \
+    SM_ASSERT(attr != NULL);                                                                                           \
     attr->length = array_length;                                                                                       \
     size_t size = sizeof(X);                                                                                           \
     glBindBuffer(GL_ARRAY_BUFFER, attr->vbo);                                                                          \
@@ -44,7 +44,7 @@ void attribute_default(const attribute_s *const attr, const void *const array, u
   (void)length;
   (void)usage;
 
-  log_warn("invalid attribute set");
+  SM_LOG_WARN("invalid attribute set");
 }
 
 void attribute_bind_to(attribute_s const *attribute, uint8_t slot) {
@@ -53,7 +53,7 @@ void attribute_bind_to(attribute_s const *attribute, uint8_t slot) {
 }
 
 void attribute_bind_to_pro(attribute_s const *attribute, uint8_t slot, GLsizei stride, const void *pointer) {
-  assert(attribute != NULL);
+  SM_ASSERT(attribute != NULL);
 
   glBindBuffer(GL_ARRAY_BUFFER, attribute->vbo);
   glEnableVertexAttribArray(slot);
@@ -75,7 +75,7 @@ void attribute_bind_to_pro(attribute_s const *attribute, uint8_t slot, GLsizei s
     break;
 
   default:
-    log_warn("unkown kind type");
+    SM_LOG_WARN("unkown kind type");
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -83,7 +83,7 @@ void attribute_bind_to_pro(attribute_s const *attribute, uint8_t slot, GLsizei s
 
 void attribute_unbind_from(attribute_s const *attribute, uint8_t slot) {
 
-  assert(attribute != NULL);
+  SM_ASSERT(attribute != NULL);
 
   glBindBuffer(GL_ARRAY_BUFFER, attribute->vbo);
   glDisableVertexAttribArray(slot);

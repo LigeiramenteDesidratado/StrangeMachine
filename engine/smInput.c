@@ -1,5 +1,9 @@
-#include "smMem.h"
+#include "SDL_mouse.h"
+#include "SDL_scancode.h"
 #include "util/common.h"
+
+#include "smMem.h"
+
 #include <SDL2/SDL_events.h>
 
 #define MAX_KEYBOARD_KEYS 350
@@ -21,20 +25,20 @@ typedef struct {
 static input_s *GINPUT = NULL;
 
 void input_init(void) {
-  assert(GINPUT == NULL && "input initialized twice");
+  SM_ASSERT(GINPUT == NULL && "input initialized twice");
   GINPUT = (input_s *)SM_CALLOC(1, sizeof(input_s));
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
 }
 
 bool input_scan_key(int32_t key) {
-  assert(GINPUT != NULL);
-  assert(key < MAX_KEYBOARD_KEYS);
+  SM_ASSERT(GINPUT != NULL);
+  SM_ASSERT(key < MAX_KEYBOARD_KEYS);
 
   return GINPUT->keyboard[key];
 }
 
 bool input_scan_key_lock(int32_t key) {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
 
   bool val = false;
 
@@ -49,42 +53,42 @@ bool input_scan_key_lock(int32_t key) {
 }
 
 float input_get_mouse_scroll() {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
   return GINPUT->scroll;
 }
 
 float input_get_x_rel_mouse() {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
   return GINPUT->x_rel;
 }
 
 float input_get_y_rel_mouse() {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
   return GINPUT->y_rel;
 }
 
 float input_get_x_mouse() {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
   return GINPUT->x;
 }
 
 float input_get_y_mouse() {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
   return GINPUT->y;
 }
 
 float input_get_x_last_mouse() {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
   return GINPUT->x_last;
 }
 
 float input_get_y_last_mouse() {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
   return GINPUT->y_last;
 }
 
 void input_before_do() {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
   GINPUT->y_rel = 0;
   GINPUT->x_rel = 0;
   GINPUT->x_last = GINPUT->x;
@@ -97,7 +101,7 @@ void input_before_do() {
 }
 
 void input_do(SDL_Event *e) {
-  assert(GINPUT != NULL);
+  SM_ASSERT(GINPUT != NULL);
 
   if (e->type == SDL_KEYUP) {
     // check if the keyboard event was a result of  Keyboard repeat event
@@ -115,12 +119,12 @@ void input_do(SDL_Event *e) {
     GINPUT->x = e->motion.x;
     GINPUT->y = e->motion.y;
   } else if (e->type == SDL_MOUSEWHEEL) {
-    GINPUT->scroll = e->wheel.y;
+    GINPUT->scroll = e->wheel.preciseY;
   }
 }
 
 void input_tear_down(void) {
-  assert(GINPUT != NULL && "trying to finilize a not initialized input");
+  SM_ASSERT(GINPUT != NULL && "trying to finilize a not initialized input");
   SM_FREE(GINPUT);
   GINPUT = NULL;
 }

@@ -30,7 +30,8 @@ void track_index_look_up_table(track_s *track);
 
 // Destructor
 void track_dtor(track_s *track) {
-  assert(track != NULL);
+
+  SM_ASSERT(track != NULL);
 
   for (size_t i = 0; i < SM_ARRAY_SIZE(track->frames); ++i) {
     SM_ARRAY_DTOR(track->frames[i].value);
@@ -44,19 +45,22 @@ void track_dtor(track_s *track) {
 
 float track_get_start_time(const track_s *const track) {
 
-  assert(track != NULL);
+  SM_ASSERT(track != NULL);
 
   return track->frames[0].t;
 }
 
 float track_get_end_time(const track_s *const track) {
 
-  assert(track != NULL);
+  SM_ASSERT(track != NULL);
 
   return track->frames[SM_ARRAY_SIZE(track->frames) - 1].t;
 }
 
 float track_sample_float(track_s *track, float time, bool looping) {
+
+  SM_ASSERT(track != NULL);
+
   switch (track->interpolation) {
   case CONSTANT_INTERP:
     return __track_sample_constant_float(track, time, looping);
@@ -68,13 +72,14 @@ float track_sample_float(track_s *track, float time, bool looping) {
     return __track_sample_linear_float(track, time, looping);
     break;
   default:
-    log_warn("unkown iterpolation");
+    SM_LOG_WARN("unkown iterpolation");
   }
   return 0.0f;
 }
 
 void track_sample_vec3(track_s *track, float time, bool looping, vec3 out) {
 
+  SM_ASSERT(track != NULL);
 
   switch (track->interpolation) {
   case CONSTANT_INTERP:
@@ -92,6 +97,9 @@ void track_sample_vec3(track_s *track, float time, bool looping, vec3 out) {
 }
 
 void track_sample_quat(track_s *track, float time, bool looping, versor out) {
+
+  SM_ASSERT(track != NULL);
+
   switch (track->interpolation) {
   case CONSTANT_INTERP:
     __track_sample_constant_quat(track, time, looping, out);
@@ -108,7 +116,8 @@ void track_sample_quat(track_s *track, float time, bool looping, versor out) {
 }
 
 void track_resize_sampled_frames(track_s *track, size_t size) {
-  assert(track != NULL);
+
+  SM_ASSERT(track != NULL);
 
   size_t old_length = SM_ARRAY_SIZE(track->sampled_frames);
   SM_ARRAY_SET_SIZE(track->sampled_frames, size);
@@ -122,7 +131,7 @@ void track_resize_sampled_frames(track_s *track, size_t size) {
 // changed from track_resize --> track_resize_frame;
 void track_resize_frame(track_s *track, size_t size) {
 
-  assert(track != NULL);
+  SM_ASSERT(track != NULL);
 
   size_t old_length = SM_ARRAY_SIZE(track->frames);
   SM_ARRAY_SET_SIZE(track->frames, size);
@@ -135,9 +144,10 @@ void track_resize_frame(track_s *track, size_t size) {
 
 void track_resize_frame_in(track_s *track, size_t size, uint32_t frame_index) {
 
-  assert(track != NULL);
+  SM_ASSERT(track != NULL);
+
   if (frame_index > SM_ARRAY_SIZE(track->frames)) {
-    log_warn("trying to access invalid index");
+    SM_LOG_WARN("trying to access invalid index");
     return;
   }
 
@@ -152,9 +162,10 @@ void track_resize_frame_in(track_s *track, size_t size, uint32_t frame_index) {
 
 void track_resize_frame_out(track_s *track, size_t size, uint32_t frame_index) {
 
-  assert(track != NULL);
+  SM_ASSERT(track != NULL);
+
   if (frame_index >= SM_ARRAY_SIZE(track->frames)) {
-    log_warn("trying to access invalid index");
+    SM_LOG_WARN("trying to access invalid index");
     return;
   }
 
@@ -168,9 +179,11 @@ void track_resize_frame_out(track_s *track, size_t size, uint32_t frame_index) {
 }
 
 void track_resize_frame_value(track_s *track, size_t size, uint32_t frame_index) {
-  assert(track != NULL);
+
+  SM_ASSERT(track != NULL);
+
   if (frame_index > SM_ARRAY_SIZE(track->frames)) {
-    log_warn("trying to access invalid index");
+    SM_LOG_WARN("trying to access invalid index");
     return;
   }
 
@@ -185,20 +198,21 @@ void track_resize_frame_value(track_s *track, size_t size, uint32_t frame_index)
 
 size_t track_get_frame_size(track_s *track) {
 
-  assert(track != NULL);
+  SM_ASSERT(track != NULL);
 
   return SM_ARRAY_SIZE(track->frames);
 }
 
 interpolation_e track_get_interpolation(track_s *track) {
 
-  assert(track != NULL);
+  SM_ASSERT(track != NULL);
 
   return track->interpolation;
 }
 
 void track_set_interpolation(track_s *track, interpolation_e interpolation) {
-  assert(track != NULL);
+
+  SM_ASSERT(track != NULL);
 
   track->interpolation = interpolation;
 }
@@ -260,7 +274,7 @@ int32_t track_frame_index(track_s *track, float time, bool looping) {
 
   size_t size = SM_ARRAY_SIZE(track->frames);
   if (size <= 1) {
-    log_debug("returning -1");
+    SM_LOG_DEBUG("returning -1");
     return -1;
   }
 
@@ -289,10 +303,10 @@ int32_t track_frame_index(track_s *track, float time, bool looping) {
   uint32_t index = (uint32_t)(t * num_samples);
 
   if (index >= SM_ARRAY_SIZE(track->sampled_frames)) {
-    /* log_debug("index (%d) is gt array length (%lu)", index, */
+    /* SM_LOG_DEBUG("index (%d) is gt array length (%lu)", index, */
     /* SM_ARRAY_SIZE(track->sampled_frames)); */
     return (int32_t)track->sampled_frames[SM_ARRAY_SIZE(track->sampled_frames) - 1];
-    // return -1;
+    /* return -1; */
   }
 
   return (int32_t)track->sampled_frames[index];
@@ -742,7 +756,7 @@ static void quat_iterpolate(versor a, versor b, float t, versor out) {
 // faster
 void track_index_look_up_table(track_s *track) {
 
-  assert(track != NULL);
+  SM_ASSERT(track != NULL);
   int32_t num_frames = SM_ARRAY_SIZE(track->frames);
   if (num_frames <= 1)
     return;

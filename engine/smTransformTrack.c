@@ -6,7 +6,7 @@
 // Destructor
 void transform_track_dtor(transform_track_s *transform_track) {
 
-  assert(transform_track != NULL);
+  SM_ASSERT(transform_track != NULL);
 
   track_dtor(&transform_track->position);
   track_dtor(&transform_track->rotation);
@@ -17,7 +17,7 @@ void transform_track_dtor(transform_track_s *transform_track) {
 // least one of the component tracks stored in the transform_track_s struct is
 // valid. For a track to be valid, it needs to have two or more frames.
 bool transform_track_is_valid(const transform_track_s *const transform_track) {
-  assert(transform_track != NULL);
+  SM_ASSERT(transform_track != NULL);
   return (SM_ARRAY_SIZE(transform_track->position.frames) > 1) ||
          (SM_ARRAY_SIZE(transform_track->rotation.frames) > 1) || (SM_ARRAY_SIZE(transform_track->scale.frames) > 1);
 }
@@ -28,7 +28,7 @@ bool transform_track_is_valid(const transform_track_s *const transform_track) {
 // return 0.
 float transform_track_get_start_time(const transform_track_s *const transform_track) {
 
-  assert(transform_track != NULL);
+  SM_ASSERT(transform_track != NULL);
 
   float result = 0.0f;
   bool is_set = false;
@@ -62,7 +62,7 @@ float transform_track_get_start_time(const transform_track_s *const transform_tr
 // difference is that this function looks for the greatest trak end time.
 float transform_track_get_end_time(const transform_track_s *const transform_track) {
 
-  assert(transform_track != NULL);
+  SM_ASSERT(transform_track != NULL);
 
   float result = 0.0f;
   bool is_set = false;
@@ -100,7 +100,7 @@ float transform_track_get_end_time(const transform_track_s *const transform_trac
 // is used.
 transform_s transform_track_sample(transform_track_s *transform_track, transform_s *transform_ref, float time,
                                    bool looping) {
-  assert(transform_track != NULL);
+  SM_ASSERT(transform_track != NULL);
 
   transform_s result = *transform_ref; // Assign default values
 

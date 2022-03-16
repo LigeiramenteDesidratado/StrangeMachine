@@ -4,6 +4,8 @@
 #include <SDL2/SDL_events.h>
 #include <stdbool.h>
 
+#include "core/smKeyCode.h"
+
 void input_init(void);
 void input_do(SDL_Event *e);
 void input_before_do();

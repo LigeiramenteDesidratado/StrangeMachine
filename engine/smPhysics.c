@@ -1,3 +1,4 @@
+#include "cglm/vec3.h"
 #include "util/bitmask.h"
 #include "util/common.h"
 
@@ -45,12 +46,14 @@ typedef struct {
 static void __handle_capsule_mesh(physics_s *physics, physics_s *against);
 static void __handle_sphere_mesh(physics_s *physics, physics_s *against);
 static void __handle_default(physics_s *physics, physics_s *against);
+static void __handle_capsules(physics_s *physics, physics_s *against);
+static void __handle_spheres(physics_s *physics, physics_s *against);
 
 static void (*handler[SPHERE | CAPSULE | MESH])(physics_s *physics, physics_s *against) = {
-    [SPHERE | SPHERE] = __handle_default,  // TODO: implement
+    [SPHERE | SPHERE] = __handle_spheres,  // TODO: implement
     [SPHERE | CAPSULE] = __handle_default, // TODO: implement...
     [SPHERE | MESH] = __handle_sphere_mesh,
-    [CAPSULE | CAPSULE] = __handle_default, // TODO: implement...
+    [CAPSULE | CAPSULE] = __handle_capsules, // TODO: implement...
     [CAPSULE | MESH] = __handle_capsule_mesh,
     [MESH | MESH] = __handle_default, // TODO: implement...
 };
@@ -79,7 +82,7 @@ void physics_step(void) {
 physics_s *physics_new(void) {
   physics_s *physics = (physics_s *)SM_CALLOC(1, sizeof(physics_s));
 
-  assert(physics != NULL);
+  SM_ASSERT(physics != NULL);
 
   return physics;
 }
@@ -87,8 +90,8 @@ physics_s *physics_new(void) {
 // Sphere Constructor
 bool physics_sphere_ctor(physics_s *physics, vec3 pos, float radius) {
 
-  assert(physics != NULL);
-  assert(radius > 0);
+  SM_ASSERT(physics != NULL);
+  SM_ASSERT(radius > 0);
 
   if (++entity.count == INT8_MAX) {
     --entity.count;
@@ -97,13 +100,13 @@ bool physics_sphere_ctor(physics_s *physics, vec3 pos, float radius) {
 
   if (physics->entity_type != EMPTY || physics->__id != 0) {
     --entity.count;
-    log_warn("NON EMPTY PHYSICS BODY!\n");
+    SM_LOG_WARN("NON EMPTY PHYSICS BODY!\n");
     return false;
   }
   physics->__id = entity.count;
   physics->entity_type = SPHERE;
 
-  physics->entity_body.sphere.center = pos;
+  glm_vec3_copy(pos, physics->entity_body.sphere.center);
   physics->entity_body.sphere.radius = radius;
 
   entity.bodies[entity.count] = physics;
@@ -113,9 +116,9 @@ bool physics_sphere_ctor(physics_s *physics, vec3 pos, float radius) {
 
 bool physics_capsule_ctor(physics_s *physics, vec3 pos, float radius, float height) {
 
-  assert(physics != NULL);
-  assert(radius > 0.0f && "negative radius");
-  assert(height > 0.0f && "negative height");
+  SM_ASSERT(physics != NULL);
+  SM_ASSERT(radius > 0.0f && "negative radius");
+  SM_ASSERT(height > 0.0f && "negative height");
 
   if (++entity.count == INT8_MAX) {
     --entity.count;
@@ -124,7 +127,7 @@ bool physics_capsule_ctor(physics_s *physics, vec3 pos, float radius, float heig
 
   if (physics->entity_type != EMPTY || physics->__id != 0) {
     --entity.count;
-    log_warn("NON EMPTY PHYSICS BODY!\n");
+    SM_LOG_WARN("NON EMPTY PHYSICS BODY!\n");
     return false;
   }
   physics->__id = entity.count;
@@ -151,7 +154,7 @@ bool physics_terrain_ctor(physics_s *physics, vec3 pos, mesh_s *terrain_model) {
 
   if (physics->entity_type != EMPTY || physics->__id != 0) {
     --entity.count;
-    log_warn("NON EMPTY PHYSICS BODY!\n");
+    SM_LOG_WARN("NON EMPTY PHYSICS BODY!\n");
     return false;
   }
   physics->__id = entity.count;
@@ -167,28 +170,30 @@ bool physics_terrain_ctor(physics_s *physics, vec3 pos, mesh_s *terrain_model) {
 
 // Destructor
 void physics_dtor(physics_s *physics) {
-  assert(physics != NULL);
+  SM_ASSERT(physics != NULL);
 
   SM_FREE(physics);
 }
 
 void physics_do_late(physics_s *physics) {
-  assert(physics != NULL);
+  SM_ASSERT(physics != NULL);
+  SM_UNUSED(physics);
 
   /* physics->velocity = Vector3Zero(); */
 }
 
 void physics_add_force(physics_s *physics, vec3 force) {
-  assert(physics != NULL);
+  SM_ASSERT(physics != NULL);
+  glm_vec3_add(physics->force, force, physics->force);
 }
 
 void physics_scale_force(physics_s *physics, float by) {
-  assert(physics != NULL);
+  SM_ASSERT(physics != NULL);
   glm_vec3_scale(physics->force, by, physics->force);
 }
 
 void physics_apply_force(physics_s *physics) {
-  assert(physics != NULL);
+  SM_ASSERT(physics != NULL);
   /* physics->velocity = vec3_add(physics->velocity, physics->force); */
   glm_vec3_add(physics->velocity, physics->force, physics->velocity);
   glm_vec3_zero(physics->force);
@@ -196,7 +201,7 @@ void physics_apply_force(physics_s *physics) {
 }
 
 void physics_add_gravity(physics_s *physics, vec3 gravity) {
-  assert(physics != NULL);
+  SM_ASSERT(physics != NULL);
   glm_vec3_add(physics->gravity, gravity, physics->gravity);
 }
 
@@ -238,8 +243,8 @@ static void __handle_spheres(physics_s *physics, physics_s *against) {
 }
 
 static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
-  assert(physics != NULL);
-  assert(against != NULL);
+  SM_ASSERT(physics != NULL);
+  SM_ASSERT(against != NULL);
 
   mesh_s *mesh = against->entity_body.mesh_ref;
 
@@ -302,7 +307,6 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
   //	This is to avoid sliding down slopes and easier traversing of
   // slopes/stairs 	Unlike normal character motion collision, surface
   // sliding is not computed
-  physics->gravity = vec3_add(physics->gravity, vec3_new(0, -GRAVITY * 0.3f, 0));
   glm_vec3_add(physics->gravity, vec3_new(0, -GRAVITY * 0.3f, 0), physics->gravity);
 
   for (uint8_t i = 0; i < ccd_max; ++i) {
@@ -358,21 +362,19 @@ static void __handle_capsule_mesh(physics_s *physics, physics_s *against) {
             ground_intersection ? "True" : "False", glm_vec3_norm(physics->velocity));
 }
 
-vec3 physics_get_pos(physics_s *physics) {
-  assert(physics != NULL);
 void physics_get_pos(physics_s *physics, vec3 out) {
+  SM_ASSERT(physics != NULL);
 
   glm_vec3_copy(physics->position, out);
 
-  return pos;
   if (MASK_CHK(physics->entity_type, CAPSULE) > 0)
     out[1] -= physics->entity_body.capsule.radius;
 }
 
 static void __handle_sphere_mesh(physics_s *physics, physics_s *against) {
 
-  assert(physics != NULL);
-  assert(against != NULL);
+  SM_ASSERT(physics != NULL);
+  SM_ASSERT(against != NULL);
 
   mesh_s *mesh = against->entity_body.mesh_ref;
 
@@ -427,7 +429,7 @@ static void __handle_sphere_mesh(physics_s *physics, physics_s *against) {
 capsule_s physics_get_capsule(physics_s *physics) {
 
   if (physics->entity_type != CAPSULE) {
-    log_error("not a capsule body");
+    SM_LOG_ERROR("not a capsule body");
     sphere_s s;
     s.radius = 1.0f;
     glm_vec3_copy(s.center, vec3_new(0.0f, 0.0f, 0.0f));
@@ -437,8 +439,6 @@ capsule_s physics_get_capsule(physics_s *physics) {
   return physics->entity_body.capsule;
 }
 
-vec3 physics_get_force(physics_s *physics) {
-  return physics->force;
 sphere_s physics_get_sphere(physics_s *physics) {
 
   if (physics->entity_type != SPHERE) {
@@ -452,8 +452,6 @@ sphere_s physics_get_sphere(physics_s *physics) {
   return physics->entity_body.sphere;
 }
 
-vec3 physics_get_velocity(physics_s *physics) {
-  return physics->velocity;
 void physics_get_force(physics_s *physics, vec3 out) {
   glm_vec3_copy(physics->force, out);
 }
@@ -463,7 +461,8 @@ void physics_get_velocity(physics_s *physics, vec3 out) {
 }
 
 void physics_draw(physics_s *physics) {
-  assert(physics != NULL);
+  SM_ASSERT(physics != NULL);
+  SM_UNUSED(physics);
 
   /* if (physics->physics_entity_type == CAPSULE) */
   /*   DrawCapsule(physics->physics_entity_body.capsule); */
@@ -484,7 +483,9 @@ static char const *__physics_type_to_str(body_e type) {
 
 static void __handle_default(physics_s *physics, physics_s *against) {
 
-  (void)physics;
-  (void)against;
-  log_warn("NOT IMPLEMENTED DEFAULT\n");
+  SM_UNUSED(physics);
+  SM_UNUSED(against);
+
+  SM_LOG_WARN("NOT IMPLEMENTED: %s/%s", __physics_type_to_str(physics->entity_type),
+              __physics_type_to_str(against->entity_type));
 }

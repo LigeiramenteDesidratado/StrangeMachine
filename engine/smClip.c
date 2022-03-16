@@ -38,7 +38,7 @@ float clip_get_duration(const clip_s *const clip);
 clip_s *clip_new(void) {
   clip_s *clip = (clip_s *)SM_CALLOC(1, sizeof(clip_s));
 
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   clip->looping = true;
 
@@ -48,7 +48,7 @@ clip_s *clip_new(void) {
 // Constructor
 bool clip_ctor(clip_s *clip, const char *name) {
 
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
   clip->tracks = (transform_track_s *)SM_ARRAY_NEW_EMPTY();
   __clip_set_name(clip, name);
 
@@ -58,7 +58,7 @@ bool clip_ctor(clip_s *clip, const char *name) {
 // Destructor
 void clip_dtor(clip_s *clip) {
 
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   for (size_t i = 0; i < SM_ARRAY_SIZE(clip->tracks); ++i) {
     transform_track_dtor(&clip->tracks[i]);
@@ -76,12 +76,12 @@ void clip_dtor(clip_s *clip) {
 }
 
 static float __clip_adjust_time(const clip_s *const clip, float t) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   if (clip->looping) {
     float duration = clip->end_time - clip->start_time;
     if (duration <= 0.0f)
-      return scalar_zero();
+      return 0.0f;
 
     t = fmodf(t - clip->start_time, clip->end_time - clip->start_time);
 
@@ -104,7 +104,7 @@ static float __clip_adjust_time(const clip_s *const clip, float t) {
 // Provide a way to get the number of joints a clip contains, as well as the
 // joint ID for a specific track index.
 uint32_t clip_get_id_at_index(const clip_s *const clip, uint32_t index) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   if (index >= SM_ARRAY_SIZE(clip->tracks))
     return 0;
@@ -113,20 +113,20 @@ uint32_t clip_get_id_at_index(const clip_s *const clip, uint32_t index) {
 }
 
 void clip_set_id_at_index(clip_s *clip, uint32_t index, uint32_t id) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   if (index < SM_ARRAY_SIZE(clip->tracks))
     clip->tracks[index].id = id;
 }
 
 size_t clip_get_size(const clip_s *const clip) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   return SM_ARRAY_SIZE(clip->tracks);
 }
 
 void clip_set_cap_tracks(clip_s *clip, size_t value) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   SM_ARRAY_SET_CAPACITY(clip->tracks, value);
 }
@@ -135,8 +135,8 @@ void clip_set_cap_tracks(clip_s *clip, size_t value) {
 // value that is also a time. This function samples the animation clip at the
 // provided time into the pose reference.
 float clip_sample(const clip_s *const clip, pose_s *pose, float t) {
-  assert(clip != NULL);
-  assert(pose != NULL);
+  SM_ASSERT(clip != NULL);
+  SM_ASSERT(pose != NULL);
 
   if (clip_get_duration(clip) == 0.0f) {
     return 0.0f;
@@ -163,7 +163,7 @@ float clip_sample(const clip_s *const clip, pose_s *pose, float t) {
 // stored. The start time of a clip might not be 0; it's possible to have a clip
 // that starts at an arbitrary point in time.
 void clip_recalculate_duration(clip_s *clip) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   clip->start_time = 0.0f;
   clip->end_time = 0.0f;
@@ -199,7 +199,7 @@ void clip_recalculate_duration(clip_s *clip) {
 // created and returned:
 // similar [] operator
 transform_track_s *clip_get_transform_track_from_joint(clip_s *clip, uint32_t joint) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   for (size_t i = 0, s = SM_ARRAY_SIZE(clip->tracks); i < s; ++i) {
     if (clip->tracks[i].id == joint) {
@@ -216,48 +216,48 @@ transform_track_s *clip_get_transform_track_from_joint(clip_s *clip, uint32_t jo
 }
 
 void clip_resize_tracks(clip_s *clip, size_t size) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   SM_ARRAY_SET_CAPACITY(clip->tracks, size);
 }
 
 char *clip_get_name(const clip_s *const clip) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   return clip->name;
 }
 
 static void __clip_set_name(clip_s *clip, const char *name) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   clip->name = (char *)SM_MALLOC((strlen(name) + 1) * sizeof(char));
   strcpy(clip->name, name);
 }
 
 float clip_get_duration(const clip_s *const clip) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   return clip->end_time - clip->start_time;
 }
 
 float clip_get_start_time(const clip_s *const clip) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
 
   return clip->start_time;
 }
 
 float clip_get_end_time(const clip_s *const clip) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
   return clip->end_time;
 }
 
 bool clip_get_looping(const clip_s *const clip) {
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
   return clip->looping;
 }
 
 void clip_set_looping(clip_s *clip, bool looping) {
 
-  assert(clip != NULL);
+  SM_ASSERT(clip != NULL);
   clip->looping = looping;
 }

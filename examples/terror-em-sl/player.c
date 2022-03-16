@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "math/transform.h"
 #include "cglm/quat.h"
 #include "smCamera.h"
 #include "smDebug.h"
@@ -208,7 +207,6 @@ void player_draw_debug(player_s *player) {
   assert(player != NULL);
 
   capsule_s c = physics_get_capsule(player->physics);
-
   debug_draw_capsule(c);
 
   /* sphere_s s = physics_get_sphere(player->sphere); */

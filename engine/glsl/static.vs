@@ -16,7 +16,7 @@ void main() {
   gl_Position = projection * view * model * vec4(position, 1.0);
 
   // texture jiggle
-  gl_Position.xy = floor(gl_Position.xy/gl_Position.w*(1./0.009))*0.009*gl_Position.w;
+  // gl_Position.xy = floor(gl_Position.xy/gl_Position.w*(1./0.009))*0.009*gl_Position.w;
 
   // frag_pos = vec3(model * vec4(position, 1.0));
   norm = vec3(model * vec4(normal, 0.0f));

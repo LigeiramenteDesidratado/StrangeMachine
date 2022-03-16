@@ -14,8 +14,12 @@ message(STATUS "${PROJECT_NAME}:")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 message(STATUS "C flags, Debug configuration: ${CMAKE_C_FLAGS_DEBUG}")
 message(STATUS "C flags, Release configuration: ${CMAKE_C_FLAGS_RELEASE}")
+message(STATUS "PROJECT_NAME: " ${PROJECT_NAME})
+message(STATUS "LIBRARY_NAME: " ${LIBRARY_NAME})
 
-add_library(${PROJECT_NAME} STATIC 
+set(SM_SOURCE_FILES)
+
+list(APPEND SM_SOURCE_FILES
   glad.c
   smLoader.c
   smAttribute.c
@@ -43,9 +47,23 @@ add_library(${PROJECT_NAME} STATIC
   smTexture.c
   smTrack.c
   smTransformTrack.c
-  smUniform.c
-  smMem.c
-)
+  smSkyBox.c
+  smCollision.c
+
+  math/smTransform.c
+  vendor/logc/src/log.c
+  )
+
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+  list(APPEND SM_SOURCE_FILES
+    smMem.c
+    )
+endif()
+
+add_compile_definitions(LOG_USE_COLOR)
+add_library(${PROJECT_NAME} STATIC ${SM_SOURCE_FILES})
+target_compile_definitions(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Debug>:SM_DEBUG>")
+
 
 target_compile_options(${PROJECT_NAME} PRIVATE -fPIC -Wall)
 if(NOT WIN32)

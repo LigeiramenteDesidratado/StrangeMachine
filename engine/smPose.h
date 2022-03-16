@@ -1,12 +1,13 @@
 #ifndef SM_POSE_H
 #define SM_POSE_H
 
-#include "math/transform.h"
+#include "math/smMath.h"
 #include <stdint.h>
 
 typedef struct {
   transform_s joint;
   int32_t parent;
+  char name[128];
 } node_s;
 
 typedef struct {
@@ -32,5 +33,8 @@ bool pose_is_equal(const pose_s *const a, const pose_s *const b);
 bool pose_not_equal(const pose_s *const a, const pose_s *const b);
 bool pose_is_in_hierarchy(const pose_s *const pose, uint32_t root, uint32_t search);
 void pose_blend(pose_s *output, const pose_s *const a, const pose_s *const b, float t, int root);
+void pose_set_name(pose_s *pose, uint32_t index, const char *name);
+const char *pose_get_name(const pose_s *const pose, uint32_t index);
+int32_t pose_get_index_by_name(const pose_s *const pose, const char *name);
 
 #endif // SM_POSE_H

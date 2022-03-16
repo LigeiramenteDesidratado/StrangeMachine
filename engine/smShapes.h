@@ -31,6 +31,13 @@ typedef struct {
 
 } bounding_box_s;
 
+// cube
+typedef struct {
+  vec3 center;
+  vec3 size;
+
+} cube_s;
+
 bool check_collision_bounding_box(bounding_box_s bb1, bounding_box_s bb2);
 capsule_s shapes_capsule_new(sphere_s s, float height);
 bounding_box_s shapes_get_aabb_sphere(sphere_s s);

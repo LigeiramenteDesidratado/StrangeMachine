@@ -23,7 +23,7 @@ void main() {
   animated[int(joint.w)] * weight.w;
 
   gl_Position = projection * view * model * skin * vec4(position, 1.0);
-  gl_Position.xy = floor(gl_Position.xy/gl_Position.w*(1./0.009))*0.009*gl_Position.w;
+  // gl_Position.xy = floor(gl_Position.xy/gl_Position.w*(1./0.009))*0.009*gl_Position.w;
 
   frag_pos = vec3(model * skin * vec4(position, 1.0));
   norm = vec3(model * skin * vec4(normal, 0.0f));

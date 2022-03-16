@@ -1,17 +1,20 @@
-#include "smPose.h"
-#include "smMem.h"
 #include "util/common.h"
+
+#include "data/array.h"
+
+#include "smMem.h"
+#include "smPose.h"
 
 // Destructor
 void pose_dtor(pose_s *pose) {
-  assert(pose != NULL);
+  SM_ASSERT(pose != NULL);
 
   SM_ARRAY_DTOR(pose->nodes);
 }
 
 void pose_resize(pose_s *pose, size_t size) {
 
-  assert(pose != NULL);
+  SM_ASSERT(pose != NULL);
 
   size_t nodes_old_size = SM_ARRAY_SIZE(pose->nodes);
   SM_ARRAY_SET_SIZE(pose->nodes, size);
@@ -24,35 +27,35 @@ void pose_resize(pose_s *pose, size_t size) {
 }
 
 int32_t pose_get_parent(const pose_s *const pose, size_t index) {
-  assert(pose != NULL);
+  SM_ASSERT(pose != NULL);
 
-  assert(index < SM_ARRAY_SIZE(pose->nodes));
+  SM_ASSERT(index < SM_ARRAY_SIZE(pose->nodes));
   return pose->nodes[index].parent;
 }
 
 void pose_set_parent(pose_s *pose, uint32_t index, int parent) {
-  assert(pose != NULL);
-  assert(index < SM_ARRAY_SIZE(pose->nodes));
+  SM_ASSERT(pose != NULL);
+  SM_ASSERT(index < SM_ARRAY_SIZE(pose->nodes));
 
   pose->nodes[index].parent = parent;
 }
 
 transform_s pose_get_local_transform(const pose_s *const pose, uint32_t index) {
-  assert(pose != NULL);
-  assert(index < SM_ARRAY_SIZE(pose->nodes));
+  SM_ASSERT(pose != NULL);
+  SM_ASSERT(index < SM_ARRAY_SIZE(pose->nodes));
   return pose->nodes[index].joint;
 }
 
 void pose_set_local_transform(pose_s *pose, uint32_t index, transform_s transform) {
-  assert(pose != NULL);
-  assert(index < SM_ARRAY_SIZE(pose->nodes));
+  SM_ASSERT(pose != NULL);
+  SM_ASSERT(index < SM_ARRAY_SIZE(pose->nodes));
 
   pose->nodes[index].joint = transform;
 }
 
 transform_s pose_get_global_transform(const pose_s *const pose, uint32_t index) {
-  assert(pose != NULL);
-  assert(index < SM_ARRAY_SIZE(pose->nodes));
+  SM_ASSERT(pose != NULL);
+  SM_ASSERT(index < SM_ARRAY_SIZE(pose->nodes));
 
   transform_s result = pose->nodes[index].joint;
   for (int32_t p = pose->nodes[index].parent; p >= 0; p = pose->nodes[p].parent) {
@@ -78,14 +81,18 @@ void pose_get_matrix_palette(pose_t *pose, mat4 **out, unsigned int length) {
 
 void pose_get_matrix_palette(const pose_s *const pose, mat4 **out) {
   int32_t size = (int32_t)SM_ARRAY_SIZE(pose->nodes);
-  int32_t length = (int32_t)SM_ARRAY_SIZE((*out));
+  int32_t length = (int32_t)SM_ALIGNED_ARRAY_SIZE((*out));
 
-  if (length != size) {
-    SM_ARRAY_SET_SIZE(*out, (size_t)size);
-    for (size_t i = 0; i < (SM_ARRAY_SIZE((*out)) - length); ++i) {
-      (*out)[length + i] = mat4_identity();
+  if ((length != size) && (length == 0)) {
+    SM_ALIGNED_ARRAY_NEW(*out, 16, (size_t)size);
+    for (size_t i = 0; i < (size_t)size; ++i) {
+      glm_mat4_identity((*out)[length + i]);
     }
+    length = (int32_t)SM_ALIGNED_ARRAY_SIZE((*out));
+  } else if ((length != size) && (length > 0)) {
+    SM_UNREACHABLE();
   }
+  SM_ASSERT(length == size);
 
   int32_t i = 0;
   for (; i < size; ++i) {
@@ -96,16 +103,20 @@ void pose_get_matrix_palette(const pose_s *const pose, mat4 **out) {
       break;
     }
 
-    mat4 global = transform_to_mat4(pose->nodes[i].joint);
+    mat4 global;
+    /* printf("\n ========================= POSE ========================= \n"); */
+    /* transform_print(pose->nodes[i].joint); */
+    transform_to_mat4(pose->nodes[i].joint, global);
     if (parent >= 0) {
-      global = mat4_mul((*out)[parent], global);
+      glm_mat4_mul((*out)[parent], global, global);
     }
-    (*out)[i] = global;
+    glm_mat4_copy(global, (*out)[i]);
+    /* printf("\n ========================= END ========================= \n"); */
   }
 
   for (; i < size; ++i) {
     transform_s t = pose_get_global_transform(pose, i);
-    (*out)[i] = transform_to_mat4(t);
+    transform_to_mat4(t, (*out)[i]);
   }
 }
 #endif
@@ -130,13 +141,18 @@ bool pose_is_equal(const pose_s *const a, const pose_s *const b) {
     if (a_parent != b_parent)
       return false;
 
-    if (vec3_not_equal(a_local.position, b_local.position))
+    if (!glm_vec3_eqv(a_local.position, b_local.position))
       return false;
 
-    if (quat_not_equal(a_local.rotation, b_local.rotation))
+    bool is_eq = (fabsf(a_local.rotation[0] - b_local.rotation[0]) <= EPSILON &&
+                  fabsf(a_local.rotation[1] - b_local.rotation[1]) <= EPSILON &&
+                  fabsf(a_local.rotation[2] - b_local.rotation[2]) <= EPSILON &&
+                  fabsf(a_local.rotation[3] - b_local.rotation[3]) <= EPSILON);
+
+    if (!is_eq)
       return false;
 
-    if (vec3_not_equal(a_local.scale, b_local.scale))
+    if (glm_vec3_eqv(a_local.scale, b_local.scale))
       return false;
   }
 
@@ -149,7 +165,7 @@ bool pose_not_equal(const pose_s *const a, const pose_s *const b) {
 
 void pose_copy(pose_s *dest, const pose_s *const src) {
 
-  assert((src != dest) || pose_not_equal(src, dest));
+  SM_ASSERT((src != dest) || pose_not_equal(src, dest));
 
   size_t size = SM_ARRAY_SIZE(src->nodes);
   pose_resize(dest, size);
@@ -184,8 +200,40 @@ void pose_blend(pose_s *output, const pose_s *const a, const pose_s *const b, fl
       }
     }
     transform_s mix = transform_mix(pose_get_local_transform(a, i), pose_get_local_transform(b, i), t);
+    /* printf("\n ========================= MIX ========================= \n"); */
+    /* transform_print(pose_get_local_transform(a, i)); */
+    /* transform_print(pose_get_local_transform(b, i)); */
+    /* transform_print(mix); */
+    /* printf("\n ========================= END ========================= \n"); */
     pose_set_local_transform(output, i, mix);
-    // output.SetLocalTransform(i,
-    // mix(a.GetLocalTransform(i), b.GetLocalTransform(i), t));
   }
+}
+
+const char *pose_get_name(const pose_s *const pose, uint32_t index) {
+  SM_ASSERT(pose != NULL);
+  SM_ASSERT(index < SM_ARRAY_SIZE(pose->nodes));
+
+  return pose->nodes[index].name;
+}
+
+void pose_set_name(pose_s *pose, uint32_t index, const char *name) {
+  SM_ASSERT(pose != NULL);
+  SM_ASSERT(index < SM_ARRAY_SIZE(pose->nodes));
+  SM_ASSERT(name != NULL);
+
+  strncpy(pose->nodes[index].name, name, sizeof(pose->nodes[index].name));
+}
+
+int32_t pose_get_index_by_name(const pose_s *const pose, const char *name) {
+  SM_ASSERT(pose != NULL);
+  SM_ASSERT(name != NULL);
+
+  size_t size = SM_ARRAY_SIZE(pose->nodes);
+  for (size_t i = 0; i < size; ++i) {
+    if (strcmp(pose->nodes[i].name, name) == 0) {
+      return (int32_t)i;
+    }
+  }
+
+  return -1;
 }

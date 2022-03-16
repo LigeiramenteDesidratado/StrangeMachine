@@ -4,6 +4,7 @@
 #include "smAttribute.h"
 #include "smIndexBuffer.h"
 #include "smShapes.h"
+#include "smTexture.h"
 #include "smVertex.h"
 
 // NOTE: in case of change make sure to update the src/shader/glsl/static.vs as
@@ -30,6 +31,25 @@ typedef struct {
   attribute_s debug_color_attr; // VEC3_KIND
 
 } mesh_s;
+
+typedef struct {
+
+  // vertex information
+  vec3 *positions;
+  vec4 *colors;
+  vec3 *normals;
+  vec2 *uvs;
+  uint32_t *indices;
+  texture_s texture;
+
+  // animation extra data
+  vec4 *weights;
+  ivec4 *influences;
+  mat4 *pose_palette;
+
+  bounding_box_s aabb;
+
+} mesh2_s;
 
 #define mesh_new() ((mesh_s){0})
 

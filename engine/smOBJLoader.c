@@ -1,13 +1,15 @@
-#include "smMem.h"
-#include "smMesh.h"
 #include "util/common.h"
+
+#include "data/array.h"
+
+#include "smMesh.h"
 
 bool obj_loader_load(mesh_s **meshes, const char *path) {
 
   FILE *fp;
   fp = fopen(path, "r");
   if (fp == NULL) {
-    log_error("[%s] failed to open obj file", path);
+    SM_LOG_ERROR("[%s] failed to open obj file", path);
     return false;
   }
 
@@ -79,15 +81,15 @@ bool obj_loader_load(mesh_s **meshes, const char *path) {
 
     if (strcmp(lineHeader, "v") == 0) {
       vec3 v = {0};
-      fscanf(fp, "%f %f %f\n", &v.x, &v.y, &v.z);
+      fscanf(fp, "%f %f %f\n", &v[0], &v[1], &v[2]);
       SM_ARRAY_PUSH(tmp_v, v);
     } else if (strcmp(lineHeader, "vt") == 0) {
       vec2 uv;
-      fscanf(fp, "%f %f\n", &uv.x, &uv.y);
+      fscanf(fp, "%f %f\n", &uv[0], &uv[1]);
       SM_ARRAY_PUSH(tmp_uv, uv);
     } else if (strcmp(lineHeader, "vn") == 0) {
       vec3 n;
-      fscanf(fp, "%f %f %f\n", &n.x, &n.y, &n.z);
+      fscanf(fp, "%f %f %f\n", &n[0], &n[1], &n[2]);
       SM_ARRAY_PUSH(tmp_n, n);
     } else if (strcmp(lineHeader, "f") == 0) {
       uint32_t vi[3], ui[3], ni[3];
@@ -95,8 +97,8 @@ bool obj_loader_load(mesh_s **meshes, const char *path) {
       int matches = fscanf(fp, "%u/%u/%u %u/%u/%u %u/%u/%u\n", &vi[0], &ui[0], &ni[0], &vi[1], &ui[1], &ni[1], &vi[2],
                            &ui[2], &ni[2]);
 
-      assert(matches == 9 && "should export your model with 'Triangulate faces' checked" &&
-             "make sure that vertex, uv and normals are being exported");
+      SM_ASSERT(matches == 9 && "should export your model with 'Triangulate faces' checked" &&
+                "make sure that vertex, uv and normals are being exported");
 
       SM_ARRAY_PUSH(iv, vi[0]);
       SM_ARRAY_PUSH(iv, vi[1]);
@@ -121,19 +123,22 @@ bool obj_loader_load(mesh_s **meshes, const char *path) {
 
     for (uint32_t j = 0; j < iv_len; ++j) {
       size_t vertex_index = iv[j];
-      vec3 vertex = tmp_v[vertex_index - 1];
+      vec3 vertex;
+      glm_vec3_copy(tmp_v[vertex_index - 1], vertex);
       SM_ARRAY_PUSH(mesh->vertex.positions, vertex);
     }
 
     for (uint32_t j = 0; j < in_len; ++j) {
       size_t nv_index = in[j];
-      vec3 normal = tmp_n[nv_index - 1];
+      vec3 normal;
+      glm_vec3_copy(tmp_n[nv_index - 1], normal);
       SM_ARRAY_PUSH(mesh->vertex.normals, normal);
     }
 
     for (uint32_t j = 0; j < iu_len; ++j) {
       size_t uv_index = iu[j];
-      vec2 uv = tmp_uv[uv_index - 1];
+      vec2 uv;
+      glm_vec2_copy(tmp_uv[uv_index - 1], uv);
       /* uv.y = 1.0f - uv.y; */
       SM_ARRAY_PUSH(mesh->vertex.tex_coords, uv);
     }
