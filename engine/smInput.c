@@ -1,10 +1,6 @@
-#include "SDL_mouse.h"
-#include "SDL_scancode.h"
 #include "util/common.h"
 
-#include "smMem.h"
-
-#include <SDL2/SDL_events.h>
+#include "core/smCore.h"
 
 #define MAX_KEYBOARD_KEYS 350
 
@@ -30,14 +26,14 @@ void input_init(void) {
   SM_ASSERT(GINPUT != NULL);
 }
 
-bool input_scan_key(int32_t key) {
+bool input_scan_key(sm_key_code key) {
   SM_ASSERT(GINPUT != NULL);
   SM_ASSERT(key < MAX_KEYBOARD_KEYS);
 
   return GINPUT->keyboard[key];
 }
 
-bool input_scan_key_lock(int32_t key) {
+bool input_scan_key_lock(sm_key_code key) {
   SM_ASSERT(GINPUT != NULL);
 
   bool val = false;
@@ -87,8 +83,10 @@ float input_get_y_last_mouse() {
   return GINPUT->y_last;
 }
 
-void input_before_do() {
+void input_do() {
+
   SM_ASSERT(GINPUT != NULL);
+
   GINPUT->y_rel = 0;
   GINPUT->x_rel = 0;
   GINPUT->x_last = GINPUT->x;
@@ -100,28 +98,78 @@ void input_before_do() {
     GINPUT->lock = 0;
 }
 
-void input_do(SDL_Event *e) {
-  SM_ASSERT(GINPUT != NULL);
+bool input_on_event(event_s *event, void *user_data) {
 
-  if (e->type == SDL_KEYUP) {
-    // check if the keyboard event was a result of  Keyboard repeat event
-    if (e->key.repeat == 0 && e->key.keysym.scancode < MAX_KEYBOARD_KEYS) {
-      GINPUT->keyboard[e->key.keysym.scancode] = false;
+  SM_ASSERT(GINPUT != NULL);
+  SM_UNUSED(user_data);
+
+  switch (event->category) {
+
+  case SM_CATEGORY_KEYBOARD:
+
+    switch (event->key.type) {
+    case SM_EVENT_KEY_REPEAT: /* fallthrough */
+    case SM_EVENT_KEY_DOWN:
+      GINPUT->keyboard[event->key.key] = true;
+      break;
+    case SM_EVENT_KEY_UP:
+      GINPUT->keyboard[event->key.key] = false;
+      break;
+    default:
+      SM_LOG_WARN("unhandled keyboard event");
+      break;
     }
-  } else if (e->type == SDL_KEYDOWN) {
-    // check if the keyboard event was a result of  Keyboard repeat event
-    if (e->key.repeat == 0 && e->key.keysym.scancode < MAX_KEYBOARD_KEYS) {
-      GINPUT->keyboard[e->key.keysym.scancode] = true;
+    break;
+  case SM_CATEGORY_MOUSE:
+
+    switch (event->mouse.type) {
+    case SM_EVENT_MOUSE_MOVE:
+      GINPUT->x = event->mouse.x;
+      GINPUT->y = event->mouse.y;
+      GINPUT->x_rel = event->mouse.x_delta;
+      GINPUT->y_rel = event->mouse.y_delta;
+      break;
+    case SM_EVENT_MOUSE_WHEEL:
+      GINPUT->scroll = event->mouse.wheel;
+      break;
+    default:
+      SM_LOG_WARN("unhandled mouse event");
+      break;
     }
-  } else if (e->type == SDL_MOUSEMOTION) {
-    GINPUT->x_rel = e->motion.xrel;
-    GINPUT->y_rel = e->motion.yrel;
-    GINPUT->x = e->motion.x;
-    GINPUT->y = e->motion.y;
-  } else if (e->type == SDL_MOUSEWHEEL) {
-    GINPUT->scroll = e->wheel.preciseY;
+    break;
+
+  default:
+    SM_LOG_WARN("unhandled event");
+    return false;
+    break;
   }
+
+  return true;
 }
+
+// void input_do(SDL_Event *e) {
+//
+//   SM_ASSERT(GINPUT != NULL);
+//
+//   if (e->type == SDL_KEYUP) {
+//     // check if the keyboard event was a result of  Keyboard repeat event
+//     if (e->key.repeat == 0 && e->key.keysym.scancode < MAX_KEYBOARD_KEYS) {
+//       GINPUT->keyboard[e->key.keysym.scancode] = false;
+//     }
+//   } else if (e->type == SDL_KEYDOWN) {
+//     // check if the keyboard event was a result of  Keyboard repeat event
+//     if (e->key.repeat == 0 && e->key.keysym.scancode < MAX_KEYBOARD_KEYS) {
+//       GINPUT->keyboard[e->key.keysym.scancode] = true;
+//     }
+//   } else if (e->type == SDL_MOUSEMOTION) {
+//     GINPUT->x_rel = e->motion.xrel;
+//     GINPUT->y_rel = e->motion.yrel;
+//     GINPUT->x = e->motion.x;
+//     GINPUT->y = e->motion.y;
+//   } else if (e->type == SDL_MOUSEWHEEL) {
+//     GINPUT->scroll = e->wheel.preciseY;
+//   }
+// }
 
 void input_tear_down(void) {
   SM_ASSERT(GINPUT != NULL && "trying to finilize a not initialized input");

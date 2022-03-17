@@ -2,6 +2,7 @@
 
 #include "core/smStackLayer.h"
 #include "core/smWindow.h"
+#include "smInput.h"
 
 #include "smMem.h"
 
@@ -53,6 +54,7 @@ bool application_ctor(application_s *app, const char *name) {
     return false;
   }
   app->stack = stack;
+  input_init();
 
   return true;
 }
@@ -85,6 +87,7 @@ void application_do(application_s *app) {
 
   while (app->is_running) {
 
+    input_do();
     uint32_t current_tick = SDL_GetTicks();
     app->delta = (current_tick - app->last_tick) / 1000.0f;
     app->last_tick = current_tick;
@@ -106,6 +109,8 @@ bool application_on_window_close(event_s *event, void *user_data) {
 void application_dtor(application_s *app) {
 
   SM_CORE_ASSERT(app);
+
+  input_tear_down();
 
   window_dtor(app->window);
 

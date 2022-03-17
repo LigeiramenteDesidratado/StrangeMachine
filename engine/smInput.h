@@ -1,14 +1,14 @@
 #ifndef SM_INPUT_H
 #define SM_INPUT_H
 
-#include <SDL2/SDL_events.h>
 #include <stdbool.h>
 
 #include "core/smKeyCode.h"
+#include "event/smEvent.h"
 
 void input_init(void);
-void input_do(SDL_Event *e);
-void input_before_do();
+bool input_on_event(event_s *event, void *user_data);
+void input_do();
 void input_tear_down(void);
 bool input_scan_key(int32_t key);
 bool input_scan_key_lock(int32_t key);
