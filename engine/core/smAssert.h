@@ -16,7 +16,7 @@
   #define SM_CORE_ASSERT(...)                                                                                          \
     do {                                                                                                               \
       if (!(__VA_ARGS__)) {                                                                                            \
-        SM_LOG_FATAL("Assertion failed: %s", #__VA_ARGS__);                                                            \
+        SM_CORE_LOG_FATAL("Assertion failed: %s", #__VA_ARGS__);                                                       \
         abort();                                                                                                       \
       }                                                                                                                \
     } while (0)
