@@ -63,6 +63,9 @@ void application_on_event(event_s *event, void *user_data) {
   SM_CORE_ASSERT(user_data);
   application_s *app = (application_s *)user_data;
 
+  event_dispatch(event, SM_EVENT_WINDOW_CLOSE, application_on_window_close, app);
+  event_dispatch_categories(event, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE, input_on_event, NULL);
+
   size_t stack_size = stack_layer_get_size(app->stack);
   for (size_t i = stack_size; i > 0; i--) {
     layer_s *layer = stack_layer_get_layer(app->stack, i - 1);
@@ -88,9 +91,24 @@ void application_do(application_s *app) {
   }
 }
 
+bool application_on_window_close(event_s *event, void *user_data) {
+
+  SM_CORE_ASSERT(event);
+  SM_CORE_ASSERT(user_data);
+
+  application_s *app = (application_s *)user_data;
+
+  app->is_running = false;
+
+  return true;
+}
+
 void application_dtor(application_s *app) {
 
   SM_CORE_ASSERT(app);
 
   window_dtor(app->window);
+
+  SM_FREE(app);
+}
 }
