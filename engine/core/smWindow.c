@@ -53,11 +53,11 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
     return false;
   }
 
-  GLint n_attrs;
-  glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attrs);
-  SM_CORE_LOG_DEBUG("GL Renderer: %s\n", glGetString(GL_RENDERER));
-  SM_CORE_LOG_DEBUG("GL Version: %s\n", glGetString(GL_VERSION));
-  SM_CORE_LOG_DEBUG("GL MAX_VERTEX_ATTRIBS: %d\n", n_attrs);
+  /* GLint n_attrs; */
+  /* glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attrs); */
+  /* SM_CORE_LOG_DEBUG("GL Renderer: %s\n", glGetString(GL_RENDERER)); */
+  /* SM_CORE_LOG_DEBUG("GL Version: %s\n", glGetString(GL_VERSION)); */
+  /* SM_CORE_LOG_DEBUG("GL MAX_VERTEX_ATTRIBS: %d\n", n_attrs); */
 
   // vsync enable by default
   SDL_GL_SetSwapInterval(1);
@@ -76,6 +76,8 @@ void window_dtor(window_s *win) {
   SDL_GL_DeleteContext(win->gc);
   SDL_DestroyWindow(win->window);
   SDL_Quit();
+
+  SM_FREE(win);
 }
 
 void window_do(window_s *win) {
@@ -143,6 +145,10 @@ void window_do(window_s *win) {
       break;
     }
     }
+  }
+
+  if (win->vsync) {
+    SDL_GL_SwapWindow(win->window);
   }
 }
 

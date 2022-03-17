@@ -34,8 +34,10 @@ application_s *application_new(void) {
 }
 
 void application_on_event(event_s *event, void *user_data);
+bool application_on_window_close(event_s *event, void *user_data);
 
 bool application_ctor(application_s *app, const char *name) {
+
   SM_CORE_ASSERT(app);
 
   struct window_s *window = window_new();
@@ -54,6 +56,8 @@ bool application_ctor(application_s *app, const char *name) {
     return false;
   }
   app->stack = stack;
+  app->is_running = true;
+
   input_init();
 
   return true;
@@ -61,8 +65,11 @@ bool application_ctor(application_s *app, const char *name) {
 
 void application_on_event(event_s *event, void *user_data) {
 
+  event_print(event);
+
   SM_CORE_ASSERT(event);
   SM_CORE_ASSERT(user_data);
+
   application_s *app = (application_s *)user_data;
 
   event_dispatch(event, SM_EVENT_WINDOW_CLOSE, application_on_window_close, app);
@@ -88,6 +95,7 @@ void application_do(application_s *app) {
   while (app->is_running) {
 
     input_do();
+    window_do(app->window);
     uint32_t current_tick = SDL_GetTicks();
     app->delta = (current_tick - app->last_tick) / 1000.0f;
     app->last_tick = current_tick;
