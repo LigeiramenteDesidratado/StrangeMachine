@@ -20,6 +20,14 @@ message(STATUS "LIBRARY_NAME: " ${LIBRARY_NAME})
 set(SM_SOURCE_FILES)
 
 list(APPEND SM_SOURCE_FILES
+
+  core/smApplication.c
+  core/smWindow.c
+  core/smLayer.c
+  core/smStackLayer.c
+
+  event/smEvent.c
+
   glad.c
   smLoader.c
   smAttribute.c
