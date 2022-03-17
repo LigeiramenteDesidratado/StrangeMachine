@@ -6,8 +6,8 @@
 
 typedef struct {
 
-  layer_s *layers;
-  layer_s *overlayers;
+  layer_s **layers;
+  layer_s **overlayers;
 
 } stack_layer_s;
 
@@ -23,8 +23,8 @@ bool stack_layer_ctor(stack_layer_s *stack_layer) {
 
   SM_ASSERT(stack_layer != NULL);
 
-  stack_layer->layers = (layer_s *)SM_ARRAY_NEW_EMPTY();
-  stack_layer->overlayers = (layer_s *)SM_ARRAY_NEW_EMPTY();
+  stack_layer->layers = (layer_s **)SM_ARRAY_NEW_EMPTY();
+  stack_layer->overlayers = (layer_s **)SM_ARRAY_NEW_EMPTY();
   SM_ASSERT(stack_layer->layers != NULL);
 
   return true;
@@ -34,8 +34,22 @@ void stack_layer_dtor(stack_layer_s *stack_layer) {
 
   SM_ASSERT(stack_layer != NULL);
 
+  size_t layer_size = SM_ARRAY_SIZE(stack_layer->layers);
+  for (size_t i = 0; i < layer_size; i++) {
+    layer_s *layer = stack_layer->layers[i];
+    layer->on_detach(layer->user_data);
+  }
+
+  size_t overlayer_size = SM_ARRAY_SIZE(stack_layer->overlayers);
+  for (size_t i = 0; i < overlayer_size; i++) {
+    layer_s *layer = stack_layer->overlayers[i];
+    layer->on_detach(layer->user_data);
+  }
+
   SM_ARRAY_DTOR(stack_layer->layers);
   SM_ARRAY_DTOR(stack_layer->overlayers);
+
+  SM_FREE(stack_layer);
 }
 
 void stack_layer_push(stack_layer_s *stack_layer, layer_s *layer) {
@@ -80,8 +94,8 @@ layer_s *stack_layer_get_layer(stack_layer_s *stack_layer, size_t index) {
   SM_ASSERT(stack_layer != NULL);
 
   if (index < SM_ARRAY_SIZE(stack_layer->layers)) {
-    return &stack_layer->layers[index];
+    return stack_layer->layers[index];
   } else {
-    return &stack_layer->overlayers[index - SM_ARRAY_SIZE(stack_layer->layers)];
+    return stack_layer->overlayers[index - SM_ARRAY_SIZE(stack_layer->layers)];
   }
 }

@@ -84,8 +84,6 @@ void application_on_event(event_s *event, void *user_data) {
       layer->on_event(event, layer->user_data);
     }
   }
-
-  /* window_on_event(app->window, event); */
 }
 
 void application_do(application_s *app) {
@@ -96,6 +94,15 @@ void application_do(application_s *app) {
 
     input_do();
     window_do(app->window);
+
+    size_t stack_size = stack_layer_get_size(app->stack);
+    for (size_t i = 0; i < stack_size; i++) {
+      layer_s *layer = stack_layer_get_layer(app->stack, i);
+      if (layer->on_update) {
+        layer->on_update(layer->user_data, app->delta);
+      }
+    }
+
     uint32_t current_tick = SDL_GetTicks();
     app->delta = (current_tick - app->last_tick) / 1000.0f;
     app->last_tick = current_tick;
@@ -120,8 +127,26 @@ void application_dtor(application_s *app) {
 
   input_tear_down();
 
+  stack_layer_dtor(app->stack);
   window_dtor(app->window);
 
   SM_FREE(app);
 }
+
+void application_push_layer(application_s *app, layer_s *layer) {
+
+  SM_CORE_ASSERT(app);
+  SM_CORE_ASSERT(layer);
+
+  stack_layer_push(app->stack, layer);
+  layer->on_attach(layer->user_data);
+}
+
+void application_push_overlay(application_s *app, layer_s *layer) {
+
+  SM_CORE_ASSERT(app);
+  SM_CORE_ASSERT(layer);
+
+  stack_layer_push_overlay(app->stack, layer);
+  layer->on_attach(layer->user_data);
 }
