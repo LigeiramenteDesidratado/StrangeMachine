@@ -1,5 +1,6 @@
-#include "util/common.h"
+#include "smpch.h"
 
+#include "smAssert.h"
 #include "smMem.h"
 
 static struct {

@@ -11,17 +11,15 @@
 #include <stdlib.h> // malloc calloc realloc free
 #include <string.h> // memcpy and string manipulation
 
-#include "glad/glad.h"
-#include "stb_ds/stb_ds.h"
-#include "stb/stb_image.h"
 #include "cgltf/cgltf.h"
+#include "stb/stb_image.h"
+#include "stb_ds/stb_ds.h"
 
 #include "core/smAssert.h"
 #include "core/smBase.h"
 #include "core/smLog.h"
 
 #include "math/smMath.h"
-#include "smMem.h"
 
 /* #include "math_deprec/mat4.h" */
 /* #include "math_deprec/quat.h" */

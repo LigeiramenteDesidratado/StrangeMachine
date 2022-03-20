@@ -3,7 +3,11 @@
 #include "event/smEvent.h"
 #include "smWindowPub.h"
 
+
+#include "core/smCore.h"
+
 #include "vendor/gladGL21/glad.h"
+
 #include <SDL2/SDL.h>
 
 typedef struct {

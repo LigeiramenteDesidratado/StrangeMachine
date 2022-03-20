@@ -6,4 +6,6 @@
 #include "smBase.h"
 #include "smLog.h"
 
+#include "smMem.h"
+
 #endif /* SM_CORE_H */

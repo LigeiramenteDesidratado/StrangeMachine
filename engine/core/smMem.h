@@ -1,7 +1,7 @@
 #ifndef SM_MEM_H
 #define SM_MEM_H
 
-#include <stddef.h>
+#include "smpch.h"
 
 #ifdef SM_DEBUG
 
@@ -26,12 +26,12 @@ void __smmem_aligned_free(void *ptr);
 
 #else
 
-  #define SM_MALLOC(SIZE)        malloc(SIZE)
-  #define SM_CALLOC(NMEMB, SIZE) calloc(NMEMB, SIZE)
-  #define SM_REALLOC(PTR, SIZE)  realloc(PTR, SIZE)
-  #define SM_FREE(PTR)           free(PTR)
+  #define SM_MALLOC(SIZE)                   malloc(SIZE)
+  #define SM_CALLOC(NMEMB, SIZE)            calloc(NMEMB, SIZE)
+  #define SM_REALLOC(PTR, SIZE)             realloc(PTR, SIZE)
+  #define SM_FREE(PTR)                      free(PTR)
 
-/* TODO: system aligned memory */
+  /* TODO: system aligned memory for others plataforms */
   #define SM_ALIGNED_ALLOC(ALIGNMENT, SIZE) aligned_alloc(ALIGNMENT, SIZE)
   #define SM_ALIGNED_FREE(PTR)              free(PTR)
 

@@ -3,7 +3,7 @@
 
 #include "smpch.h"
 
-#include "smMem.h"
+#include "core/smCore.h"
 
 char* read_file(const char* filename) {
 

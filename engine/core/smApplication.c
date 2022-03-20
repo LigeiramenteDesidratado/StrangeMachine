@@ -1,11 +1,11 @@
-#include "util/common.h"
-
-#include "core/smStackLayer.h"
-#include "core/smWindow.h"
-#include "smInput.h"
 #include "smpch.h"
 
+#include "smAssert.h"
 #include "smMem.h"
+#include "smStackLayer.h"
+#include "smWindow.h"
+
+#include "smInput.h"
 
 #include <SDL2/SDL.h>
 

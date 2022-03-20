@@ -3,7 +3,7 @@
 
 #include "smpch.h"
 
-#include "smMem.h"
+#include "core/smCore.h"
 
 #define SM_SIZE_HEADER_SIZE     (sizeof(size_t))
 #define SM_CAPACITY_HEADER_SIZE (sizeof(size_t))

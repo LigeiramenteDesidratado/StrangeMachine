@@ -73,7 +73,7 @@ list(APPEND SM_SOURCE_FILES
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
   list(APPEND SM_SOURCE_FILES
-    smMem.c
+    core/smMem.c
     )
 endif()
 
