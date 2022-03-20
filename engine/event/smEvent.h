@@ -25,7 +25,7 @@ typedef enum {
 
   SM_EVENT_MAX
 
-} event_type_s;
+} event_type_e;
 
 typedef enum {
 
@@ -35,21 +35,21 @@ typedef enum {
   SM_CATEGORY_WINDOW = 1 << 2,
   SM_CATEGORY_ALL = SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE | SM_CATEGORY_WINDOW
 
-} event_category_s;
+} event_category_e;
 
 #include "core/smKeyCode.h"
 #include "core/smMouseCode.h"
 
 typedef struct {
 
-  event_type_s type;
+  event_type_e type;
   sm_key_code key; /* key pressed, key released, key repeat */
 
 } event_key_s;
 
 typedef struct {
 
-  event_type_s type;
+  event_type_e type;
   sm_mouse_code button;
   int x;
   int y;
@@ -61,7 +61,7 @@ typedef struct {
 
 typedef struct {
 
-  event_type_s type;
+  event_type_e type;
   int width;
   int height;
 
@@ -69,7 +69,7 @@ typedef struct {
 
 typedef struct {
 
-  event_category_s category;
+  event_category_e category;
   bool handled;
 
   union {
@@ -83,8 +83,8 @@ typedef struct {
 typedef bool (*event_handl)(event_s *event, void *user_data);
 
 void event_print(event_s *event);
-bool event_dispatch(event_s *event, event_type_s t, const event_handl func, void *user_data);
-bool event_dispatch_categories(event_s *event, event_category_s t, const event_handl func, void *user_data);
+bool event_dispatch(event_s *event, event_type_e t, const event_handl func, void *user_data);
+bool event_dispatch_categories(event_s *event, event_category_e t, const event_handl func, void *user_data);
 
 #define event_new_key(TYPE, KEY)                                                                                       \
   (event_s) {                                                                                                          \
