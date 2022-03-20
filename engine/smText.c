@@ -85,7 +85,7 @@ void text_draw(vec2 dest, float line_width, vec3 color, char *format, ...) {
 
   uint32_t c_index = 0;
 
-  for (size_t i = 0; i < len; i++) {
+  for (size_t i = 0; i < len; ++i) {
     char c = text_buffer[i];
     if (c == '\n') {
       dest[0] = initx;

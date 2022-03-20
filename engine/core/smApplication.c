@@ -103,7 +103,7 @@ void application_do(application_s *app) {
     window_do(app->window);
 
     size_t stack_size = stack_layer_get_size(app->stack);
-    for (size_t i = 0; i < stack_size; i++) {
+    for (size_t i = 0; i < stack_size; ++i) {
       layer_s *layer = stack_layer_get_layer(app->stack, i);
       if (layer->on_update) {
         layer->on_update(layer->user_data, app->delta);

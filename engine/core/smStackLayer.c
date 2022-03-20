@@ -35,13 +35,15 @@ void stack_layer_dtor(stack_layer_s *stack_layer) {
   SM_ASSERT(stack_layer != NULL);
 
   size_t layer_size = SM_ARRAY_SIZE(stack_layer->layers);
-  for (size_t i = 0; i < layer_size; i++) {
+  for (size_t i = 0; i < layer_size; ++i) {
     layer_s *layer = stack_layer->layers[i];
-    layer->on_detach(layer->user_data);
+    if (layer->on_detach) {
+      layer->on_detach((layer->user_data) ? layer->user_data : NULL);
+    }
   }
 
   size_t overlayer_size = SM_ARRAY_SIZE(stack_layer->overlayers);
-  for (size_t i = 0; i < overlayer_size; i++) {
+  for (size_t i = 0; i < overlayer_size; ++i) {
     layer_s *layer = stack_layer->overlayers[i];
     layer->on_detach(layer->user_data);
   }

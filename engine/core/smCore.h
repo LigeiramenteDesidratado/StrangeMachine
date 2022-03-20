@@ -6,6 +6,9 @@
 #include "smBase.h"
 #include "smLog.h"
 
+#include "smKeyCode.h"
+#include "smMouseCode.h"
+
 #include "smMem.h"
 
 #endif /* SM_CORE_H */

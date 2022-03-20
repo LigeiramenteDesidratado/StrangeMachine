@@ -91,7 +91,7 @@
 
 #define SM_ARRAY_PUSH(arr, value)                                                                                      \
   do {                                                                                                                 \
-    size_t *raw = (!arr) ? SM_CALLOC(1, SM_HEADER_OFFSET + sizeof((*arr))) : ((size_t *)(arr)-2);                      \
+    size_t *raw = (!arr) ? SM_CALLOC(1, SM_HEADER_OFFSET + sizeof((value))) : ((size_t *)(arr)-2);                     \
     raw[0] = raw[0] + 1;                                                                                               \
     if (raw[1] == 0) { /* TODO : remove this check ? */                                                                \
       raw[1] = 1;                                                                                                      \

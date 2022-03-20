@@ -5,9 +5,9 @@
 
 #include "core/smCore.h"
 
-char* read_file(const char* filename) {
+char *read_file(const char *filename) {
 
-  char* text = NULL;
+  char *text = NULL;
 
   if (filename != NULL) {
 
@@ -23,7 +23,7 @@ char* read_file(const char* filename) {
       fseek(f, 0, SEEK_SET);
 
       if (size > 0) {
-        text = (char*)SM_MALLOC((size + 1) * sizeof(char));
+        text = (char *)SM_MALLOC((size + 1) * sizeof(char));
 
         uint64_t count = fread(text, sizeof(char), size, f);
         // WARNING: \r\n is converted to \n on reading, so,

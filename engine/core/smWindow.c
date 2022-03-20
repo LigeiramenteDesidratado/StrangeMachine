@@ -1,8 +1,8 @@
 #include "smpch.h"
 
-#include "event/smEvent.h"
 #include "smWindowPub.h"
 
+#include "event/smEvent.h"
 
 #include "core/smCore.h"
 
