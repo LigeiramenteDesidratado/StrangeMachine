@@ -3,6 +3,7 @@
 #include "event/smEvent.h"
 #include "smWindowPub.h"
 
+#include "vendor/gladGL21/glad.h"
 #include <SDL2/SDL.h>
 
 typedef struct {
@@ -53,11 +54,17 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
     return false;
   }
 
-  /* GLint n_attrs; */
-  /* glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attrs); */
-  /* SM_CORE_LOG_DEBUG("GL Renderer: %s\n", glGetString(GL_RENDERER)); */
-  /* SM_CORE_LOG_DEBUG("GL Version: %s\n", glGetString(GL_VERSION)); */
-  /* SM_CORE_LOG_DEBUG("GL MAX_VERTEX_ATTRIBS: %d\n", n_attrs); */
+  /* TODO: LOAD OPENGL FUNCTIONS PROPERLY */
+  if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
+    SM_CORE_LOG_ERROR("failed to initialize OpengGL ctx: %s\n", SDL_GetError());
+    return false;
+  }
+
+  GLint n_attrs;
+  glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attrs);
+  SM_CORE_LOG_DEBUG("GL Renderer: %s", glGetString(GL_RENDERER));
+  SM_CORE_LOG_DEBUG("GL Version: %s", glGetString(GL_VERSION));
+  SM_CORE_LOG_DEBUG("GL MAX_VERTEX_ATTRIBS: %d", n_attrs);
 
   // vsync enable by default
   SDL_GL_SetSwapInterval(1);

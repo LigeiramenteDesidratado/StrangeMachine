@@ -1,8 +1,7 @@
 #ifndef SM_TEXTURE_H
 #define SM_TEXTURE_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "smpch.h"
 
 #include "glad/glad.h"
 

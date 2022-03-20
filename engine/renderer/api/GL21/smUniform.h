@@ -1,7 +1,7 @@
 #ifndef SM_UNIFORM_H
 #define SM_UNIFORM_H
 
-#include <stdint.h>
+#include "smpch.h"
 
 #include "core/smLog.h"
 #include "math/smMath.h"
