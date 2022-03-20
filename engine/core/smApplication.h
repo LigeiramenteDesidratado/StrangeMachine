@@ -1,8 +1,9 @@
 #ifndef SM_APPLICATION_H
 #define SM_APPLICATION_H
 
+#include "smpch.h"
+
 #include "core/smLayer.h"
-#include <stdbool.h>
 
 struct application_s;
 
@@ -17,7 +18,6 @@ void application_dtor(struct application_s *app);
 
 /* Application main loop */
 void application_do(struct application_s *app);
-
 
 void application_push_layer(struct application_s *app, layer_s *layer);
 void application_push_overlay(struct application_s *app, layer_s *layer);

@@ -3,6 +3,7 @@
 #include "core/smStackLayer.h"
 #include "core/smWindow.h"
 #include "smInput.h"
+#include "smpch.h"
 
 #include "smMem.h"
 

@@ -1,8 +1,7 @@
 #ifndef SM_CORE_BASE_H
 #define SM_CORE_BASE_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "smpch.h"
 
 #include "core/smAssert.h"
 #include "core/smLog.h"

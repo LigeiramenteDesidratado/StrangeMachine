@@ -1,8 +1,7 @@
 #ifndef SM_STACK_LAYER_H
 #define SM_STACK_LAYER_H
 
-#include <stdbool.h>
-#include <stddef.h>
+#include "smpch.h"
 
 #include "core/smLayer.h"
 

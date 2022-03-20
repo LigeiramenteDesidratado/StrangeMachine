@@ -1,6 +1,6 @@
+#include "smpch.h"
 
 #include "data/array.h"
-#include "util/common.h"
 
 #include "core/smLayer.h"
 

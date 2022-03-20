@@ -1,7 +1,7 @@
 #ifndef UTIL_FILE_H
 #define UTIL_FILE_H
 
-#include "util/common.h"
+#include "smpch.h"
 
 #include "smMem.h"
 

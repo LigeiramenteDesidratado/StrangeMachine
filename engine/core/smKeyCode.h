@@ -1,7 +1,7 @@
 #ifndef SM_CORE_KEY_CODE_H
 #define SM_CORE_KEY_CODE_H
 
-#include <stdint.h>
+#include "smpch.h"
 
 typedef uint16_t sm_key_code;
 

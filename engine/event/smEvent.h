@@ -1,7 +1,7 @@
 #ifndef SM_EVENT_H
 #define SM_EVENT_H
 
-#include <stdbool.h>
+#include "smpch.h"
 
 typedef enum {
   SM_EVENT_NONE = 0,

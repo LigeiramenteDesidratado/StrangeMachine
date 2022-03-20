@@ -5,11 +5,11 @@ project(StrangeMachineEngine LANGUAGES C)
 find_package(SDL2 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
-include_directories(${SDL2_INCLUDE_DIRS})
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
+
 message(STATUS "${PROJECT_NAME}:")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 message(STATUS "C flags, Debug configuration: ${CMAKE_C_FLAGS_DEBUG}")
@@ -68,9 +68,11 @@ if (CMAKE_BUILD_TYPE STREQUAL Debug)
     )
 endif()
 
-add_compile_definitions(LOG_USE_COLOR)
 add_library(${PROJECT_NAME} STATIC ${SM_SOURCE_FILES})
-target_compile_definitions(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Debug>:SM_DEBUG>")
+target_precompile_headers(${PROJECT_NAME} PUBLIC smpch.h)
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_USE_COLOR)
+target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:Debug>:SM_DEBUG>")
 
 
 target_compile_options(${PROJECT_NAME} PRIVATE -fPIC -Wall)
@@ -80,8 +82,9 @@ endif()
 
 
 # cimgui library
-option(IMGUI_STATIC "Static build" ON)
-add_subdirectory(vendor/cimgui)
+#  option(IMGUI_STATIC "Static build" ON)
+# add glad to the imgui library
+# add_subdirectory(vendor/cimgui)
 
 # My math library
 #  add_subdirectory(math_deprec)
@@ -91,7 +94,7 @@ option(CGLM_STATIC "Static build" ON)
 add_subdirectory(vendor/cglm)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "include" ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC cglm PRIVATE assimp stdc++ cimgui SDL2 m )
+target_link_libraries(${PROJECT_NAME} PUBLIC cglm PRIVATE assimp stdc++ SDL2 m )
 
 # Copy content to build folder:
 add_custom_command(

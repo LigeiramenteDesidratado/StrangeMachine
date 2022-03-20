@@ -1,12 +1,7 @@
 #ifndef __UTIL_ARRAY_H__
 #define __UTIL_ARRAY_H__
 
-#include "util/common.h"
-#include <err.h>
-#include <errno.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include "smpch.h"
 
 #include "smMem.h"
 

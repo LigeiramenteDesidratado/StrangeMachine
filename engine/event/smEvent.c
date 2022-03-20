@@ -1,5 +1,6 @@
+#include "smpch.h"
+
 #include "util/bitmask.h"
-#include "util/common.h"
 
 #include "event/smEvent.h"
 
