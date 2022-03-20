@@ -9,6 +9,12 @@
 
 #include <SDL2/SDL.h>
 
+#ifdef SM_DEBUG
+static void sm_at_exit(void) {
+  __smmem_print();
+}
+#endif
+
 typedef struct {
 
   struct window_s *window;
@@ -108,6 +114,12 @@ void application_do(application_s *app) {
     app->delta = (current_tick - app->last_tick) / 1000.0f;
     app->last_tick = current_tick;
   }
+
+#ifdef SM_DEBUG
+
+  SM_CORE_ASSERT(app->is_running == false);
+
+#endif
 }
 
 bool application_on_window_close(event_s *event, void *user_data) {
@@ -132,6 +144,10 @@ void application_dtor(application_s *app) {
   window_dtor(app->window);
 
   SM_FREE(app);
+
+#ifdef SM_DEBUG
+  sm_at_exit();
+#endif
 }
 
 void application_push_layer(application_s *app, layer_s *layer) {
