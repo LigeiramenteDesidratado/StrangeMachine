@@ -26,9 +26,17 @@ list(APPEND SM_SOURCE_FILES
   core/smLayer.c
   core/smStackLayer.c
 
+  renderer/smRenderer2D.c
+  renderer/smDevice.c
+
+  renderer/api/GL21/smVertexBuffer.c
+  renderer/api/GL21/smIndexBuffer.c
+  renderer/api/GL21/smShader.c
+  renderer/api/GL21/smGLUtil.c
+  renderer/api/GL21/smDraw.c
+
   event/smEvent.c
 
-  glad.c
   smLoader.c
   smAttribute.c
   smCamera.c
@@ -60,6 +68,7 @@ list(APPEND SM_SOURCE_FILES
 
   math/smTransform.c
   vendor/logc/src/log.c
+  vendor/gladGL21/glad.c
   )
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
