@@ -44,7 +44,6 @@ typedef struct {
   const size_t max_vertices;
   const size_t max_indices;
 
-  uint32_t vertex_count;
   vertex_s *vertices;
   vertex_s *__vertex_buffer;
 
@@ -198,6 +197,20 @@ void renderer2D_dtor(renderer2D_s *renderer) {
   SM_FREE(renderer);
 }
 
+void renderer2D_set_clear_color(renderer2D_s *renderer, vec4 color) {
+
+  SM_ASSERT(renderer);
+
+  renderer->api.clear_color(color[0], color[1], color[2], color[3]);
+}
+
+void renderer2D_clear(renderer2D_s *renderer) {
+
+  SM_ASSERT(renderer);
+
+  renderer->api.clear();
+}
+
 vertex_s *new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id) {
 
   vertex_s v1;
@@ -285,11 +298,50 @@ void renderer2D_end(renderer2D_s *renderer) {
   renderer2D_flush(renderer);
 }
 
-void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id) {
-
 #define QUAD_SIZE 4
 
+void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id) {
+
   renderer->__vertex_buffer = new_quad(renderer->__vertex_buffer, position, size, color, tex_id);
-  renderer->vertex_count += QUAD_SIZE;
+  renderer->index_count += 6;
+}
+
+void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
+                                  float deg_angle) {
+
+  SM_ASSERT(renderer);
+
+  vec3 center = {position[0] + size[0] * 0.5f, position[1] + size[1] * 0.5f, 0.0f};
+
+  mat4 transform = GLM_MAT4_IDENTITY_INIT;
+
+  /* use TRS to rotate around the center */
+  glm_translate(transform, center);
+  glm_rotate(transform, glm_rad(deg_angle), vec3_new(0.0f, 0.0f, 1.0f));
+  glm_scale(transform, vec3_new(size[0], size[1], 1.0f));
+
+  vec2 tex_coords[QUAD_SIZE] = {
+      {0.0f, 0.0f},
+      {1.0f, 0.0f},
+      {1.0f, 1.0f},
+      {0.0f, 1.0f},
+  };
+
+  vec4 quad_vertex_positions[QUAD_SIZE] = {
+      {-0.5f, -0.5f, 0.0f, 1.0f},
+      {0.5f, -0.5f, 0.0f, 1.0f},
+      {0.5f, 0.5f, 0.0f, 1.0f},
+      {-0.5f, 0.5f, 0.0f, 1.0f},
+  };
+
+  for (int i = 0; i < QUAD_SIZE; i++) {
+
+    glm_mat4_mulv3(transform, quad_vertex_positions[i], 1.0f, renderer->__vertex_buffer[i].position);
+    glm_vec4_ucopy(color, renderer->__vertex_buffer[i].color);
+    glm_vec2_copy(tex_coords[i], renderer->__vertex_buffer[i].tex_coord);
+    renderer->__vertex_buffer[i].tex_id = tex_id;
+  }
+
+  renderer->__vertex_buffer += QUAD_SIZE;
   renderer->index_count += 6;
 }

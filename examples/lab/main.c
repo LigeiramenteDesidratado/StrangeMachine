@@ -43,13 +43,23 @@ void on_update(void *user_data, float dt) {
 
   lab_s *lab = (lab_s *)user_data;
 
+  renderer2D_set_clear_color(lab->renderer, GRAY);
+  renderer2D_clear(lab->renderer);
+
   renderer2D_begin(lab->renderer);
 
-  renderer2D_draw_quad(lab->renderer, vec2_new(-0.5, -0.5f), vec2_new(1.0, 1.0f), AQUA, 0.0f);
-  renderer2D_draw_quad(lab->renderer, vec2_new(-1.0, -1.0f), vec2_new(1.0, 1.0f), TEAL, 0.0f);
-  renderer2D_draw_quad(lab->renderer, vec2_new(0.0, 0.0f), vec2_new(1.0, 1.0f), BLUE, 0.0f);
-  renderer2D_draw_quad(lab->renderer, vec2_new(0.5, -1.5f), vec2_new(1.0, 1.0f), OLIVE, 0.0f);
-  renderer2D_draw_quad(lab->renderer, vec2_new(-1.5, 0.5f), vec2_new(1.0, 1.0f), GREEN, 0.0f);
+  renderer2D_draw_quad(lab->renderer, vec2_new(-0.5, -0.5f), vec2_new(1.0, 1.0f), RED, 0.0f);
+  renderer2D_draw_quad(lab->renderer, vec2_new(-1.0, -1.0f), vec2_new(1.0, 1.0f), GREEN, 0.0f);
+  renderer2D_draw_quad(lab->renderer, vec2_new(0.0, 0.0f), vec2_new(1.0, 1.0f), BLACK, 0.0f);
+  renderer2D_draw_quad(lab->renderer, vec2_new(0.5, -1.5f), vec2_new(1.0, 1.0f), NAVY, 0.0f);
+  renderer2D_draw_quad(lab->renderer, vec2_new(-1.5, 0.5f), vec2_new(1.0, 1.0f), MAROON, 0.0f);
+
+  static float deg_ang = 0;
+  deg_ang += dt * 45;
+  renderer2D_draw_quad_rotated(lab->renderer, vec2_new(-1.0, -1.0f), vec2_new(0.5, 0.5f), YELLOW, 0.0f, 45 - deg_ang);
+  renderer2D_draw_quad_rotated(lab->renderer, vec2_new(0.0, 0.0f), vec2_new(1.0, 1.0f), BLUE, 0.0f, 90 - deg_ang);
+  renderer2D_draw_quad_rotated(lab->renderer, vec2_new(0.5, -1.5f), vec2_new(1.0, 1.0f), FUCHSIA, 0.0f, 180 - deg_ang);
+  renderer2D_draw_quad_rotated(lab->renderer, vec2_new(-1.5, 0.5f), vec2_new(1.0, 1.0f), PURPLE, 0.0f, deg_ang);
 
   renderer2D_end(lab->renderer);
 }
