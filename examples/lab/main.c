@@ -64,11 +64,21 @@ void on_update(void *user_data, float dt) {
   renderer2D_end(lab->renderer);
 }
 
-void on_event(event_s *event, void *user_data) {
+bool on_event(event_s *event, void *user_data) {
 
   assert(user_data);
 
-  printf("on_event\n");
+  lab_s *lab = (lab_s *)user_data;
+
+  switch (event->category) {
+  case SM_CATEGORY_WINDOW:
+    if (event->window.type == SM_EVENT_WINDOW_RESIZE)
+      renderer2D_set_viewport(lab->renderer, 0, 0, event->window.width, event->window.height);
+    return true;
+  default:
+    break;
+  }
+  return false;
 }
 
 int main(void) {
