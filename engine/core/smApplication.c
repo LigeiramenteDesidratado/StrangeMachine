@@ -5,6 +5,8 @@
 #include "smStackLayer.h"
 #include "smWindow.h"
 
+#include "resources/smResources.h"
+
 #include "smInput.h"
 
 #include <SDL2/SDL.h>
@@ -69,6 +71,7 @@ bool application_ctor(application_s *app, const char *name) {
   app->is_running = true;
 
   input_init();
+  resource_init("assets/");
 
   return true;
 }
@@ -115,6 +118,21 @@ void application_do(application_s *app) {
       }
     }
 
+    if (input_scan_key(sm_key_f)) {
+      resource_s *r = resource_get("images/test.png");
+      if (r) {
+        SM_CORE_LOG_INFO("resource found: %s", "images/test.png");
+      } else {
+        SM_CORE_LOG_INFO("resource not found: %s", "images/test.png");
+      }
+    }
+
+    resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL);
+    const char *name = NULL;
+    while ((name = resource_iter_next(&iter))) {
+      SM_CORE_LOG_INFO("%s", name);
+    }
+
     uint32_t current_tick = SDL_GetTicks();
     app->delta = (current_tick - app->last_tick) / 1000.0f;
     app->last_tick = current_tick;
@@ -142,6 +160,8 @@ bool application_on_window_close(event_s *event, void *user_data) {
 void application_dtor(application_s *app) {
 
   SM_CORE_ASSERT(app);
+
+  resource_teardown();
 
   input_tear_down();
 

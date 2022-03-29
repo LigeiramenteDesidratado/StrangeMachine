@@ -40,6 +40,8 @@ list(APPEND SM_SOURCE_FILES
   renderer/api/GL21/smGLUtil.c
   renderer/api/GL21/smDraw.c
 
+  resources/smResources.c
+
   event/smEvent.c
 
   smLoader.c
