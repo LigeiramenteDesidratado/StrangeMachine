@@ -10,6 +10,9 @@
 
 #include "core/smCore.h"
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "GL21"
+
 typedef struct {
 
   GLuint program;
@@ -119,6 +122,40 @@ void GL21shader_set_uniform(shader_s *shader, const char *name, void *value, typ
     break;
   default:
     SM_LOG_ERROR("Unsupported type (%d) %s", type, SM_TYPE_TO_STR(type));
+    break;
+  }
+}
+
+void GL21shader_set_uniform_array(shader_s *shader, const char *name, void *value, uint32_t size, types_e type) {
+
+  SM_ASSERT(shader);
+  SM_ASSERT(name);
+  SM_ASSERT(value);
+
+  GLint location;
+  glCall(location = glGetUniformLocation(shader->program, name));
+
+  switch (type) {
+  case SM_INT:
+    glCall(glUniform1iv(location, size, (int *)value));
+    break;
+  case SM_FLOAT:
+    glCall(glUniform1fv(location, size, (float *)value));
+    break;
+  case SM_VEC2:
+    glCall(glUniform2fv(location, size, (float *)value));
+    break;
+  case SM_VEC3:
+    glCall(glUniform3fv(location, size, (float *)value));
+    break;
+  case SM_VEC4:
+    glCall(glUniform4fv(location, size, (float *)value));
+    break;
+  case SM_MAT4:
+    glCall(glUniformMatrix4fv(location, size, GL_FALSE, (float *)value));
+    break;
+  default:
+    SM_LOG_WARN("Unsupported type (%d) %s", type, SM_TYPE_TO_STR(type));
     break;
   }
 }
@@ -242,12 +279,12 @@ static GLuint shader_compile_frag(char *fragment) {
 
 static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment) {
 
-  glCall(glAttachShader(shader, vertex));
-  glCall(glAttachShader(shader, fragment));
-  glCall(glLinkProgram(shader));
+  glAttachShader(shader, vertex);
+  glAttachShader(shader, fragment);
+  glLinkProgram(shader);
 
   GLint success = 0;
-  glCall(glGetProgramiv(shader, GL_LINK_STATUS, &success));
+  glGetProgramiv(shader, GL_LINK_STATUS, &success);
   if (!success) {
     char info_log[2 * 512];
     glGetShaderInfoLog(shader, 2 * 512, NULL, info_log);
@@ -265,3 +302,5 @@ static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment) {
 
   return true;
 }
+
+#undef SM_MODULE_NAME

@@ -6,6 +6,9 @@
 
 #include "core/smCore.h"
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "EVENT"
+
 event_type_e event_get_type(event_s *event) {
 
   SM_ASSERT(event);
@@ -56,56 +59,58 @@ void event_print(event_s *event) {
   case SM_CATEGORY_WINDOW:
     switch (event->window.type) {
     case SM_EVENT_WINDOW_CLOSE:
-      SM_LOG_DEBUG("[EVENT] window close");
+      SM_LOG_DEBUG("window close");
       break;
     case SM_EVENT_WINDOW_RESIZE:
-      SM_LOG_DEBUG("[EVENT] window resize %d %d", event->window.width, event->window.height);
+      SM_LOG_DEBUG("window resize %d %d", event->window.width, event->window.height);
       break;
     case SM_EVENT_WINDOW_FOCUS:
-      SM_LOG_DEBUG("[EVENT] window focus");
+      SM_LOG_DEBUG("window focus");
       break;
     case SM_EVENT_WINDOW_UNFOCUS:
-      SM_LOG_DEBUG("[EVENT] window unfocus");
+      SM_LOG_DEBUG("window unfocus");
       break;
     default:
-      SM_LOG_DEBUG("[EVENT] window event");
+      SM_LOG_DEBUG("window event");
       break;
     }
     break;
   case SM_CATEGORY_KEYBOARD:
     switch (event->key.type) {
     case SM_EVENT_KEY_DOWN:
-      SM_LOG_DEBUG("[EVENT] key down %d", event->key.key);
+      SM_LOG_DEBUG("key down %s", sm_key_to_str(event->key.key));
       break;
     case SM_EVENT_KEY_UP:
-      SM_LOG_DEBUG("[EVENT] key up %d", event->key.key);
+      SM_LOG_DEBUG("key up %s", sm_key_to_str(event->key.key));
       break;
     default:
-      SM_LOG_DEBUG("[EVENT] key event %d", event->key.key);
+      SM_LOG_DEBUG("key event %s", sm_key_to_str(event->key.key));
       break;
     }
     break;
   case SM_CATEGORY_MOUSE:
     switch (event->mouse.type) {
     case SM_EVENT_MOUSE_MOVE:
-      SM_LOG_DEBUG("[EVENT] mouse move x:%d y:%d", event->mouse.x, event->mouse.y);
+      SM_LOG_DEBUG("mouse move x:%d y:%d", event->mouse.x, event->mouse.y);
       break;
     case SM_EVENT_MOUSE_DOWN:
-      SM_LOG_DEBUG("[EVENT] mouse down %d", event->mouse.button);
+      SM_LOG_DEBUG("mouse down %d", event->mouse.button);
       break;
     case SM_EVENT_MOUSE_UP:
-      SM_LOG_DEBUG("[EVENT] mouse up %d", event->mouse.button);
+      SM_LOG_DEBUG("mouse up %d", event->mouse.button);
       break;
     case SM_EVENT_MOUSE_WHEEL:
-      SM_LOG_DEBUG("[EVENT] mouse wheel %f", event->mouse.wheel);
+      SM_LOG_DEBUG("mouse wheel %f", event->mouse.wheel);
       break;
     default:
-      SM_LOG_DEBUG("[EVENT] mouse event");
+      SM_LOG_DEBUG("mouse event");
       break;
     }
     break;
   default:
-    SM_LOG_DEBUG("[EVENT] unknown event");
+    SM_LOG_DEBUG("unknown event");
     break;
   }
 }
+
+#undef SM_MODULE_NAME

@@ -6,6 +6,9 @@
 
 #include "core/smCore.h"
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "GL21"
+
 static const char *GL21error_to_string(GLenum error) {
   switch (error) {
   case GL_NO_ERROR:
@@ -66,3 +69,4 @@ GLint GL21map_sm_to_gl_type(types_e type) {
     return SM_FLOAT;
   }
 }
+#undef SM_MODULE_NAME

@@ -10,6 +10,9 @@
 
 #include "smCamera.h"
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "RENDERER2D"
+
 #define DRAW_VERTEX_COLOR 0.0f
 #define DRAW_VERTEX_TEX0  1.0f
 #define DRAW_VERTEX_TEX1  2.0f
@@ -345,3 +348,4 @@ void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 si
   renderer->__vertex_buffer += QUAD_SIZE;
   renderer->index_count += 6;
 }
+#undef SM_MODULE_NAME

@@ -3,6 +3,9 @@
 #include "smAssert.h"
 #include "smMem.h"
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "MEMORY"
+
 static struct {
   uint64_t total_allocs;
   uint64_t allocs;
@@ -182,3 +185,5 @@ static char *__smmem_human_readable_size(void) {
     sprintf(buf, "%.3fGB", size / BYTES2GB);
   return buf;
 }
+
+#undef SM_MODULE_NAME

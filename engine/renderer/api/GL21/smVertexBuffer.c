@@ -7,6 +7,9 @@
 
 #include "vendor/gladGL21/glad.h"
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "GL21"
+
 #define SM_MAX_ATTRIBUTES 8
 
 typedef struct {
@@ -214,3 +217,4 @@ void GL21vertex_buffer_unbind(vertex_buffer_s *vertex_buffer) {
 //   glDisableVertexAttribArray(slot);
 //   glBindBuffer(GL_ARRAY_BUFFER, 0);
 // }
+#undef SM_MODULE_NAME

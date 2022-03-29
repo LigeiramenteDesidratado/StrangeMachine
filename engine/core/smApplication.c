@@ -9,6 +9,9 @@
 
 #include <SDL2/SDL.h>
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "APPLICATION"
+
 #ifdef SM_DEBUG
 static void sm_at_exit(void) {
   __smmem_print();
@@ -167,3 +170,4 @@ void application_push_overlay(application_s *app, layer_s *layer) {
   stack_layer_push_overlay(app->stack, layer);
   layer->on_attach(layer->user_data);
 }
+#undef SM_MODULE_NAME

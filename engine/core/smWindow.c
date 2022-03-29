@@ -10,6 +10,9 @@
 
 #include <SDL2/SDL.h>
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "WINDOW"
+
 typedef struct {
   SDL_Window *window;
   SDL_GLContext gc;
@@ -207,3 +210,4 @@ void window_set_vsync(window_s *win, bool vsync) {
   win->vsync = vsync;
   SDL_GL_SetSwapInterval(vsync);
 }
+#undef SM_MODULE_NAME

@@ -7,6 +7,9 @@
 
 #include "core/smCore.h"
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "GL21"
+
 typedef struct {
   GLuint EBO; /* Element Buffer Object */
 
@@ -43,6 +46,8 @@ void GL21index_buffer_dtor(index_buffer_s *index_buffer) {
   SM_ASSERT(index_buffer);
 
   glCall(glDeleteBuffers(1, &index_buffer->EBO));
+
+  SM_FREE(index_buffer);
 }
 
 void GL21index_buffer_set_data(index_buffer_s *index_buffer, uint32_t *data, size_t length) {
@@ -76,6 +81,7 @@ void GL21index_buffer_unbind(index_buffer_s *index_buffer) {
 
   glCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
+#undef SM_MODULE_NAME
 
 // Constructor
 // bool index_buffer_ctor(index_buffer_s *index_buffer) {
