@@ -5,6 +5,8 @@
 #include "smStackLayer.h"
 #include "smWindow.h"
 
+#include "cimgui/smCimgui.h"
+
 #include "resources/smResources.h"
 
 #include "smInput.h"
@@ -24,6 +26,8 @@ typedef struct {
 
   struct window_s *window;
   struct stack_layer_s *stack;
+
+  cimgui_s cimgui;
 
   bool is_running;
 
@@ -47,6 +51,7 @@ application_s *application_new(void) {
 
 bool application_on_event(event_s *event, void *user_data);
 bool application_on_window_close(event_s *event, void *user_data);
+void application_push_overlay(application_s *app, layer_s *layer);
 
 bool application_ctor(application_s *app, const char *name) {
 
@@ -54,6 +59,7 @@ bool application_ctor(application_s *app, const char *name) {
 
   struct window_s *window = window_new();
   if (!window_ctor(window, name, 800, 600)) {
+    SM_CORE_LOG_ERROR("failed to initialize window");
     return false;
   }
   app->window = window;
@@ -65,6 +71,7 @@ bool application_ctor(application_s *app, const char *name) {
 
   struct stack_layer_s *stack = stack_layer_new();
   if (!stack_layer_ctor(stack)) {
+    SM_CORE_LOG_ERROR("failed to initialize stack layer");
     return false;
   }
   app->stack = stack;
@@ -72,6 +79,12 @@ bool application_ctor(application_s *app, const char *name) {
 
   input_init();
   resource_init("assets/");
+
+  if (!cimgui_ctor(&app->cimgui, window)) {
+    SM_CORE_LOG_ERROR("failed to initialize cimgui");
+    return false;
+  }
+  application_push_overlay(app, &app->cimgui);
 
   return true;
 }
@@ -86,7 +99,12 @@ bool application_on_event(event_s *event, void *user_data) {
   application_s *app = (application_s *)user_data;
 
   event_dispatch(event, SM_EVENT_WINDOW_CLOSE, application_on_window_close, app);
+
+  /* TODO: move input handling to input layer */
+  /* this is a hack to get the input working */
   event_dispatch_categories(event, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE, input_on_event, NULL);
+  event_dispatch_categories(event, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE, app->cimgui.on_event,
+                            app->cimgui.user_data);
 
   size_t stack_size = stack_layer_get_size(app->stack);
   for (size_t i = stack_size; i > 0; i--) {
@@ -114,24 +132,36 @@ void application_do(application_s *app) {
     for (size_t i = 0; i < stack_size; ++i) {
       layer_s *layer = stack_layer_get_layer(app->stack, i);
       if (layer->on_update) {
+
         layer->on_update(layer->user_data, app->delta);
       }
     }
 
-    if (input_scan_key(sm_key_f)) {
-      resource_s *r = resource_get("images/test.png");
-      if (r) {
-        SM_CORE_LOG_INFO("resource found: %s", "images/test.png");
-      } else {
-        SM_CORE_LOG_INFO("resource not found: %s", "images/test.png");
+    cimgui_begin(&app->cimgui);
+
+    stack_size = stack_layer_get_size(app->stack);
+    for (size_t i = 0; i < stack_size; ++i) {
+      layer_s *layer = stack_layer_get_layer(app->stack, i);
+      if (layer->on_gui) {
+        layer->on_gui(layer->user_data);
       }
     }
+    cimgui_end(&app->cimgui);
 
-    resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL);
-    const char *name = NULL;
-    while ((name = resource_iter_next(&iter))) {
-      SM_CORE_LOG_INFO("%s", name);
-    }
+    // if (input_scan_key(sm_key_f)) {
+    //   resource_s *r = resource_get("images/test.png");
+    //   if (r) {
+    //     SM_CORE_LOG_INFO("resource found: %s", "images/test.png");
+    //   } else {
+    //     SM_CORE_LOG_INFO("resource not found: %s", "images/test.png");
+    //   }
+    // }
+
+    // resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL);
+    // const char *name = NULL;
+    // while ((name = resource_iter_next(&iter))) {
+    //   SM_CORE_LOG_INFO("%s", name);
+    // }
 
     uint32_t current_tick = SDL_GetTicks();
     app->delta = (current_tick - app->last_tick) / 1000.0f;

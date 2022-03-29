@@ -100,8 +100,7 @@ layer_s *stack_layer_get_layer(stack_layer_s *stack_layer, size_t index) {
 
   if (index < SM_ARRAY_SIZE(stack_layer->layers)) {
     return stack_layer->layers[index];
-  } else {
-    return stack_layer->overlayers[index - SM_ARRAY_SIZE(stack_layer->layers)];
   }
+  return stack_layer->overlayers[index - SM_ARRAY_SIZE(stack_layer->layers)];
 }
 #undef SM_MODULE_NAME

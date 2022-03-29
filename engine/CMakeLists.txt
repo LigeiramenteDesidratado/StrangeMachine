@@ -40,6 +40,8 @@ list(APPEND SM_SOURCE_FILES
   renderer/api/GL21/smGLUtil.c
   renderer/api/GL21/smDraw.c
 
+  cimgui/smCimgui.c
+
   resources/smResources.c
 
   event/smEvent.c
@@ -98,9 +100,9 @@ endif()
 
 
 # cimgui library
-#  option(IMGUI_STATIC "Static build" ON)
-# add glad to the imgui library
-# add_subdirectory(vendor/cimgui)
+option(IMGUI_STATIC "Static build" ON)
+#  add glad to the imgui library
+add_subdirectory(vendor/cimgui)
 
 # My math library
 #  add_subdirectory(math_deprec)
@@ -110,7 +112,7 @@ option(CGLM_STATIC "Static build" ON)
 add_subdirectory(vendor/cglm)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "include" ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC cglm PRIVATE assimp stdc++ SDL2 m )
+target_link_libraries(${PROJECT_NAME} PUBLIC cglm PRIVATE assimp stdc++ cimgui SDL2 m)
 
 # Copy content to build folder:
 add_custom_command(

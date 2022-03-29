@@ -1,10 +1,12 @@
 #include "smpch.h"
 
-#include "smWindowPub.h"
-
 #include "event/smEvent.h"
 
-#include "core/smCore.h"
+#include "core/smAssert.h"
+#include "core/smMem.h"
+#include "core/smWindowPub.h"
+
+#include "cimgui/smCimguiImpl.h"
 
 #include "vendor/gladGL21/glad.h"
 
@@ -100,6 +102,9 @@ void window_do(window_s *win) {
 
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
+
+    ImGui_ImplSDL2_ProcessEvent(&event);
+
     switch (event.type) {
     case SDL_QUIT: {
       event_s e = event_new_window(SM_EVENT_WINDOW_CLOSE, 0, 0);
@@ -208,5 +213,19 @@ void window_set_vsync(window_s *win, bool vsync) {
 
   win->vsync = vsync;
   SDL_GL_SetSwapInterval(vsync);
+}
+
+void *window_get_window_raw(window_s *win) {
+
+  SM_CORE_ASSERT(win);
+
+  return win->window;
+}
+
+void *window_get_context_raw(window_s *win) {
+
+  SM_CORE_ASSERT(win);
+
+  return win->gc;
 }
 #undef SM_MODULE_NAME

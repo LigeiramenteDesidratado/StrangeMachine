@@ -1,8 +1,8 @@
 #ifndef SM_CORE_WINDOW_H
 #define SM_CORE_WINDOW_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "smpch.h"
+
 #include "smWindowPub.h"
 
 struct window_s;
@@ -23,5 +23,7 @@ void window_set_vsync(struct window_s *win, bool vsync);
 bool window_is_vsync(struct window_s *win);
 void window_set_callback(struct window_s *win, event_callback_f callback, void *user_data);
 void window_do(struct window_s *win);
+void *window_get_window_raw(struct window_s *win);
+void *window_get_context_raw(struct window_s *win);
 
 #endif /* SM_CORE_WINDOW_H */

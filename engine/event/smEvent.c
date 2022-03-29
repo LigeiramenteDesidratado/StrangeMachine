@@ -32,7 +32,7 @@ bool event_dispatch(event_s *event, event_type_e t, const event_handl func, void
   SM_ASSERT(event);
 
   if (event_get_type(event) == t) {
-    event->handled = func(event, user_data);
+    event->handled |= func(event, user_data);
     return true;
   }
   return false;
@@ -43,7 +43,7 @@ bool event_dispatch_categories(event_s *event, event_category_e t, const event_h
   SM_ASSERT(event);
 
   if (SM_MASK_CHK(event->category, t)) {
-    event->handled = func(event, user_data);
+    event->handled |= func(event, user_data);
     return true;
   }
   return false;
