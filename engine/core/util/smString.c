@@ -29,7 +29,7 @@ const char **sm__string_split(const char *str, char delim) {
   char buf[128];
 
   for (const char *p = str; *p != '\0'; ++p) {
-    if (*p == delim || (*p + 1) == '\0') {
+    if (*p == delim || *(p + 1) == '\0') {
 
       if (buf_index > 0) {
 
