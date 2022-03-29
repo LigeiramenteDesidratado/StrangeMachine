@@ -1,5 +1,5 @@
-#ifndef __UTIL_ARRAY_H__
-#define __UTIL_ARRAY_H__
+#ifndef SM_CORE_DATA_ARRAY_H
+#define SM_CORE_DATA_ARRAY_H
 
 #include "smpch.h"
 
@@ -166,4 +166,4 @@
     }                                                                                                                  \
   } while (0)
 
-#endif /* __UTIL_ARRAY_H__ */
+#endif /* SM_CORE_DATA_ARRAY_H */
