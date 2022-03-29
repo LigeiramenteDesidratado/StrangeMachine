@@ -14,6 +14,8 @@ typedef void(shader_dtor_f)(struct shader_s *shader);
 typedef void(shader_bind_f)(struct shader_s *shader);
 typedef void(shader_unbind_f)(struct shader_s *shader);
 typedef void(shader_set_uniform_f)(struct shader_s *shader, const char *name, void *value, types_e type);
+typedef void(shader_set_uniform_array_f)(struct shader_s *shader, const char *name, void *value, uint32_t size,
+                                         types_e type);
 
 /* Index buffer */
 typedef struct index_buffer_s *(index_buffer_new_f)(void);
@@ -57,6 +59,7 @@ typedef struct {
   shader_bind_f *shader_bind;
   shader_unbind_f *shader_unbind;
   shader_set_uniform_f *shader_set_uniform;
+  shader_set_uniform_array_f *shader_set_uniform_array;
 
   /* Index buffer */
   index_buffer_new_f *index_buffer_new;
