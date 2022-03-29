@@ -63,4 +63,6 @@ typedef uint16_t sm_key_code;
 #define sm_key_rshift ((sm_key_code)229)
 #define sm_key_ralt   ((sm_key_code)230)
 
+const char *sm_key_to_str(sm_key_code code);
+
 #endif /* SM_CORE_KEY_CODE_H */

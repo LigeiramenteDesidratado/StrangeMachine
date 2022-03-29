@@ -1,9 +1,9 @@
-#include "util/common.h"
+#include "smpch.h"
+
+#include "math/smMath.h"
 
 #include "smCameraP.h"
 #include "smInput.h"
-
-#include <SDL2/SDL_events.h>
 
 #define CAMERA_THIRD_PERSON_DISTANCE_CLAMP 1.2f
 #define CAMERA_THIRD_PERSON_MIN_CLAMP      -5.0f
@@ -79,36 +79,30 @@ void camera_do(float dt) {
     if (input_scan_key(sm_key_w)) {
       glm_vec3_scale(CAMERA.target, CAMERA.move_speed * dt, pos);
       glm_vec3_add(CAMERA.position, pos, CAMERA.position);
-      /* CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.target, CAMERA.move_speed * dt)); */
     }
 
     if (input_scan_key(sm_key_s)) {
       glm_vec3_scale(CAMERA.target, CAMERA.move_speed * dt, pos);
       glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
-      /* CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.target, CAMERA.move_speed * dt)); */
     }
 
     if (input_scan_key(sm_key_a)) {
       glm_vec3_scale(CAMERA.right, CAMERA.move_speed * dt, pos);
       glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
-      /* CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt)); */
     }
 
     if (input_scan_key(sm_key_d)) {
       glm_vec3_scale(CAMERA.right, CAMERA.move_speed * dt, pos);
       glm_vec3_add(CAMERA.position, pos, CAMERA.position);
-      /* CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.right, CAMERA.move_speed * dt)); */
     }
 
     if (input_scan_key(sm_key_space)) {
       glm_vec3_scale(CAMERA.up, CAMERA.move_speed * dt, pos);
       glm_vec3_add(CAMERA.position, pos, CAMERA.position);
-      /* CAMERA.position = vec3_add(CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt)); */
     }
     if (input_scan_key(sm_key_lshift)) {
       glm_vec3_scale(CAMERA.up, CAMERA.move_speed * dt, pos);
       glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
-      /* CAMERA.position = vec3_sub(CAMERA.position, vec3_scale(CAMERA.up, CAMERA.move_speed * dt)); */
     }
 
     float offset_x = input_get_x_rel_mouse();

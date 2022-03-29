@@ -23,8 +23,13 @@ list(APPEND SM_SOURCE_FILES
 
   core/smApplication.c
   core/smWindow.c
-  core/smLayer.c
+  #  core/smLayer.c
   core/smStackLayer.c
+  core/smKeyCode.c
+
+  core/util/smString.c
+  core/util/smFile.c
+  core/util/smDir.c
 
   renderer/smRenderer2D.c
   renderer/smDevice.c
@@ -38,33 +43,33 @@ list(APPEND SM_SOURCE_FILES
   event/smEvent.c
 
   smLoader.c
-  smAttribute.c
+  #  smAttribute.c
   smCamera.c
-  smClip.c
-  smController.c
-  smCrossFadeTarget.c
-  smDebug.c
-  smGLTFLoader.c
-  smIndexBuffer.c
+  #  smClip.c
+  #  smController.c
+  #  smCrossFadeTarget.c
+  #  smDebug.c
+  #  smGLTFLoader.c
+  #  smIndexBuffer.c
   smInput.c
-  smMesh.c
-  smModel.c
-  smOBJLoader.c
-  smPhysics.c
-  smPose.c
-  smRearrangeBones.c
-  smShader.c
-  smShaderProgram.c
+  #  smMesh.c
+  #  smModel.c
+  #  smOBJLoader.c
+  #  smPhysics.c
+  #  smPose.c
+  #  smRearrangeBones.c
+  #  smShader.c
+  #  smShaderProgram.c
   smShapes.c
-  smSkeleton.c
-  smSkinnedMesh.c
-  smSkinnedModel.c
-  smText.c
-  smTexture.c
-  smTrack.c
-  smTransformTrack.c
-  smSkyBox.c
-  smCollision.c
+  #  smSkeleton.c
+  #  smSkinnedMesh.c
+  #  smSkinnedModel.c
+  #  smText.c
+  #  smTexture.c
+  #  smTrack.c
+  #  smTransformTrack.c
+  #  smSkyBox.c
+  #  smCollision.c
 
   math/smTransform.c
   vendor/logc/src/log.c

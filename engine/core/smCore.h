@@ -1,14 +1,16 @@
 #ifndef SM_CORE_H
 #define SM_CORE_H
 
-#include "smApplication.h"
-#include "smAssert.h"
-#include "smBase.h"
-#include "smLog.h"
+#include "core/smApplication.h"
+#include "core/smAssert.h"
+#include "core/smBase.h"
+#include "core/smLog.h"
 
-#include "smKeyCode.h"
-#include "smMouseCode.h"
+#include "core/smKeyCode.h"
+#include "core/smMouseCode.h"
 
-#include "smMem.h"
+#include "core/util/smUtil.h"
+
+#include "core/smMem.h"
 
 #endif /* SM_CORE_H */

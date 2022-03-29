@@ -1,7 +1,5 @@
 #include "smpch.h"
 
-#include "util/file.h"
-
 #include "renderer/api/GL21/smGLUtil.h"
 #include "renderer/api/smDescriptor.h"
 #include "renderer/api/smTypes.h"
@@ -37,11 +35,11 @@ bool GL21shader_ctor(shader_s *shader, const char *vertex_shader, const char *fr
   SM_ASSERT(shader);
   SM_ASSERT(desc);
 
-  char *vs_source = read_file(vertex_shader);
+  char *vs_source = (char *)SM_FILE_READ(vertex_shader);
   if (!vs_source)
     return false;
 
-  char *fs_source = read_file(fragment_shader);
+  char *fs_source = (char *)SM_FILE_READ(fragment_shader);
   if (!fs_source) {
     SM_FREE(vs_source);
     return false;

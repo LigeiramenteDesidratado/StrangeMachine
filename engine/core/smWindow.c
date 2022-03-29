@@ -42,9 +42,8 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
     return false;
   }
 
-  win->window =
-      SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
-                       SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_MOUSE_GRABBED);
+  win->window = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
+                                 SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 
   if (win->window == NULL) {
     SM_CORE_LOG_ERROR("SDL_CreateWindow Error: %s", SDL_GetError());

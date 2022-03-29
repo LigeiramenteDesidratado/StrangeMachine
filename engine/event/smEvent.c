@@ -1,7 +1,5 @@
 #include "smpch.h"
 
-#include "util/bitmask.h"
-
 #include "event/smEvent.h"
 
 #include "core/smCore.h"
@@ -44,7 +42,7 @@ bool event_dispatch_categories(event_s *event, event_category_e t, const event_h
 
   SM_ASSERT(event);
 
-  if (MASK_CHK(event->category, t)) {
+  if (SM_MASK_CHK(event->category, t)) {
     event->handled = func(event, user_data);
     return true;
   }

@@ -3,6 +3,6 @@
 
 #include "event/smEvent.h"
 
-typedef void (*event_callback_f)(event_s *event, void *user_data);
+typedef bool (*event_callback_f)(event_s *event, void *user_data);
 
 #endif /* SM_WINDOW_PUB_H */

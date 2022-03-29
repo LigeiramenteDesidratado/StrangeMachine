@@ -13,5 +13,6 @@ void GL21shader_dtor(struct shader_s *shader);
 void GL21shader_bind(struct shader_s *shader);
 void GL21shader_unbind(struct shader_s *shader);
 void GL21shader_set_uniform(struct shader_s *shader, const char *name, void *value, types_e type);
+void GL21shader_set_uniform_array(struct shader_s *shader, const char *name, void *value, uint32_t size, types_e type);
 
 #endif // SM_SHADER_H

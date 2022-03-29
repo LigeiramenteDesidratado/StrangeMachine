@@ -1,7 +1,7 @@
 #ifndef SM_INPUT_H
 #define SM_INPUT_H
 
-#include <stdbool.h>
+#include "smpch.h"
 
 #include "core/smKeyCode.h"
 #include "event/smEvent.h"

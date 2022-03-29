@@ -14,7 +14,7 @@
 
 #ifdef SM_DEBUG
 static void sm_at_exit(void) {
-  __smmem_print();
+  sm__mem_print();
 }
 #endif
 
@@ -43,7 +43,7 @@ application_s *application_new(void) {
   return app;
 }
 
-void application_on_event(event_s *event, void *user_data);
+bool application_on_event(event_s *event, void *user_data);
 bool application_on_window_close(event_s *event, void *user_data);
 
 bool application_ctor(application_s *app, const char *name) {
@@ -73,7 +73,7 @@ bool application_ctor(application_s *app, const char *name) {
   return true;
 }
 
-void application_on_event(event_s *event, void *user_data) {
+bool application_on_event(event_s *event, void *user_data) {
 
   event_print(event);
 
@@ -91,9 +91,11 @@ void application_on_event(event_s *event, void *user_data) {
     if (event->handled)
       break;
     if (layer->on_event) {
-      layer->on_event(event, layer->user_data);
+      event->handled = layer->on_event(event, layer->user_data);
     }
   }
+
+  return event->handled;
 }
 
 void application_do(application_s *app) {
@@ -159,7 +161,8 @@ void application_push_layer(application_s *app, layer_s *layer) {
   SM_CORE_ASSERT(layer);
 
   stack_layer_push(app->stack, layer);
-  layer->on_attach(layer->user_data);
+  if (layer->on_attach)
+    layer->on_attach(layer->user_data);
 }
 
 void application_push_overlay(application_s *app, layer_s *layer) {
@@ -168,6 +171,7 @@ void application_push_overlay(application_s *app, layer_s *layer) {
   SM_CORE_ASSERT(layer);
 
   stack_layer_push_overlay(app->stack, layer);
-  layer->on_attach(layer->user_data);
+  if (layer->on_attach)
+    layer->on_attach(layer->user_data);
 }
 #undef SM_MODULE_NAME

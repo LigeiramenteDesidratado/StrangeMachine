@@ -1,4 +1,4 @@
-#include "util/common.h"
+#include "smpch.h"
 
 #include "core/smCore.h"
 
@@ -111,15 +111,14 @@ bool input_on_event(event_s *event, void *user_data) {
     case SM_EVENT_KEY_REPEAT: /* fallthrough */
     case SM_EVENT_KEY_DOWN:
       GINPUT->keyboard[event->key.key] = true;
-      break;
+      return true;
     case SM_EVENT_KEY_UP:
       GINPUT->keyboard[event->key.key] = false;
-      break;
+      return true;
     default:
       SM_LOG_WARN("unhandled keyboard event");
-      break;
+      return false;
     }
-    break;
   case SM_CATEGORY_MOUSE:
 
     switch (event->mouse.type) {
@@ -128,48 +127,19 @@ bool input_on_event(event_s *event, void *user_data) {
       GINPUT->y = event->mouse.y;
       GINPUT->x_rel = event->mouse.x_delta;
       GINPUT->y_rel = event->mouse.y_delta;
-      break;
+      return true;
     case SM_EVENT_MOUSE_WHEEL:
       GINPUT->scroll = event->mouse.wheel;
-      break;
+      return true;
     default:
       SM_LOG_WARN("unhandled mouse event");
-      break;
+      return false;
     }
-    break;
-
   default:
     SM_LOG_WARN("unhandled event");
     return false;
-    break;
   }
-
-  return true;
 }
-
-// void input_do(SDL_Event *e) {
-//
-//   SM_ASSERT(GINPUT != NULL);
-//
-//   if (e->type == SDL_KEYUP) {
-//     // check if the keyboard event was a result of  Keyboard repeat event
-//     if (e->key.repeat == 0 && e->key.keysym.scancode < MAX_KEYBOARD_KEYS) {
-//       GINPUT->keyboard[e->key.keysym.scancode] = false;
-//     }
-//   } else if (e->type == SDL_KEYDOWN) {
-//     // check if the keyboard event was a result of  Keyboard repeat event
-//     if (e->key.repeat == 0 && e->key.keysym.scancode < MAX_KEYBOARD_KEYS) {
-//       GINPUT->keyboard[e->key.keysym.scancode] = true;
-//     }
-//   } else if (e->type == SDL_MOUSEMOTION) {
-//     GINPUT->x_rel = e->motion.xrel;
-//     GINPUT->y_rel = e->motion.yrel;
-//     GINPUT->x = e->motion.x;
-//     GINPUT->y = e->motion.y;
-//   } else if (e->type == SDL_MOUSEWHEEL) {
-//     GINPUT->scroll = e->wheel.preciseY;
-//   }
-// }
 
 void input_tear_down(void) {
   SM_ASSERT(GINPUT != NULL && "trying to finilize a not initialized input");
