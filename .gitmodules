@@ -7,3 +7,6 @@
 [submodule "engine/vendor/cglm"]
 	path = engine/vendor/cglm
 	url = https://github.com/recp/cglm.git
+[submodule "engine/vendor/dmon"]
+	path = engine/vendor/dmon
+	url = https://github.com/septag/dmon
