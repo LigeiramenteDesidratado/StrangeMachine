@@ -35,6 +35,13 @@ typedef void(vertex_buffer_set_data_f)(struct vertex_buffer_s *vertex_buffer, vo
 typedef void(vertex_buffer_bind_f)(struct vertex_buffer_s *vertex_buffer);
 typedef void(vertex_buffer_unbind_f)(struct vertex_buffer_s *vertex_buffer);
 
+/* Texture */
+typedef struct texture_s *(texture_new_f)(void);
+typedef bool(texture_ctor_f)(struct texture_s *texture, uint32_t width, uint32_t height, void *data);
+typedef void(texture_dtor_f)(struct texture_s *texture);
+typedef void(texture_bind_f)(struct texture_s const *texture, uint32_t tex_index);
+typedef void(texture_unbind_f)(struct texture_s const *texture, uint32_t tex_index);
+
 typedef void(clear_f)(void);
 typedef void(clear_color_f)(float r, float g, float b, float a);
 typedef void(set_viewport_f)(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
@@ -77,6 +84,13 @@ typedef struct {
   vertex_buffer_set_data_f *vertex_buffer_set_data;
   vertex_buffer_bind_f *vertex_buffer_bind;
   vertex_buffer_unbind_f *vertex_buffer_unbind;
+
+  /* Texture */
+  texture_new_f *texture_new;
+  texture_ctor_f *texture_ctor;
+  texture_dtor_f *texture_dtor;
+  texture_bind_f *texture_bind;
+  texture_unbind_f *texture_unbind;
 
 } device_s;
 

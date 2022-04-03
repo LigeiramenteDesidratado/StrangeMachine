@@ -23,7 +23,6 @@ uniform sampler2D u_tex5;
 uniform sampler2D u_tex6;
 uniform sampler2D u_tex7;
 
-
 void main() {
 
   int tex_id = int(in_tex_id);
@@ -49,7 +48,6 @@ void main() {
   } else {
     gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
   }
-  // gl_FragColor = vec4(tex_id, tex_id, tex_id,1.0);
 };
 
 

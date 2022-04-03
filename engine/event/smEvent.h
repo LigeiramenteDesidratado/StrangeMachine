@@ -85,6 +85,7 @@ typedef bool (*event_handl)(event_s *event, void *user_data);
 void event_print(event_s *event);
 bool event_dispatch(event_s *event, event_type_e t, const event_handl func, void *user_data);
 bool event_dispatch_categories(event_s *event, event_category_e t, const event_handl func, void *user_data);
+void event_set_print_mask(event_category_e mask);
 
 #define event_new_key(TYPE, KEY)                                                                                       \
   (event_s) {                                                                                                          \

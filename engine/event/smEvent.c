@@ -27,6 +27,8 @@ event_type_e event_get_type(event_s *event) {
   }
 }
 
+static event_category_e EVENT_PRINT_MASK = 0;
+
 bool event_dispatch(event_s *event, event_type_e t, const event_handl func, void *user_data) {
 
   SM_ASSERT(event);
@@ -49,12 +51,21 @@ bool event_dispatch_categories(event_s *event, event_category_e t, const event_h
   return false;
 }
 
+void event_set_print_mask(event_category_e mask) {
+  EVENT_PRINT_MASK = mask;
+}
+
 void event_print(event_s *event) {
 
   SM_ASSERT(event);
 
+  if (EVENT_PRINT_MASK == 0)
+    return;
+
   switch (event->category) {
   case SM_CATEGORY_WINDOW:
+    if (!SM_MASK_CHK(EVENT_PRINT_MASK, SM_CATEGORY_WINDOW))
+      return;
     switch (event->window.type) {
     case SM_EVENT_WINDOW_CLOSE:
       SM_LOG_DEBUG("window close");
@@ -74,6 +85,8 @@ void event_print(event_s *event) {
     }
     break;
   case SM_CATEGORY_KEYBOARD:
+    if (!SM_MASK_CHK(EVENT_PRINT_MASK, SM_CATEGORY_KEYBOARD))
+      break;
     switch (event->key.type) {
     case SM_EVENT_KEY_DOWN:
       SM_LOG_DEBUG("key down %s", sm_key_to_str(event->key.key));
@@ -87,6 +100,8 @@ void event_print(event_s *event) {
     }
     break;
   case SM_CATEGORY_MOUSE:
+    if (!SM_MASK_CHK(EVENT_PRINT_MASK, SM_CATEGORY_MOUSE))
+      break;
     switch (event->mouse.type) {
     case SM_EVENT_MOUSE_MOVE:
       SM_LOG_DEBUG("mouse move x:%d y:%d", event->mouse.x, event->mouse.y);

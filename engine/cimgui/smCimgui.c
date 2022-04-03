@@ -4,6 +4,7 @@
 
 #include "core/smCore.h"
 #include "core/smWindow.h"
+#include "util/colors.h"
 
 #include <SDL2/SDL.h>
 
@@ -89,13 +90,25 @@ void cimgui_end(cimgui_s *cimgui) {
   ImGui_ImplOpenGL2_RenderDrawData(igGetDrawData());
 }
 
+#define VEC4_TO_IM_VEC4(VEC4) ((ImVec4){VEC4[0], VEC4[1], VEC4[2], VEC4[3]})
+
 static void sm__set_dark_theme_colors() {
 
   ImGuiStyle *style = igGetStyle();
 
   ImVec4 *colors = style->Colors;
 
-  colors[ImGuiCol_WindowBg] = (ImVec4){0.1f, 0.105f, 0.11f, 1.0f};
+  colors[ImGuiCol_WindowBg] = VEC4_TO_IM_VEC4(SM_BACKGROUND_COLOR);
+  colors[ImGuiCol_Text] = VEC4_TO_IM_VEC4(SM_FOREGROUND_COLOR);
+
+  /* Separator */
+  colors[ImGuiCol_SeparatorHovered] = VEC4_TO_IM_VEC4(SM_MAIN_COLOR_1);
+  colors[ImGuiCol_SeparatorActive] = VEC4_TO_IM_VEC4(SM_MAIN_COLOR_2);
+
+  /* Resize Grip */
+  colors[ImGuiCol_ResizeGrip] = VEC4_TO_IM_VEC4(SM_MAIN_COLOR_0);
+  colors[ImGuiCol_ResizeGripHovered] = VEC4_TO_IM_VEC4(SM_MAIN_COLOR_1);
+  colors[ImGuiCol_ResizeGripActive] = VEC4_TO_IM_VEC4(SM_MAIN_COLOR_2);
 
   // Headers
   colors[ImGuiCol_Header] = (ImVec4){0.2f, 0.205f, 0.21f, 1.0f};
@@ -111,6 +124,10 @@ static void sm__set_dark_theme_colors() {
   colors[ImGuiCol_FrameBg] = (ImVec4){0.2f, 0.205f, 0.21f, 1.0f};
   colors[ImGuiCol_FrameBgHovered] = (ImVec4){0.3f, 0.305f, 0.31f, 1.0f};
   colors[ImGuiCol_FrameBgActive] = (ImVec4){0.15f, 0.1505f, 0.151f, 1.0f};
+
+  colors[ImGuiCol_CheckMark] = VEC4_TO_IM_VEC4(SM_MAIN_COLOR_1);
+  colors[ImGuiCol_SliderGrab] = VEC4_TO_IM_VEC4(SM_MAIN_COLOR_1);
+  colors[ImGuiCol_SliderGrabActive] = VEC4_TO_IM_VEC4(SM_MAIN_COLOR_2);
 
   // Tabs
   colors[ImGuiCol_Tab] = (ImVec4){0.15f, 0.1505f, 0.151f, 1.0f};

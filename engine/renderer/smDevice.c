@@ -41,6 +41,12 @@ bool device_ctor(device_s *device, device_api_e api) {
     device->vertex_buffer_bind = GL21vertex_buffer_bind;
     device->vertex_buffer_unbind = GL21vertex_buffer_unbind;
 
+    device->texture_new = GL21texture_new;
+    device->texture_ctor = GL21texture_ctor;
+    device->texture_dtor = GL21texture_dtor;
+    device->texture_bind = GL21texture_bind;
+    device->texture_unbind = GL21texture_unbind;
+
     break;
 
   case OPENGL33: /* fallthrough */

@@ -5,5 +5,6 @@
 #include "renderer/api/GL21/smIndexBuffer.h"
 #include "renderer/api/GL21/smShader.h"
 #include "renderer/api/GL21/smVertexBuffer.h"
+#include "renderer/api/GL21/smTexture.h"
 
 #endif /* SM_GL_21_H */

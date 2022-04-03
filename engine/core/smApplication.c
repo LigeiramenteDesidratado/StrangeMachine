@@ -5,9 +5,11 @@
 #include "smStackLayer.h"
 #include "smWindow.h"
 
+#include "smCamera.h"
+
 #include "cimgui/smCimgui.h"
 
-#include "resources/smResources.h"
+#include "resource/smResource.h"
 
 #include "smInput.h"
 
@@ -31,8 +33,8 @@ typedef struct {
 
   bool is_running;
 
-  uint32_t last_tick;
-  float delta;
+  double delta;
+  double elapsed;
 
 } application_s;
 
@@ -64,8 +66,7 @@ bool application_ctor(application_s *app, const char *name) {
   }
   app->window = window;
 
-  app->last_tick = SDL_GetTicks();
-  app->delta = 0.0f;
+  app->delta = 0.0;
 
   window_set_callback(window, application_on_event, app);
 
@@ -86,7 +87,29 @@ bool application_ctor(application_s *app, const char *name) {
   }
   application_push_overlay(app, &app->cimgui);
 
+  event_category_e mask = SM_CATEGORY_WINDOW;
+  event_set_print_mask(mask);
+
   return true;
+}
+
+void application_dtor(application_s *app) {
+
+  SM_CORE_ASSERT(app);
+
+  resource_teardown();
+
+  input_tear_down();
+
+  stack_layer_dtor(app->stack);
+
+  window_dtor(app->window);
+
+  SM_FREE(app);
+
+#ifdef SM_DEBUG
+  sm_at_exit();
+#endif
 }
 
 bool application_on_event(event_s *event, void *user_data) {
@@ -102,9 +125,11 @@ bool application_on_event(event_s *event, void *user_data) {
 
   /* TODO: move input handling to input layer */
   /* this is a hack to get the input working */
-  event_dispatch_categories(event, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE, input_on_event, NULL);
+
   event_dispatch_categories(event, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE, app->cimgui.on_event,
                             app->cimgui.user_data);
+  if (!event->handled)
+    event_dispatch_categories(event, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE, input_on_event, NULL);
 
   size_t stack_size = stack_layer_get_size(app->stack);
   for (size_t i = stack_size; i > 0; i--) {
@@ -119,14 +144,40 @@ bool application_on_event(event_s *event, void *user_data) {
   return event->handled;
 }
 
+void application_cap_frame_rate(long *then, float *remainder) {
+  long wait, frameTime;
+  wait = (long int)(16 + *remainder);
+
+  *remainder -= (int)*remainder;
+
+  frameTime = SDL_GetTicks() - *then;
+
+  wait -= frameTime;
+  if (wait < 1) {
+    wait = 1;
+  }
+  SDL_Delay(wait);
+
+  *remainder += 0.667f;
+
+  *then = SDL_GetTicks();
+}
+
 void application_do(application_s *app) {
 
   SM_CORE_ASSERT(app);
 
+  long then = SDL_GetTicks();
+  float remainder = 0;
+  int f = 12;
+
   while (app->is_running) {
+
+    Uint64 start = SDL_GetPerformanceCounter();
 
     input_do();
     window_do(app->window);
+    camera_do(app->delta);
 
     size_t stack_size = stack_layer_get_size(app->stack);
     for (size_t i = 0; i < stack_size; ++i) {
@@ -146,6 +197,9 @@ void application_do(application_s *app) {
         layer->on_gui(layer->user_data);
       }
     }
+
+    igText("FPS: %f", app->elapsed);
+
     cimgui_end(&app->cimgui);
 
     // if (input_scan_key(sm_key_f)) {
@@ -163,9 +217,18 @@ void application_do(application_s *app) {
     //   SM_CORE_LOG_INFO("%s", name);
     // }
 
-    uint32_t current_tick = SDL_GetTicks();
-    app->delta = (current_tick - app->last_tick) / 1000.0f;
-    app->last_tick = current_tick;
+    window_swap_buffers(app->window);
+
+    application_cap_frame_rate(&then, &remainder);
+
+    Uint64 end = SDL_GetPerformanceCounter();
+
+    app->delta = (end - start) / (double)SDL_GetPerformanceFrequency();
+
+    if (--f == 0) {
+      app->elapsed = (1.0 / app->delta);
+      f = 12;
+    }
   }
 
 #ifdef SM_DEBUG
@@ -185,24 +248,6 @@ bool application_on_window_close(event_s *event, void *user_data) {
   app->is_running = false;
 
   return true;
-}
-
-void application_dtor(application_s *app) {
-
-  SM_CORE_ASSERT(app);
-
-  resource_teardown();
-
-  input_tear_down();
-
-  stack_layer_dtor(app->stack);
-  window_dtor(app->window);
-
-  SM_FREE(app);
-
-#ifdef SM_DEBUG
-  sm_at_exit();
-#endif
 }
 
 void application_push_layer(application_s *app, layer_s *layer) {

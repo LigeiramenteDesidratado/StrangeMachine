@@ -1,71 +1,63 @@
-#include "util/common.h"
+#include "smpch.h"
 
-#include "smTexture.h"
+#include "vendor/gladGL21/glad.h"
 
-bool __texture_load(texture_s *texture, const char *path);
+#include "renderer/api/GL21/smGLUtil.h"
+
+typedef struct {
+  GLuint texture;
+
+} texture_s;
+
+texture_s *GL21texture_new(void) {
+  texture_s *texture = SM_CALLOC(1, sizeof(texture_s));
+  SM_ASSERT(texture);
+
+  return texture;
+}
 
 // Constructor
-bool texture_ctor(texture_s *texture, const char *path) {
+bool GL21texture_ctor(texture_s *texture, uint32_t width, uint32_t height, void *data) {
 
   SM_ASSERT(texture != NULL);
 
-  glGenTextures(1, &texture->texture);
-  if (!__texture_load(texture, path))
-    return false;
+  glCall(glGenTextures(1, &texture->texture));
+
+  glCall(glBindTexture(GL_TEXTURE_2D, texture->texture));
+  glCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
+  /* glGenerateMipmap(GL_TEXTURE_2D); */
+
+  glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+  glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+
+  glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+  glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+
+  glCall(glBindTexture(GL_TEXTURE_2D, 0));
 
   return true;
 }
 
 // Destructor
-void texture_dtor(texture_s *texture) {
+void GL21texture_dtor(texture_s *texture) {
   SM_ASSERT(texture != NULL);
 
-  glDeleteTextures(1, &texture->texture);
+  glCall(glDeleteTextures(1, &texture->texture));
 }
 
-void texture_set(texture_s const *texture, int32_t uniform, int32_t tex_index) {
+void GL21texture_bind(texture_s const *texture, uint32_t tex_index) {
+
   SM_ASSERT(texture != NULL);
 
-  glActiveTexture(GL_TEXTURE0 + tex_index);
-  glBindTexture(GL_TEXTURE_2D, texture->texture);
-  glUniform1i(uniform, tex_index);
+  glCall(glActiveTexture(GL_TEXTURE0 + tex_index));
+  glCall(glBindTexture(GL_TEXTURE_2D, texture->texture));
 }
 
-void texture_unset(uint32_t tex_index) {
+void GL21texture_unbind(texture_s const *texture, uint32_t tex_index) {
 
-  glActiveTexture(GL_TEXTURE0 + tex_index);
-  glBindTexture(GL_TEXTURE_2D, 0);
-  glActiveTexture(GL_TEXTURE0);
-}
+  SM_UNUSED(texture);
 
-bool __texture_load(texture_s *texture, const char *path) {
-  SM_ASSERT(texture != NULL);
-
-  int32_t width, height, channels;
-  stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-  unsigned char *data = stbi_load(path, &width, &height, &channels, 4);
-  if (data == NULL) {
-    SM_LOG_ERROR("[%s] failed to load image", path);
-    return false;
-  }
-  SM_LOG_INFO("[%s] image successfully loaded", path);
-
-  glBindTexture(GL_TEXTURE_2D, texture->texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-  /* glGenerateMipmap(GL_TEXTURE_2D); */
-  stbi_image_free(data);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-  glBindTexture(GL_TEXTURE_2D, 0);
-
-  texture->width = width;
-  texture->height = height;
-  texture->channels = channels;
-
-  return true;
+  glCall(glActiveTexture(GL_TEXTURE0 + tex_index));
+  glCall(glBindTexture(GL_TEXTURE_2D, 0));
+  glCall(glActiveTexture(GL_TEXTURE0));
 }

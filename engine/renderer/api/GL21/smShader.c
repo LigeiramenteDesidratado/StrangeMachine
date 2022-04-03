@@ -99,6 +99,8 @@ void GL21shader_set_uniform(shader_s *shader, const char *name, void *value, typ
   GLint location;
   glCall(location = glGetUniformLocation(shader->program, name));
 
+  SM_ASSERT(location != -1);
+
   switch (type) {
   case SM_INT:
     glCall(glUniform1i(location, *(int *)value));

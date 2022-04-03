@@ -4,6 +4,10 @@
 #include "renderer/smDeviceDefs.h"
 #include "renderer/smDevicePub.h"
 
+#include "resource/smResource.h"
+
+#include "util/colors.h"
+
 #include "math/smMath.h"
 
 #include "core/smCore.h"
@@ -22,6 +26,14 @@
 #define DRAW_VERTEX_TEX5  6.0f
 #define DRAW_VERTEX_TEX6  7.0f
 #define DRAW_VERTEX_TEX7  8.0f
+#define MAX_TEXTURES      8
+
+struct {
+
+  uint32_t draw_call_count, previous_cc;
+  uint32_t quad_count, previous_qc;
+
+} __stats = {0, 0, 0, 0};
 
 typedef union {
   struct {
@@ -37,7 +49,7 @@ typedef union {
 
 typedef struct {
 
-  device_s api;
+  device_s device;
 
   struct index_buffer_s *EBO;  /* element buffer object */
   struct vertex_buffer_s *VBO; /* vertex buffer object */
@@ -52,6 +64,9 @@ typedef struct {
 
   size_t index_count;
   uint32_t *indices;
+
+  uint8_t texture_size;
+  texture_handler_s textures[MAX_TEXTURES];
 
 } renderer2D_s;
 
@@ -77,7 +92,7 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
 
   renderer->vertices = SM_CALLOC(1, sizeof(vertex_s) * renderer->max_vertices);
 
-  if (!device_ctor(&renderer->api, device))
+  if (!device_ctor(&renderer->device, device))
     return false;
 
   attribute_loc_desc_s attribute_loc[4] = {
@@ -87,11 +102,12 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
       {.name = "tex_id", .location = 3},
   };
 
-  renderer->program = renderer->api.shader_new();
-  if (!renderer->api.shader_ctor(renderer->program, "engine/glsl/renderer2D.vs", "engine/glsl/renderer2D.fs",
-                                 attribute_loc, 4)) {
+  renderer->program = renderer->device.shader_new();
+  if (!renderer->device.shader_ctor(renderer->program, "engine/glsl/renderer2D.vs", "engine/glsl/renderer2D.fs",
+                                    attribute_loc, 4)) {
     return false;
   }
+  renderer->device.shader_bind(renderer->program);
 
   buffer_desc_s vbo_desc = {
       .dynamic = true,
@@ -99,8 +115,8 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
       .data = NULL,
   };
 
-  renderer->VBO = renderer->api.vertex_buffer_new();
-  if (!renderer->api.vertex_buffer_ctor(renderer->VBO, &vbo_desc))
+  renderer->VBO = renderer->device.vertex_buffer_new();
+  if (!renderer->device.vertex_buffer_ctor(renderer->VBO, &vbo_desc))
     return false;
 
   attribute_desc_s attr_desc[4] = {
@@ -134,28 +150,24 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
       },
   };
 
-  renderer->api.vertex_buffer_set_pointer(renderer->VBO, attr_desc, 4);
+  renderer->device.vertex_buffer_set_pointer(renderer->VBO, attr_desc, 4);
 
-  /* glUseProgram(renderer->shader_program); */
-  /* GLuint loc = glGetUniformLocation(renderer->shader_program, "u_tex0"); */
-  /* glUniform1i(loc, 0); */
-  /* loc = glGetUniformLocation(renderer->shader_program, "u_tex1"); */
-  /* glUniform1i(loc, 1); */
-  /* loc = glGetUniformLocation(renderer->shader_program, "u_tex2"); */
-  /* glUniform1i(loc, 2); */
-  /* loc = glGetUniformLocation(renderer->shader_program, "u_tex3"); */
-  /* glUniform1i(loc, 3); */
-  /* loc = glGetUniformLocation(renderer->shader_program, "u_tex4"); */
-  /* glUniform1i(loc, 4); */
-  /* loc = glGetUniformLocation(renderer->shader_program, "u_tex5"); */
-  /* glUniform1i(loc, 5); */
-  /* loc = glGetUniformLocation(renderer->shader_program, "u_tex6"); */
-  /* glUniform1i(loc, 6); */
-  /* loc = glGetUniformLocation(renderer->shader_program, "u_tex7"); */
-  /* glUniform1i(loc, 7); */
-
-  /* GLuint loc = glGetUniformLocation(shader, "u_tex"); */
-  /* glUniform1iv(loc, 2, (int[2]){0, 1}); */
+  int32_t val = 0;
+  renderer->device.shader_set_uniform(renderer->program, "u_tex0", &val, SM_INT);
+  val++;
+  renderer->device.shader_set_uniform(renderer->program, "u_tex1", &val, SM_INT);
+  val++;
+  renderer->device.shader_set_uniform(renderer->program, "u_tex2", &val, SM_INT);
+  val++;
+  renderer->device.shader_set_uniform(renderer->program, "u_tex3", &val, SM_INT);
+  val++;
+  renderer->device.shader_set_uniform(renderer->program, "u_tex4", &val, SM_INT);
+  val++;
+  renderer->device.shader_set_uniform(renderer->program, "u_tex5", &val, SM_INT);
+  val++;
+  renderer->device.shader_set_uniform(renderer->program, "u_tex6", &val, SM_INT);
+  val++;
+  renderer->device.shader_set_uniform(renderer->program, "u_tex7", &val, SM_INT);
 
   uint32_t indices[renderer->max_indices];
   uint32_t offset = 0;
@@ -178,22 +190,24 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
       .data = indices,
   };
 
-  renderer->EBO = renderer->api.index_buffer_new();
-  if (!renderer->api.index_buffer_ctor(renderer->EBO, &ebo_desc))
+  renderer->EBO = renderer->device.index_buffer_new();
+  if (!renderer->device.index_buffer_ctor(renderer->EBO, &ebo_desc))
     return false;
 
-  /* camera_init(vec3_new(0.0f, 3.0f, 8.0f), vec3_new(0.0f, 2.0f, 0.0f), vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON, */
-  /* PERSPECTIVE); */
+  camera_init(vec3_new(0.0f, 3.0f, 8.0f), vec3_new(0.0f, 2.0f, 0.0f), vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON,
+              ORTHOGONAL);
+
+  renderer->device.shader_unbind(renderer->program);
 
   return true;
 }
 
 void renderer2D_dtor(renderer2D_s *renderer) {
 
-  /* camera_tear_down(); */
-  renderer->api.index_buffer_dtor(renderer->EBO);
-  renderer->api.vertex_buffer_dtor(renderer->VBO);
-  renderer->api.shader_dtor(renderer->program);
+  camera_tear_down();
+  renderer->device.index_buffer_dtor(renderer->EBO);
+  renderer->device.vertex_buffer_dtor(renderer->VBO);
+  renderer->device.shader_dtor(renderer->program);
 
   SM_FREE(renderer->indices);
   SM_FREE(renderer->vertices);
@@ -204,14 +218,21 @@ void renderer2D_set_clear_color(renderer2D_s *renderer, vec4 color) {
 
   SM_ASSERT(renderer);
 
-  renderer->api.clear_color(color[0], color[1], color[2], color[3]);
+  renderer->device.clear_color(color[0], color[1], color[2], color[3]);
 }
 
 void renderer2D_clear(renderer2D_s *renderer) {
 
   SM_ASSERT(renderer);
 
-  renderer->api.clear();
+  renderer->device.clear();
+}
+
+void renderer2D_set_viewport(renderer2D_s *renderer, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+
+  SM_ASSERT(renderer);
+
+  renderer->device.set_viewport(x, y, width, height);
 }
 
 vertex_s *new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id) {
@@ -259,17 +280,31 @@ void renderer2D_flush(renderer2D_s *renderer) {
 
   /* renderer->api.vertex_buffer_set_data(renderer->VBO, renderer->vertices, renderer->vertex_count * sizeof(vertex_s));
    */
-  renderer->api.vertex_buffer_set_data(renderer->VBO, renderer->vertices, data_size);
+  renderer->device.vertex_buffer_set_data(renderer->VBO, renderer->vertices, data_size);
 
-  renderer->api.shader_bind(renderer->program);
-  renderer->api.vertex_buffer_bind(renderer->VBO);
-  renderer->api.index_buffer_bind(renderer->EBO);
+  renderer->device.shader_bind(renderer->program);
 
-  renderer->api.draw_indexed(renderer->index_count);
+  for (uint8_t i = 0; i < renderer->texture_size; ++i) {
+    /* renderer->api.texture_bind(renderer->textures[i], i); */
+    texture_res_bind(renderer->textures[i], i);
+  }
 
-  renderer->api.index_buffer_unbind(renderer->EBO);
-  renderer->api.vertex_buffer_unbind(renderer->VBO);
-  renderer->api.shader_unbind(renderer->program);
+  renderer->device.vertex_buffer_bind(renderer->VBO);
+  renderer->device.index_buffer_bind(renderer->EBO);
+
+  renderer->device.draw_indexed(renderer->index_count);
+
+  renderer->device.index_buffer_unbind(renderer->EBO);
+  renderer->device.vertex_buffer_unbind(renderer->VBO);
+
+  for (uint8_t i = 0; i < renderer->texture_size; ++i) {
+    /* renderer->api.texture_unbind(renderer->textures[i], i); */
+    texture_res_unbind(renderer->textures[i], i);
+  }
+
+  renderer->device.shader_unbind(renderer->program);
+
+  __stats.draw_call_count++;
 }
 
 void renderer2D_start_batch(renderer2D_s *renderer) {
@@ -284,12 +319,17 @@ void renderer2D_begin(renderer2D_s *renderer) {
 
   SM_ASSERT(renderer);
 
-  /* mat4 view, proj; */
-  /* camera_get_view(view); */
-  /* camera_get_projection_matrix(800 / (float)600, proj); */
+  resource_set_device_reference(&renderer->device);
 
-  /* renderer->api.shader_set_uniform(renderer->program, "view", view, SM_MAT4); */
-  /* renderer->api.shader_set_uniform(renderer->program, "projection", proj, SM_MAT4); */
+  mat4 view, proj;
+  camera_get_view(view);
+  camera_get_projection_matrix(800 / (float)600, proj);
+
+  renderer->device.shader_bind(renderer->program);
+
+  renderer->device.shader_set_uniform(renderer->program, "u_view", view, SM_MAT4);
+  renderer->device.shader_set_uniform(renderer->program, "u_projection", proj, SM_MAT4);
+  renderer->device.shader_unbind(renderer->program);
 
   renderer2D_start_batch(renderer);
 }
@@ -299,20 +339,116 @@ void renderer2D_end(renderer2D_s *renderer) {
   SM_ASSERT(renderer);
 
   renderer2D_flush(renderer);
+
+  resource_unset_device_reference();
+
+  __stats.previous_cc = __stats.draw_call_count;
+  __stats.previous_qc = __stats.quad_count;
+  __stats.draw_call_count = 0;
+  __stats.quad_count = 0;
 }
 
 #define QUAD_SIZE 4
 
 void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id) {
 
+  /* check if this new quad will not exceed the vertex buffer */
+  if (renderer->index_count + 6 > renderer->max_indices) {
+    renderer2D_flush(renderer);
+    renderer2D_start_batch(renderer);
+  }
   renderer->__vertex_buffer = new_quad(renderer->__vertex_buffer, position, size, color, tex_id);
   renderer->index_count += 6;
+  __stats.quad_count++;
+}
+
+void renderer2D_draw_sprite(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler) {
+
+  SM_UNUSED(renderer);
+  SM_UNUSED(position);
+  SM_UNUSED(size);
+
+  /* check if this new quad will not exceed the vertex buffer */
+  if (renderer->index_count + 6 > renderer->max_indices) {
+    renderer2D_flush(renderer);
+    renderer2D_start_batch(renderer);
+  }
+
+  float tex_id = 0.0f;
+
+  for (uint8_t i = 0; i < MAX_TEXTURES; ++i) {
+    if (handler.handle == renderer->textures[i].handle) {
+      tex_id = (float)i + 1;
+      break;
+    }
+  }
+
+  if (tex_id == 0.0f) {
+    renderer->textures[renderer->texture_size] = handler;
+    renderer->texture_size++; /* TODO: check array overflow and batch it */
+    tex_id = renderer->texture_size;
+  }
+
+  renderer->__vertex_buffer = new_quad(renderer->__vertex_buffer, position, size, SM_RED_COLOR, tex_id);
+  renderer->index_count += 6;
+  __stats.quad_count++;
+}
+
+void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
+                                  float deg_angle);
+
+void renderer2D_draw_sprite_rotated(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler,
+                                    float deg_angle) {
+
+  SM_UNUSED(renderer);
+  SM_UNUSED(position);
+  SM_UNUSED(size);
+
+  /* check if this new quad will not exceed the vertex buffer */
+  if (renderer->index_count + 6 > renderer->max_indices) {
+    renderer2D_flush(renderer);
+    renderer2D_start_batch(renderer);
+  }
+
+  float tex_id = 0.0f;
+
+  for (uint8_t i = 0; i < MAX_TEXTURES; ++i) {
+    if (handler.handle == renderer->textures[i].handle) {
+      tex_id = (float)i + 1;
+      break;
+    }
+  }
+
+  if (tex_id == 0.0f) {
+    renderer->textures[renderer->texture_size] = handler;
+    renderer->texture_size++; /* TODO: check array overflow and batch it */
+    tex_id = renderer->texture_size;
+  }
+
+  renderer2D_draw_quad_rotated(renderer, position, size, SM_RED_COLOR, tex_id, deg_angle);
+
+  /* renderer->__vertex_buffer = new_quad(renderer->__vertex_buffer, position, size, SM_RED_COLOR, tex_id); */
+  /* renderer->index_count += 6; */
+  /* __stats.quad_count++; */
 }
 
 void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
                                   float deg_angle) {
 
   SM_ASSERT(renderer);
+
+  /* check if this new quad will not exceed the vertex buffer */
+  if (renderer->index_count + 6 > renderer->max_indices) {
+    renderer2D_flush(renderer);
+    renderer2D_start_batch(renderer);
+  }
+
+  if (deg_angle == 0.0f || deg_angle == 360.0f) {
+    renderer->__vertex_buffer = new_quad(renderer->__vertex_buffer, position, size, color, tex_id);
+    renderer->index_count += 6;
+    __stats.quad_count++;
+    return;
+  }
 
   vec3 center = {position[0] + size[0] * 0.5f, position[1] + size[1] * 0.5f, 0.0f};
 
@@ -347,5 +483,15 @@ void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 si
 
   renderer->__vertex_buffer += QUAD_SIZE;
   renderer->index_count += 6;
+  __stats.quad_count++;
 }
+
+uint32_t renderer2D_stats_get_draw_call_count(void) {
+  return __stats.previous_cc;
+}
+
+uint32_t renderer2D_stats_get_quad_count(void) {
+  return __stats.previous_qc;
+}
+
 #undef SM_MODULE_NAME

@@ -131,6 +131,12 @@ bool input_on_event(event_s *event, void *user_data) {
     case SM_EVENT_MOUSE_WHEEL:
       GINPUT->scroll = event->mouse.wheel;
       return true;
+    case SM_EVENT_MOUSE_DOWN:
+      GINPUT->keyboard[event->mouse.button] = true;
+      return true;
+    case SM_EVENT_MOUSE_UP:
+      GINPUT->keyboard[event->mouse.button] = false;
+      return true;
     default:
       SM_LOG_WARN("unhandled mouse event");
       return false;

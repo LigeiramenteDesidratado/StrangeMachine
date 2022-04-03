@@ -25,4 +25,11 @@
 #define TEAL    vec4_new(0.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f)
 #define AQUA    vec4_new(0.0f, 1.0f, 1.0f, 1.0f)
 
+#define SM_BACKGROUND_COLOR vec4_new(0x12 / (float)0xFF, 0x12 / (float)0xFF, 0x12 / (float)0xFF, 1.0f)
+#define SM_FOREGROUND_COLOR vec4_new(0xEE / (float)0xFF, 0xEE / (float)0xFF, 0xEE / (float)0xFF, 1.0f)
+#define SM_MAIN_COLOR_0     vec4_new(0x71 / (float)0xFF, 0xC8 / (float)0xFF, 0x71 / (float)0xFF, 1.0f)
+#define SM_MAIN_COLOR_1     vec4_new(0x85 / (float)0xFF, 0xDC / (float)0xFF, 0x85 / (float)0xFF, 1.0f)
+#define SM_MAIN_COLOR_2     vec4_new(0x99 / (float)0xFF, 0xF0 / (float)0xFF, 0x99 / (float)0xFF, 1.0f)
+#define SM_RED_COLOR        vec4_new(0x96 / (float)0xFF, 0x19 / (float)0xFF, 0x19 / (float)0xFF, 1.0f)
+
 #endif /* SM_COLORS_H */

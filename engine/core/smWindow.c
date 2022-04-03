@@ -44,6 +44,11 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
     return false;
   }
 
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
   win->window = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
                                  SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 
@@ -52,10 +57,6 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
     return false;
   }
 
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   win->gc = SDL_GL_CreateContext(win->window);
   if (win->gc == NULL) {
     SM_CORE_LOG_ERROR("SDL_GL_CreateContext Error: %s", SDL_GetError());
@@ -75,8 +76,10 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
   SM_CORE_LOG_DEBUG("GL MAX_VERTEX_ATTRIBS: %d", n_attrs);
 
   // vsync enable by default
-  SDL_GL_SetSwapInterval(1);
   win->vsync = true;
+  if (SDL_GL_SetSwapInterval(win->vsync) < 0) {
+    SM_CORE_LOG_WARN("SDL_GL_SetSwapInterval Error: %s", SDL_GetError());
+  }
 
   win->width = width;
   win->height = height;
@@ -164,10 +167,6 @@ void window_do(window_s *win) {
     }
     }
   }
-
-  if (win->vsync) {
-    SDL_GL_SwapWindow(win->window);
-  }
 }
 
 void window_set_callback(window_s *win, event_callback_f callback, void *user_data) {
@@ -212,7 +211,17 @@ void window_set_vsync(window_s *win, bool vsync) {
   SM_CORE_ASSERT(win);
 
   win->vsync = vsync;
-  SDL_GL_SetSwapInterval(vsync);
+  if (SDL_GL_SetSwapInterval(win->vsync) < 0) {
+    SM_CORE_LOG_WARN("SDL_GL_SetSwapInterval Error: %s", SDL_GetError());
+  }
+}
+
+/* Swap the buffers */
+void window_swap_buffers(window_s *win) {
+
+  SM_CORE_ASSERT(win);
+
+  SDL_GL_SwapWindow(win->window);
 }
 
 void *window_get_window_raw(window_s *win) {

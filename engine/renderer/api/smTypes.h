@@ -6,6 +6,7 @@
 struct shader_s;
 struct index_buffer_s;
 struct vertex_buffer_s;
+struct texture_s;
 
 typedef enum {
   /* scalar types */

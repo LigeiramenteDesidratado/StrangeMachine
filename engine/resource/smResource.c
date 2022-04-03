@@ -1,13 +1,16 @@
 #include "smpch.h"
 
 #include "core/smCore.h"
+#include "core/smHandle.h"
 
 #include "core/data/smArray.h"
 #include "core/data/smHashTable.h"
 
 #include "core/util/smBitMask.h"
 
-#include "smResources.h"
+#include "resource/smResource.h"
+#include "resource/smTextureResourcePriv.h"
+#include "resource/smTextureResourcePub.h"
 
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "RESOURCE"
@@ -41,8 +44,7 @@ typedef struct {
 } resource_manager_s;
 
 /* globals */
-static resource_manager_s RESOURCE = {0};
-static bool IS_RESOURCE_INIT = false;
+static resource_manager_s *RESOURCE = NULL;
 
 /* supported resource types */
 static char *expected_ext = "jpeg;jpg;png;gltf;glb;obj;mtl;mp3;ogg;glsl;vert;frag;fs;vs;";
@@ -84,14 +86,14 @@ static void sm__resource_on_found(const char *path) {
   res.type = ft;
   res.status = RESOURCE_STATUS_FOUND;
 
-  SM_SH_INSERT(RESOURCE.map, path, res);
+  SM_SH_INSERT(RESOURCE->map, path, res);
 }
 
 static void sm__resource_on_delete(const char *path) {
 
   SM_ASSERT(path);
 
-  if (!SM_SH_DELETE(RESOURCE.map, path))
+  if (!SM_SH_DELETE(RESOURCE->map, path))
     SM_LOG_WARN("[%s] resource does not exist", path);
   else
     SM_LOG_DEBUG("[%s] resource deleted", path);
@@ -101,7 +103,7 @@ static void sm__resource_on_reload(const char *path) {
 
   SM_ASSERT(path);
 
-  resource_s *res = &SM_SH_GET(RESOURCE.map, path);
+  resource_s *res = &SM_SH_GET(RESOURCE->map, path);
   if (!res) {
     SM_LOG_WARN("[%s] resource not found in the map (NOT_FOUND)", path);
     return;
@@ -195,53 +197,63 @@ static void sm__resource_dir_read(const char *folder) {
 
 bool resource_init(const char *root_folder) {
 
+  SM_ASSERT(RESOURCE == NULL && "resource already initialized");
   SM_ASSERT(root_folder);
 
-  SM_ASSERT(!IS_RESOURCE_INIT && "resource manager already initialized");
+  RESOURCE = SM_CALLOC(1, sizeof(resource_manager_s));
+  SM_ASSERT(RESOURCE);
 
-  RESOURCE.root_folder = strdup(root_folder);
+  RESOURCE->root_folder = strdup(root_folder);
 
-  SM_SH_STRDUP(RESOURCE.map);
+  SM_SH_STRDUP(RESOURCE->map);
   resource_s df;
 
   df.status = RESOURCE_STATUS_NOT_FOUND;
   df.type = RESOURCE_TYPE_INVALID;
 
-  SM_SH_DEFAULT(RESOURCE.map, df);
+  SM_SH_DEFAULT(RESOURCE->map, df);
 
   /* reads the folder and loads all the files */
   /* into the resource manager */
-  sm__resource_dir_read(RESOURCE.root_folder);
+  sm__resource_dir_read(RESOURCE->root_folder);
 
   dmon_init();
-  dmon_watch(RESOURCE.root_folder, sm__watch_cb, DMON_WATCHFLAGS_RECURSIVE, NULL);
+  dmon_watch(RESOURCE->root_folder, sm__watch_cb, DMON_WATCHFLAGS_RECURSIVE, NULL);
 
-  IS_RESOURCE_INIT = true;
+  texture_res_init(32);
 
   return true;
 }
 
 void resource_teardown(void) {
 
-  SM_ASSERT(IS_RESOURCE_INIT && "resource manager not initialized");
+  SM_ASSERT(RESOURCE);
 
-  /* unload all the resources */
-  SM_SH_DTOR(RESOURCE.map);
-  free((void *)RESOURCE.root_folder); /* TODO: create sm funtion for string duplication and free */
+  texture_res_teardown();
 
   dmon_deinit();
+
+  SM_SH_DTOR(RESOURCE->map);
+
+  free((void *)RESOURCE->root_folder); /* TODO: create sm funtion for string duplication and free */
+  SM_FREE(RESOURCE);
 }
 
 resource_s *resource_get(const char *key) {
 
   SM_ASSERT(key);
 
-  char path[260];
-  snprintf(path, sizeof(path), "%s%s", RESOURCE.root_folder, key);
+  resource_s *res = NULL;
+  if (strcmp(key, RESOURCE->root_folder) == 1) {
+    res = &SM_SH_GET(RESOURCE->map, key);
+  } else {
+    char path[260];
+    snprintf(path, sizeof(path), "%s%s", RESOURCE->root_folder, key);
+    res = &SM_SH_GET(RESOURCE->map, key);
+  }
 
-  resource_s *res = &SM_SH_GET(RESOURCE.map, path);
-  if (res->status == RESOURCE_STATUS_NOT_FOUND && res->type == RESOURCE_TYPE_INVALID) {
-    SM_LOG_WARN("[%s] resource not found (NOT_FOUND)", path);
+  if (SM_MASK_CHK(res->status, RESOURCE_STATUS_NOT_FOUND) && SM_MASK_CHK(res->type, RESOURCE_TYPE_INVALID)) {
+    SM_LOG_WARN("[%s] resource not found (NOT_FOUND)", key);
     return NULL;
   }
 
@@ -262,9 +274,9 @@ const char *resource_iter_next(resource_iter_s *iter) {
 
   SM_ASSERT(iter);
 
-  while (iter->index < SM_SH_LENGTH(RESOURCE.map)) {
+  while (iter->index < SM_SH_LENGTH(RESOURCE->map)) {
 
-    resource_m res = RESOURCE.map[iter->index++];
+    resource_m res = RESOURCE->map[iter->index++];
 
     if (SM_MASK_CHK(res.value.type, iter->type) && SM_MASK_CHK(res.value.status, iter->status)) {
       return res.key;
@@ -272,6 +284,52 @@ const char *resource_iter_next(resource_iter_s *iter) {
   }
 
   return NULL;
+}
+
+texture_handler_s resource_load_texture(const char *resource) {
+
+  SM_ASSERT(resource);
+
+  resource_s *res = resource_get(resource);
+  if (!res) {
+    SM_LOG_WARN("[%s] resource not found (NOT_FOUND)", resource);
+    return (texture_handler_s){SM_INVALID_HANDLE};
+  }
+
+  SM_ASSERT(SM_MASK_CHK(res->type, RESOURCE_TYPE_IMAGE) && "resource is not a texture");
+
+  char buf[260];
+  const char *root = (strcmp(resource, RESOURCE->root_folder) == 1) ? RESOURCE->root_folder : "";
+  snprintf(buf, sizeof(buf), "%s%s", root, resource);
+
+  SM_LOG_INFO("[%s] resource found", buf);
+
+  return texture_res_new(buf);
+}
+
+void resource_set_device_reference(device_s *device) {
+
+  SM_ASSERT(device);
+  texture_res_set_device(device);
+}
+
+void resource_unset_device_reference(void) {
+
+  texture_res_set_device(NULL);
+}
+
+void resource_bind_texture(texture_handler_s handler, uint32_t tex_index) {
+
+  SM_ASSERT(handler.handle != SM_INVALID_HANDLE);
+
+  texture_res_bind(handler, tex_index);
+}
+
+void resource_unbind_texture(texture_handler_s handler, uint32_t tex_index) {
+
+  SM_ASSERT(handler.handle != SM_INVALID_HANDLE);
+
+  texture_res_unbind(handler, tex_index);
 }
 
 #undef SM_MODULE_NAME

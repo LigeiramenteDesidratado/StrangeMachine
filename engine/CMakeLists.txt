@@ -23,7 +23,8 @@ list(APPEND SM_SOURCE_FILES
 
   core/smApplication.c
   core/smWindow.c
-  #  core/smLayer.c
+  core/smPool.c
+  core/smHandle.c
   core/smStackLayer.c
   core/smKeyCode.c
 
@@ -39,10 +40,12 @@ list(APPEND SM_SOURCE_FILES
   renderer/api/GL21/smShader.c
   renderer/api/GL21/smGLUtil.c
   renderer/api/GL21/smDraw.c
+  renderer/api/GL21/smTexture.c
 
   cimgui/smCimgui.c
 
-  resources/smResources.c
+  resource/smResource.c
+  resource/smTextureResource.c
 
   event/smEvent.c
 
@@ -110,6 +113,10 @@ add_subdirectory(vendor/cimgui)
 # cglm library
 option(CGLM_STATIC "Static build" ON)
 add_subdirectory(vendor/cglm)
+
+
+# dmon
+#  add_subdirectory(vendor/dmon)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "include" ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC cglm PRIVATE assimp stdc++ cimgui SDL2 m)

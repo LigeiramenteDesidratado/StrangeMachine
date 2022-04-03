@@ -56,72 +56,74 @@ void camera_tear_down(void) {
 
 void camera_do(float dt) {
 
-  if (CAMERA.mode == THIRD_PERSON) {
+  if (input_scan_key(sm_button_left)) {
+    if (CAMERA.mode == THIRD_PERSON) {
 
-    float offset_x = input_get_x_rel_mouse();
-    float offset_y = input_get_y_rel_mouse();
+      float offset_x = input_get_x_rel_mouse();
+      float offset_y = input_get_y_rel_mouse();
 
-    if (offset_x != 0 || offset_y != 0) {
-      CAMERA.angle[0] += (offset_x * -CAMERA.sensitive * dt);
-      CAMERA.angle[1] += (offset_y * -CAMERA.sensitive * dt);
+      if (offset_x != 0 || offset_y != 0) {
+        CAMERA.angle[0] += (offset_x * -CAMERA.sensitive * dt);
+        CAMERA.angle[1] += (offset_y * -CAMERA.sensitive * dt);
 
-      if (CAMERA.angle[1] > glm_rad(CAMERA_THIRD_PERSON_MIN_CLAMP))
-        CAMERA.angle[1] = glm_rad(CAMERA_THIRD_PERSON_MIN_CLAMP);
-      else if (CAMERA.angle[1] < glm_rad(CAMERA_THIRD_PERSON_MAX_CLAMP))
-        CAMERA.angle[1] = glm_rad(CAMERA_THIRD_PERSON_MAX_CLAMP);
+        if (CAMERA.angle[1] > glm_rad(CAMERA_THIRD_PERSON_MIN_CLAMP))
+          CAMERA.angle[1] = glm_rad(CAMERA_THIRD_PERSON_MIN_CLAMP);
+        else if (CAMERA.angle[1] < glm_rad(CAMERA_THIRD_PERSON_MAX_CLAMP))
+          CAMERA.angle[1] = glm_rad(CAMERA_THIRD_PERSON_MAX_CLAMP);
+      }
+    }
+
+    if (CAMERA.mode == FREE) {
+
+      vec3 pos;
+
+      if (input_scan_key(sm_key_w)) {
+        glm_vec3_scale(CAMERA.target, CAMERA.move_speed * dt, pos);
+        glm_vec3_add(CAMERA.position, pos, CAMERA.position);
+      }
+
+      if (input_scan_key(sm_key_s)) {
+        glm_vec3_scale(CAMERA.target, CAMERA.move_speed * dt, pos);
+        glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
+      }
+
+      if (input_scan_key(sm_key_a)) {
+        glm_vec3_scale(CAMERA.right, CAMERA.move_speed * dt, pos);
+        glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
+      }
+
+      if (input_scan_key(sm_key_d)) {
+        glm_vec3_scale(CAMERA.right, CAMERA.move_speed * dt, pos);
+        glm_vec3_add(CAMERA.position, pos, CAMERA.position);
+      }
+
+      if (input_scan_key(sm_key_space)) {
+        glm_vec3_scale(CAMERA.up, CAMERA.move_speed * dt, pos);
+        glm_vec3_add(CAMERA.position, pos, CAMERA.position);
+      }
+      if (input_scan_key(sm_key_lshift)) {
+        glm_vec3_scale(CAMERA.up, CAMERA.move_speed * dt, pos);
+        glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
+      }
+
+      float offset_x = input_get_x_rel_mouse();
+      float offset_y = input_get_y_rel_mouse();
+
+      if (offset_x != 0 || offset_y != 0) {
+        CAMERA.angle[1] += offset_x * 11.3f * dt;
+        CAMERA.angle[0] -= offset_y * 11.3f * dt;
+
+        if (CAMERA.angle[0] > 80.0f)
+          CAMERA.angle[0] = 80.0f;
+        if (CAMERA.angle[0] < -80.0f)
+          CAMERA.angle[0] = -80.0f;
+
+        if (CAMERA.angle[1] > 360.0f || CAMERA.angle[1] < -360.0f)
+          CAMERA.angle[1] = 0.0f;
+      }
     }
   }
-
-  if (CAMERA.mode == FREE) {
-
-    vec3 pos;
-
-    if (input_scan_key(sm_key_w)) {
-      glm_vec3_scale(CAMERA.target, CAMERA.move_speed * dt, pos);
-      glm_vec3_add(CAMERA.position, pos, CAMERA.position);
-    }
-
-    if (input_scan_key(sm_key_s)) {
-      glm_vec3_scale(CAMERA.target, CAMERA.move_speed * dt, pos);
-      glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
-    }
-
-    if (input_scan_key(sm_key_a)) {
-      glm_vec3_scale(CAMERA.right, CAMERA.move_speed * dt, pos);
-      glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
-    }
-
-    if (input_scan_key(sm_key_d)) {
-      glm_vec3_scale(CAMERA.right, CAMERA.move_speed * dt, pos);
-      glm_vec3_add(CAMERA.position, pos, CAMERA.position);
-    }
-
-    if (input_scan_key(sm_key_space)) {
-      glm_vec3_scale(CAMERA.up, CAMERA.move_speed * dt, pos);
-      glm_vec3_add(CAMERA.position, pos, CAMERA.position);
-    }
-    if (input_scan_key(sm_key_lshift)) {
-      glm_vec3_scale(CAMERA.up, CAMERA.move_speed * dt, pos);
-      glm_vec3_sub(CAMERA.position, pos, CAMERA.position);
-    }
-
-    float offset_x = input_get_x_rel_mouse();
-    float offset_y = input_get_y_rel_mouse();
-
-    if (offset_x != 0 || offset_y != 0) {
-      CAMERA.angle[1] += offset_x * 11.3f * dt;
-      CAMERA.angle[0] -= offset_y * 11.3f * dt;
-
-      if (CAMERA.angle[0] > 80.0f)
-        CAMERA.angle[0] = 80.0f;
-      if (CAMERA.angle[0] < -80.0f)
-        CAMERA.angle[0] = -80.0f;
-
-      if (CAMERA.angle[1] > 360.0f || CAMERA.angle[1] < -360.0f)
-        CAMERA.angle[1] = 0.0f;
-    }
-  }
-
+  /* if (input_scan_key(sm_button_left)) */
   camera_update_vectors(dt);
 }
 
