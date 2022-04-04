@@ -1,4 +1,5 @@
 ![Alt text](StrangeMachineLogo.png?raw=true "SM Logo")
+
 This is a early-stage game engine for creating ps1 like games
 
 # TODO
