@@ -1,9 +1,10 @@
 #include "smpch.h"
 
 #include "core/smCore.h"
+#include "core/smHandle.h"
+#include "core/smPool.h"
 
 #include "core/data/smArray.h"
-#include "core/smPool.h"
 
 #include "renderer/api/smTypes.h"
 #include "renderer/smDevicePub.h"
@@ -52,6 +53,8 @@ bool texture_res_init(size_t capacity) {
   SM_ARRAY_SET_SIZE(TEXTURE_RESOURCE->textures, capacity);
   memset(TEXTURE_RESOURCE->textures, 0x0, sizeof(texture_s) * capacity);
 
+  stbi_set_flip_vertically_on_load(true); /* tell stb_image.h to flip loaded texture's on the y-axis. */
+
   return true;
 }
 
@@ -66,6 +69,10 @@ void texture_res_teardown(void) {
     if (texture->cpu_data) {
       stbi_image_free(texture->cpu_data);
       texture->cpu_data = NULL;
+    }
+    if (texture->gpu_data) {
+      TEXTURE_RESOURCE->device_reference->texture_dtor(texture->gpu_data);
+      texture->gpu_data = NULL;
     }
   }
 
@@ -86,26 +93,25 @@ texture_handler_s texture_res_new(const char *file) {
 
   uint32_t handle = handle_new(TEXTURE_RESOURCE->handle_pool);
   if (handle == SM_INVALID_HANDLE) {
-    SM_LOG_ERROR("failed to add texture");
+    SM_LOG_ERROR("failed to create texture handle");
     return (texture_handler_s){SM_INVALID_HANDLE};
   }
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[sm_handle_index(handle)];
 
-  int32_t width, height, channels;
-  stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-  uint8_t *data = stbi_load(file, &width, &height, &channels, 4);
-  if (data == NULL) {
-    SM_LOG_ERROR("[%s] failed to load image", file);
+  int32_t width, height, channels, ok;
+  ok = stbi_info(file, &width, &height, &channels);
+  if (!ok) {
+    SM_LOG_ERROR("[%s] failed to load image from disk", file);
+    handle_del(TEXTURE_RESOURCE->handle_pool, handle);
     return (texture_handler_s){SM_INVALID_HANDLE};
   }
-  SM_LOG_INFO("[%s] image successfully loaded", file);
+  SM_LOG_INFO("[%s] (%dx%d:%d) image successfully loaded", file, width, height, channels);
 
   texture->name = strdup(file);
   texture->width = width;
   texture->height = height;
   texture->channels = channels;
-  texture->cpu_data = data;
 
   return (texture_handler_s){handle};
 }
@@ -226,7 +232,7 @@ bool texture_res_has_gpu_data(texture_handler_s handler) {
   return texture->gpu_data != NULL;
 }
 
-bool texture_res_gpu_load_data(texture_handler_s handler) {
+bool texture_res_load_gpu_data(texture_handler_s handler) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
@@ -241,8 +247,9 @@ bool texture_res_gpu_load_data(texture_handler_s handler) {
     return true;
 
   if (!texture->cpu_data) {
-    SM_LOG_ERROR("[%s] texture has no data", texture->name);
-    return false;
+    texture_res_load_cpu_data(handler);
+    if (!texture->cpu_data)
+      return false;
   }
 
   struct texture_s *gpu_texture = TEXTURE_RESOURCE->device_reference->texture_new();
@@ -258,6 +265,36 @@ bool texture_res_gpu_load_data(texture_handler_s handler) {
   return true;
 }
 
+void texture_res_load_cpu_data(texture_handler_s handler) {
+
+  SM_ASSERT(TEXTURE_RESOURCE);
+  SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
+
+  uint32_t index = sm_handle_index(handler.handle);
+  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+
+  texture_s *texture = &TEXTURE_RESOURCE->textures[index];
+
+  if (texture->cpu_data) {
+    SM_LOG_WARN("[%s] texture already has cpu data", texture->name);
+    return;
+  }
+
+  int32_t width, height, channels;
+  uint8_t *data = stbi_load(texture->name, &width, &height, &channels, 4);
+  if (data == NULL) {
+    SM_LOG_ERROR("[%s] failed to load texture", texture->name);
+    return;
+  }
+
+  texture->width = width;
+  texture->height = height;
+  texture->channels = channels;
+  texture->cpu_data = data;
+
+  SM_LOG_INFO("[%s] texture successfully loaded from disk to main memory", texture->name);
+}
+
 void texture_res_bind(texture_handler_s handler, uint32_t tex_index) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
@@ -269,7 +306,7 @@ void texture_res_bind(texture_handler_s handler, uint32_t tex_index) {
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
 
   if (!texture->gpu_data) {
-    if (!texture_res_gpu_load_data(handler)) {
+    if (!texture_res_load_gpu_data(handler)) {
       SM_LOG_ERROR("[%s] failed to load texture to GPU", texture->name);
       return;
     }

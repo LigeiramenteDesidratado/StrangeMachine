@@ -298,8 +298,11 @@ texture_handler_s resource_load_texture(const char *resource) {
 
   SM_ASSERT(SM_MASK_CHK(res->type, RESOURCE_TYPE_IMAGE) && "resource is not a texture");
 
-  char buf[260];
-  const char *root = (strcmp(resource, RESOURCE->root_folder) == 1) ? RESOURCE->root_folder : "";
+  char buf[512];
+  const char *root = "";
+  if (strcmp(resource, RESOURCE->root_folder) == 1)
+    root = RESOURCE->root_folder;
+
   snprintf(buf, sizeof(buf), "%s%s", root, resource);
 
   SM_LOG_INFO("[%s] resource found", buf);
