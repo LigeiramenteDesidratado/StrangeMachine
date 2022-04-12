@@ -9,12 +9,29 @@
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "UTIL_STRING"
 
-bool sm__string_compare(const char *a, const char *b) {
+int32_t sm__string_compare(const char *a, const char *b) {
 
   SM_CORE_ASSERT(a);
   SM_CORE_ASSERT(b);
 
-  return strcmp(a, b) == 0;
+  uint8_t c1, c2;
+
+  do {
+    c1 = (uint8_t)*a++;
+    c2 = (uint8_t)*b++;
+    if (c1 == '\0')
+      return c1 - c2;
+  } while (c1 == c2);
+
+  return c1 - c2;
+}
+
+bool sm__string_eq(const char *a, const char *b) {
+
+  SM_CORE_ASSERT(a);
+  SM_CORE_ASSERT(b);
+
+  return sm__string_compare(a, b) == 0;
 }
 
 const char **sm__string_split(const char *str, char delim) {

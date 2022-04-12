@@ -27,7 +27,7 @@ bool sm__file_has_ext(const char *file, const char *suffix) {
   const char **split = SM_STRING_SPLIT(suffix, ';');
   for (size_t i = 0; i < SM_ARRAY_SIZE(split); i++) {
 
-    if (!result && SM_STRING_COMPARE(split[i], ext)) {
+    if (!result && SM_STRING_EQ(split[i], ext)) {
       result = true;
     }
 
