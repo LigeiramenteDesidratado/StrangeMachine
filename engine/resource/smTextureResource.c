@@ -29,10 +29,10 @@ typedef struct texture_resource_s {
 
   struct handle_pool_s *handle_pool;
   texture_s *textures;
-  const device_s *device_reference; /* TODO: renderer context */
 
 } texture_resource_s;
 
+/* Globals */
 texture_resource_s *TEXTURE_RESOURCE = NULL;
 
 bool texture_res_init(size_t capacity) {
@@ -71,7 +71,7 @@ void texture_res_teardown(void) {
       texture->cpu_data = NULL;
     }
     if (texture->gpu_data) {
-      TEXTURE_RESOURCE->device_reference->texture_dtor(texture->gpu_data);
+      DEVICE->texture_dtor(texture->gpu_data);
       texture->gpu_data = NULL;
     }
   }
@@ -99,7 +99,7 @@ texture_handler_s texture_res_new(const char *file) {
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[sm_handle_index(handle)];
 
-  int32_t width, height, channels, ok;
+  int32_t width, height, channels, ok = 0;
   ok = stbi_info(file, &width, &height, &channels);
   if (!ok) {
     SM_LOG_ERROR("[%s] failed to load image from disk", file);
@@ -121,8 +121,8 @@ void texture_res_dtor(texture_handler_s handler) {
   SM_ASSERT(TEXTURE_RESOURCE);
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
+  texture_res_unload_gpu_data(handler);
   texture_res_unload_cpu_data(handler);
-  /* texture_unload_gpu_data(handler, device); */
   handle_del(TEXTURE_RESOURCE->handle_pool, handler.handle);
 }
 
@@ -191,7 +191,6 @@ void texture_res_unload_gpu_data(texture_handler_s handler) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
-  SM_ASSERT(TEXTURE_RESOURCE->device_reference && "device reference not set");
 
   uint32_t index = sm_handle_index(handler.handle);
   SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
@@ -202,7 +201,7 @@ void texture_res_unload_gpu_data(texture_handler_s handler) {
     return;
   }
 
-  TEXTURE_RESOURCE->device_reference->texture_dtor(texture->gpu_data);
+  DEVICE->texture_dtor(texture->gpu_data);
   texture->gpu_data = NULL;
 }
 
@@ -236,7 +235,6 @@ bool texture_res_load_gpu_data(texture_handler_s handler) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
-  SM_ASSERT(TEXTURE_RESOURCE->device_reference && "device reference not set");
 
   uint32_t index = sm_handle_index(handler.handle);
   SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
@@ -252,9 +250,8 @@ bool texture_res_load_gpu_data(texture_handler_s handler) {
       return false;
   }
 
-  struct texture_s *gpu_texture = TEXTURE_RESOURCE->device_reference->texture_new();
-  if (!TEXTURE_RESOURCE->device_reference->texture_ctor(gpu_texture, texture->width, texture->height,
-                                                        texture->cpu_data)) {
+  struct texture_s *gpu_texture = DEVICE->texture_new();
+  if (!DEVICE->texture_ctor(gpu_texture, texture->width, texture->height, texture->cpu_data)) {
     SM_LOG_ERROR("[%s] failed to upload texture to GPU", texture->name);
     return false;
   }
@@ -312,13 +309,12 @@ void texture_res_bind(texture_handler_s handler, uint32_t tex_index) {
     }
   }
 
-  TEXTURE_RESOURCE->device_reference->texture_bind(texture->gpu_data, tex_index);
+  DEVICE->texture_bind(texture->gpu_data, tex_index);
 }
 
 void texture_res_unbind(texture_handler_s handler, uint32_t tex_index) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
-  SM_ASSERT(TEXTURE_RESOURCE->device_reference && "device reference not set");
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
@@ -326,14 +322,7 @@ void texture_res_unbind(texture_handler_s handler, uint32_t tex_index) {
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
 
-  TEXTURE_RESOURCE->device_reference->texture_unbind(texture->gpu_data, tex_index);
-}
-
-void texture_res_set_device(const device_s *device) {
-
-  SM_ASSERT(TEXTURE_RESOURCE);
-
-  TEXTURE_RESOURCE->device_reference = device;
+  DEVICE->texture_unbind(texture->gpu_data, tex_index);
 }
 
 #undef SM_MODULE_NAME

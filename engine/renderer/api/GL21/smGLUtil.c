@@ -9,7 +9,8 @@
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "GL21"
 
-static const char *GL21error_to_string(GLenum error) {
+SM_PRIVATE
+const char *GL21error_to_string(GLenum error) {
   switch (error) {
   case GL_NO_ERROR:
     return "GL_NO_ERROR";

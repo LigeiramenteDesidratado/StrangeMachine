@@ -53,8 +53,6 @@ resource_iter_s resource_iter_new(resource_type_e type, resource_status_e status
 const char *resource_iter_next(resource_iter_s *iter);
 void resource_iter_free(resource_iter_s *iter);
 
-void resource_set_device_reference(device_s *device);
 texture_handler_s resource_load_texture(const char *resource);
-void resource_unset_device_reference(void);
 
 #endif /* SM_RESOURCES_H */

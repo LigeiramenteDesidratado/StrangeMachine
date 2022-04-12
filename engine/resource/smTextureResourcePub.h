@@ -24,7 +24,7 @@ bool texture_res_has_gpu_data(texture_handler_s handler);
 bool texture_res_load_gpu_data(texture_handler_s handler);
 void texture_res_load_cpu_data(texture_handler_s handler);
 
-void texture_res_set_device(const device_s *device);
+void texture_res_unload_data(texture_handler_s handler);
 
 void texture_res_bind(texture_handler_s handler, uint32_t tex_index);
 void texture_res_unbind(texture_handler_s handler, uint32_t tex_index);

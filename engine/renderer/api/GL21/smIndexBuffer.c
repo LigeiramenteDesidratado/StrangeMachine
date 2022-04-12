@@ -38,6 +38,8 @@ bool GL21index_buffer_ctor(index_buffer_s *index_buffer, buffer_desc_s *desc) {
   index_buffer->buffer_size = desc->buffer_size;
   index_buffer->is_dynamic = desc->dynamic;
 
+  glCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
   return true;
 }
 

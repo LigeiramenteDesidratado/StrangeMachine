@@ -69,6 +69,7 @@ bool application_ctor(application_s *app, const char *name) {
 
   window_set_callback(app->window, application_on_event, app);
 
+  device_init(OPENGL21);
 
   app->cimgui = cimgui_new();
   if (!cimgui_ctor(app->cimgui, app->window)) {

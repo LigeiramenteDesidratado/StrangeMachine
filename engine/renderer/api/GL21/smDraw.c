@@ -5,6 +5,11 @@
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "GL21"
 
+void GL21init(void) {
+  gladLoadGL();
+  SM_LOG_INFO("GL21 initialized");
+}
+
 void GL21clear_color(float r, float g, float b, float a) {
 
   glCall(glClearColor(r, g, b, a));
@@ -12,10 +17,11 @@ void GL21clear_color(float r, float g, float b, float a) {
 
 void GL21clear(void) {
 
-  glCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+  /* Depois de 4 dias de debugging, finalmente posso morrer em paz. */
+  glCall(glClear(GL_COLOR_BUFFER_BIT));
 }
 
-void GL21set_viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+void GL21_viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
 
   glCall(glViewport(x, y, width, height));
 }

@@ -61,6 +61,7 @@ bool GL21shader_ctor(shader_s *shader, const char *vertex_shader, const char *fr
   }
 
   if (!shader_link(shader->program, vert, frag)) {
+    SM_LOG_ERROR("Failed to link shader program");
     glCall(glDeleteProgram(shader->program));
     return false;
   }

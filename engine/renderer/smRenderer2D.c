@@ -35,21 +35,15 @@ struct {
 
 } __stats = {0, 0, 0, 0};
 
-typedef union {
-  struct {
-    vec3 position;
-    vec4 color;
-    vec2 tex_coord;
-    float tex_id;
-  };
-
-  float data[10];
+typedef struct vertex_s {
+  vec3 position;
+  vec4 color;
+  vec2 tex_coord;
+  float tex_id;
 
 } vertex_s;
 
-typedef struct {
-
-  device_s device;
+typedef struct renderer2D_s {
 
   struct index_buffer_s *EBO;  /* element buffer object */
   struct vertex_buffer_s *VBO; /* vertex buffer object */
@@ -59,7 +53,7 @@ typedef struct {
   const size_t max_vertices;
   const size_t max_indices;
 
-  vertex_s *vertices;
+  const vertex_s *vertices;
   vertex_s *__vertex_buffer;
 
   size_t index_count;
@@ -78,9 +72,9 @@ renderer2D_s *renderer2D_new(void) {
   return renderer;
 }
 
-bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
+SM_PRIVATE enum { POSITION_LOC = 0, COLOR_LOC = 1, TEX_COORD_LOC = 2, TEX_ID_LOC = 3, MAX_LOCS } sm__rederer2D_loc_e;
 
-  SM_ASSERT(device == OPENGL21 && "Only OpenGL 2.1 is supported for now");
+bool renderer2D_ctor(renderer2D_s *renderer) {
 
   size_t max_quads = 1024;             /* TODO: make this configurable */
   size_t max_vertices = max_quads * 4; /* each quad is 4 vertices */
@@ -92,22 +86,19 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
 
   renderer->vertices = SM_CALLOC(1, sizeof(vertex_s) * renderer->max_vertices);
 
-  if (!device_ctor(&renderer->device, device))
-    return false;
-
   attribute_loc_desc_s attribute_loc[4] = {
-      {.name = "position", .location = 0},
-      {.name = "color", .location = 1},
-      {.name = "tex_coord", .location = 2},
-      {.name = "tex_id", .location = 3},
+      {.name = "position", .location = POSITION_LOC},
+      {.name = "color", .location = COLOR_LOC},
+      {.name = "tex_coord", .location = TEX_COORD_LOC},
+      {.name = "tex_id", .location = TEX_ID_LOC},
   };
 
-  renderer->program = renderer->device.shader_new();
-  if (!renderer->device.shader_ctor(renderer->program, "engine/glsl/renderer2D.vs", "engine/glsl/renderer2D.fs",
-                                    attribute_loc, 4)) {
+  renderer->program = DEVICE->shader_new();
+  if (!DEVICE->shader_ctor(renderer->program, "engine/glsl/renderer2D.vs", "engine/glsl/renderer2D.fs", attribute_loc,
+                           4)) {
     return false;
   }
-  renderer->device.shader_bind(renderer->program);
+  DEVICE->shader_bind(renderer->program);
 
   buffer_desc_s vbo_desc = {
       .dynamic = true,
@@ -115,34 +106,34 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
       .data = NULL,
   };
 
-  renderer->VBO = renderer->device.vertex_buffer_new();
-  if (!renderer->device.vertex_buffer_ctor(renderer->VBO, &vbo_desc))
+  renderer->VBO = DEVICE->vertex_buffer_new();
+  if (!DEVICE->vertex_buffer_ctor(renderer->VBO, &vbo_desc))
     return false;
 
   attribute_desc_s attr_desc[4] = {
       {
-          .index = 0,
+          .index = POSITION_LOC,
           .size = sizeof(vec3) / sizeof(float),
           .type = 0x1406, /* GL_FLOAT */
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, position),
       },
       {
-          .index = 1,
+          .index = COLOR_LOC,
           .size = sizeof(vec4) / sizeof(float),
           .type = 0x1406, /* GL_FLOAT */
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, color),
       },
       {
-          .index = 2,
+          .index = TEX_COORD_LOC,
           .size = sizeof(vec2) / sizeof(float),
           .type = 0x1406, /* GL_FLOAT */
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, tex_coord),
       },
       {
-          .index = 3,
+          .index = TEX_ID_LOC,
           .size = sizeof(float) / sizeof(float),
           .type = 0x1406, /* GL_FLOAT */
           .stride = sizeof(vertex_s),
@@ -150,24 +141,24 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
       },
   };
 
-  renderer->device.vertex_buffer_set_pointer(renderer->VBO, attr_desc, 4);
+  DEVICE->vertex_buffer_set_pointer(renderer->VBO, attr_desc, 4);
 
   int32_t val = 0;
-  renderer->device.shader_set_uniform(renderer->program, "u_tex0", &val, SM_INT);
+  DEVICE->shader_set_uniform(renderer->program, "u_tex0", &val, SM_INT);
   val++;
-  renderer->device.shader_set_uniform(renderer->program, "u_tex1", &val, SM_INT);
+  DEVICE->shader_set_uniform(renderer->program, "u_tex1", &val, SM_INT);
   val++;
-  renderer->device.shader_set_uniform(renderer->program, "u_tex2", &val, SM_INT);
+  DEVICE->shader_set_uniform(renderer->program, "u_tex2", &val, SM_INT);
   val++;
-  renderer->device.shader_set_uniform(renderer->program, "u_tex3", &val, SM_INT);
+  DEVICE->shader_set_uniform(renderer->program, "u_tex3", &val, SM_INT);
   val++;
-  renderer->device.shader_set_uniform(renderer->program, "u_tex4", &val, SM_INT);
+  DEVICE->shader_set_uniform(renderer->program, "u_tex4", &val, SM_INT);
   val++;
-  renderer->device.shader_set_uniform(renderer->program, "u_tex5", &val, SM_INT);
+  DEVICE->shader_set_uniform(renderer->program, "u_tex5", &val, SM_INT);
   val++;
-  renderer->device.shader_set_uniform(renderer->program, "u_tex6", &val, SM_INT);
+  DEVICE->shader_set_uniform(renderer->program, "u_tex6", &val, SM_INT);
   val++;
-  renderer->device.shader_set_uniform(renderer->program, "u_tex7", &val, SM_INT);
+  DEVICE->shader_set_uniform(renderer->program, "u_tex7", &val, SM_INT);
 
   uint32_t indices[renderer->max_indices];
   uint32_t offset = 0;
@@ -190,14 +181,14 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
       .data = indices,
   };
 
-  renderer->EBO = renderer->device.index_buffer_new();
-  if (!renderer->device.index_buffer_ctor(renderer->EBO, &ebo_desc))
+  renderer->EBO = DEVICE->index_buffer_new();
+  if (!DEVICE->index_buffer_ctor(renderer->EBO, &ebo_desc))
     return false;
 
   camera_init(vec3_new(0.0f, 3.0f, 8.0f), vec3_new(0.0f, 2.0f, 0.0f), vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON,
               ORTHOGONAL);
 
-  renderer->device.shader_unbind(renderer->program);
+  DEVICE->shader_unbind(renderer->program);
 
   return true;
 }
@@ -205,12 +196,12 @@ bool renderer2D_ctor(renderer2D_s *renderer, device_api_e device) {
 void renderer2D_dtor(renderer2D_s *renderer) {
 
   camera_tear_down();
-  renderer->device.index_buffer_dtor(renderer->EBO);
-  renderer->device.vertex_buffer_dtor(renderer->VBO);
-  renderer->device.shader_dtor(renderer->program);
+  DEVICE->index_buffer_dtor(renderer->EBO);
+  DEVICE->vertex_buffer_dtor(renderer->VBO);
+  DEVICE->shader_dtor(renderer->program);
 
   SM_FREE(renderer->indices);
-  SM_FREE(renderer->vertices);
+  SM_FREE((vertex_s *)renderer->vertices);
   SM_FREE(renderer);
 }
 
@@ -277,32 +268,27 @@ void renderer2D_flush(renderer2D_s *renderer) {
     return;
 
   uint32_t data_size = (uint32_t)((uint8_t *)renderer->__vertex_buffer - (uint8_t *)renderer->vertices);
+  DEVICE->vertex_buffer_set_data(renderer->VBO, renderer->vertices, data_size);
 
-  /* renderer->api.vertex_buffer_set_data(renderer->VBO, renderer->vertices, renderer->vertex_count * sizeof(vertex_s));
-   */
-  renderer->device.vertex_buffer_set_data(renderer->VBO, renderer->vertices, data_size);
+  DEVICE->shader_bind(renderer->program);
 
-  renderer->device.shader_bind(renderer->program);
-
-  for (uint8_t i = 0; i < renderer->texture_size; ++i) {
-    /* renderer->api.texture_bind(renderer->textures[i], i); */
+  for (uint8_t i = 0; i < renderer->texture_size; ++i)
     texture_res_bind(renderer->textures[i], i);
-  }
 
-  renderer->device.vertex_buffer_bind(renderer->VBO);
-  renderer->device.index_buffer_bind(renderer->EBO);
+  SM_PRIVATE uint32_t locations[MAX_LOCS] = {POSITION_LOC, COLOR_LOC, TEX_COORD_LOC, TEX_ID_LOC};
 
-  renderer->device.draw_indexed(renderer->index_count);
+  DEVICE->vertex_buffer_bind(renderer->VBO, locations, MAX_LOCS);
+  DEVICE->index_buffer_bind(renderer->EBO);
 
-  renderer->device.index_buffer_unbind(renderer->EBO);
-  renderer->device.vertex_buffer_unbind(renderer->VBO);
+  DEVICE->draw_indexed(renderer->index_count);
 
-  for (uint8_t i = 0; i < renderer->texture_size; ++i) {
-    /* renderer->api.texture_unbind(renderer->textures[i], i); */
+  DEVICE->index_buffer_unbind(renderer->EBO);
+  DEVICE->vertex_buffer_unbind(renderer->VBO, locations, MAX_LOCS);
+
+  for (uint8_t i = 0; i < renderer->texture_size; ++i)
     texture_res_unbind(renderer->textures[i], i);
-  }
 
-  renderer->device.shader_unbind(renderer->program);
+  DEVICE->shader_unbind(renderer->program);
 
   __stats.draw_call_count++;
 }
@@ -312,24 +298,24 @@ void renderer2D_start_batch(renderer2D_s *renderer) {
   SM_ASSERT(renderer);
 
   renderer->index_count = 0;
-  renderer->__vertex_buffer = renderer->vertices;
+  renderer->texture_size = 0;
+  renderer->__vertex_buffer = (vertex_s *)renderer->vertices;
 }
 
 void renderer2D_begin(renderer2D_s *renderer) {
 
   SM_ASSERT(renderer);
 
-  resource_set_device_reference(&renderer->device);
-
   mat4 view, proj;
   camera_get_view(view);
   camera_get_projection_matrix(800 / (float)600, proj);
 
-  renderer->device.shader_bind(renderer->program);
+  DEVICE->shader_bind(renderer->program);
 
-  renderer->device.shader_set_uniform(renderer->program, "u_view", view, SM_MAT4);
-  renderer->device.shader_set_uniform(renderer->program, "u_projection", proj, SM_MAT4);
-  renderer->device.shader_unbind(renderer->program);
+  DEVICE->shader_set_uniform(renderer->program, "u_view", view, SM_MAT4);
+  DEVICE->shader_set_uniform(renderer->program, "u_projection", proj, SM_MAT4);
+
+  DEVICE->shader_unbind(renderer->program);
 
   renderer2D_start_batch(renderer);
 }
@@ -339,8 +325,6 @@ void renderer2D_end(renderer2D_s *renderer) {
   SM_ASSERT(renderer);
 
   renderer2D_flush(renderer);
-
-  resource_unset_device_reference();
 
   __stats.previous_cc = __stats.draw_call_count;
   __stats.previous_qc = __stats.quad_count;
