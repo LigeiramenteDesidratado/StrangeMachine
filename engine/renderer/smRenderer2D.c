@@ -17,18 +17,18 @@
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "RENDERER2D"
 
-#define DRAW_VERTEX_COLOR 0.0f
-#define DRAW_VERTEX_TEX0  1.0f
-#define DRAW_VERTEX_TEX1  2.0f
-#define DRAW_VERTEX_TEX2  3.0f
-#define DRAW_VERTEX_TEX3  4.0f
-#define DRAW_VERTEX_TEX4  5.0f
-#define DRAW_VERTEX_TEX5  6.0f
-#define DRAW_VERTEX_TEX6  7.0f
-#define DRAW_VERTEX_TEX7  8.0f
-#define MAX_TEXTURES      8
+#define SM_DRAW_VERTEX_COLOR 0.0f
+#define SM_DRAW_VERTEX_TEX0  1.0f
+#define SM_DRAW_VERTEX_TEX1  2.0f
+#define SM_DRAW_VERTEX_TEX2  3.0f
+#define SM_DRAW_VERTEX_TEX3  4.0f
+#define SM_DRAW_VERTEX_TEX4  5.0f
+#define SM_DRAW_VERTEX_TEX5  6.0f
+#define SM_DRAW_VERTEX_TEX6  7.0f
+#define SM_DRAW_VERTEX_TEX7  8.0f
+#define SM_MAX_TEXTURES      8
 
-struct {
+struct sm__stats {
 
   uint32_t draw_call_count, previous_cc;
   uint32_t quad_count, previous_qc;
@@ -60,9 +60,23 @@ typedef struct renderer2D_s {
   uint32_t *indices;
 
   uint8_t texture_size;
-  texture_handler_s textures[MAX_TEXTURES];
+  texture_handler_s textures[SM_MAX_TEXTURES];
 
 } renderer2D_s;
+
+/* private functions */
+SM_PRIVATE
+vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id);
+SM_PRIVATE
+void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
+                                  float deg_angle);
+
+/* public functions */
+void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color);
+void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float deg_angle);
+void renderer2D_draw_sprite(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler);
+void renderer2D_draw_sprite_rotated(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler,
+                                    float deg_angle);
 
 renderer2D_s *renderer2D_new(void) {
 
@@ -205,61 +219,6 @@ void renderer2D_dtor(renderer2D_s *renderer) {
   SM_FREE(renderer);
 }
 
-void renderer2D_set_clear_color(renderer2D_s *renderer, vec4 color) {
-
-  SM_ASSERT(renderer);
-
-  renderer->device.clear_color(color[0], color[1], color[2], color[3]);
-}
-
-void renderer2D_clear(renderer2D_s *renderer) {
-
-  SM_ASSERT(renderer);
-
-  renderer->device.clear();
-}
-
-void renderer2D_set_viewport(renderer2D_s *renderer, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-
-  SM_ASSERT(renderer);
-
-  renderer->device.set_viewport(x, y, width, height);
-}
-
-vertex_s *new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id) {
-
-  vertex_s v1;
-  glm_vec3_copy(vec3_new(position[0], position[1], 0.0f), v1.position);
-  glm_vec4_copy(color, v1.color);
-  glm_vec2_copy(vec2_new(0.0f, 0.0f), v1.tex_coord);
-  v1.tex_id = tex_id;
-
-  vertex_s v2;
-  glm_vec3_copy(vec3_new(size[0] + position[0], position[1], 0.0f), v2.position);
-  glm_vec4_copy(color, v2.color);
-  glm_vec2_copy(vec2_new(1.0f, 0.0f), v2.tex_coord);
-  v2.tex_id = tex_id;
-
-  vertex_s v3;
-  glm_vec3_copy(vec3_new(size[0] + position[0], size[1] + position[1], 0.0f), v3.position);
-  glm_vec4_copy(color, v3.color);
-  glm_vec2_copy(vec2_new(1.0f, 1.0f), v3.tex_coord);
-  v3.tex_id = tex_id;
-
-  vertex_s v4;
-  glm_vec3_copy(vec3_new(position[0], size[1] + position[1], 0.0f), v4.position);
-  glm_vec4_copy(color, v4.color);
-  glm_vec2_copy(vec2_new(0.0f, 1.0f), v4.tex_coord);
-  v4.tex_id = tex_id;
-
-  quad[0] = v1;
-  quad[1] = v2;
-  quad[2] = v3;
-  quad[3] = v4;
-
-  return quad + 4;
-}
-
 void renderer2D_flush(renderer2D_s *renderer) {
 
   SM_ASSERT(renderer);
@@ -334,69 +293,27 @@ void renderer2D_end(renderer2D_s *renderer) {
 
 #define QUAD_SIZE 4
 
-void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id) {
+void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color) {
 
-  /* check if this new quad will not exceed the vertex buffer */
-  if (renderer->index_count + 6 > renderer->max_indices) {
-    renderer2D_flush(renderer);
-    renderer2D_start_batch(renderer);
-  }
-  renderer->__vertex_buffer = new_quad(renderer->__vertex_buffer, position, size, color, tex_id);
-  renderer->index_count += 6;
-  __stats.quad_count++;
+  sm__renderer2D_draw_quad_pro(renderer, position, size, color, SM_DRAW_VERTEX_COLOR, 0.0f);
+}
+
+void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float deg_angle) {
+
+  sm__renderer2D_draw_quad_pro(renderer, position, size, color, SM_DRAW_VERTEX_COLOR, deg_angle);
 }
 
 void renderer2D_draw_sprite(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler) {
 
-  SM_UNUSED(renderer);
-  SM_UNUSED(position);
-  SM_UNUSED(size);
-
-  /* check if this new quad will not exceed the vertex buffer */
-  if (renderer->index_count + 6 > renderer->max_indices) {
-    renderer2D_flush(renderer);
-    renderer2D_start_batch(renderer);
-  }
-
-  float tex_id = 0.0f;
-
-  for (uint8_t i = 0; i < MAX_TEXTURES; ++i) {
-    if (handler.handle == renderer->textures[i].handle) {
-      tex_id = (float)i + 1;
-      break;
-    }
-  }
-
-  if (tex_id == 0.0f) {
-    renderer->textures[renderer->texture_size] = handler;
-    renderer->texture_size++; /* TODO: check array overflow and batch it */
-    tex_id = renderer->texture_size;
-  }
-
-  renderer->__vertex_buffer = new_quad(renderer->__vertex_buffer, position, size, SM_RED_COLOR, tex_id);
-  renderer->index_count += 6;
-  __stats.quad_count++;
+  renderer2D_draw_sprite_rotated(renderer, position, size, handler, 0.0f);
 }
-
-void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
-                                  float deg_angle);
 
 void renderer2D_draw_sprite_rotated(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler,
                                     float deg_angle) {
 
-  SM_UNUSED(renderer);
-  SM_UNUSED(position);
-  SM_UNUSED(size);
-
-  /* check if this new quad will not exceed the vertex buffer */
-  if (renderer->index_count + 6 > renderer->max_indices) {
-    renderer2D_flush(renderer);
-    renderer2D_start_batch(renderer);
-  }
-
   float tex_id = 0.0f;
 
-  for (uint8_t i = 0; i < MAX_TEXTURES; ++i) {
+  for (uint8_t i = 0; i < renderer->texture_size; ++i) {
     if (handler.handle == renderer->textures[i].handle) {
       tex_id = (float)i + 1;
       break;
@@ -409,29 +326,82 @@ void renderer2D_draw_sprite_rotated(renderer2D_s *renderer, vec2 position, vec2 
     tex_id = renderer->texture_size;
   }
 
-  renderer2D_draw_quad_rotated(renderer, position, size, SM_RED_COLOR, tex_id, deg_angle);
-
-  /* renderer->__vertex_buffer = new_quad(renderer->__vertex_buffer, position, size, SM_RED_COLOR, tex_id); */
-  /* renderer->index_count += 6; */
-  /* __stats.quad_count++; */
+  sm__renderer2D_draw_quad_pro(renderer, position, size, SM_RED_COLOR, tex_id, deg_angle);
 }
 
-void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
+void renderer2D_set_clear_color(renderer2D_s *renderer, vec4 color) {
+
+  SM_ASSERT(renderer);
+
+  DEVICE->clear_color(color[0], color[1], color[2], color[3]);
+}
+
+void renderer2D_clear(renderer2D_s *renderer) {
+
+  SM_ASSERT(renderer);
+
+  DEVICE->clear();
+}
+
+void renderer2D_set_viewport(renderer2D_s *renderer, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+
+  SM_ASSERT(renderer);
+
+  DEVICE->set_viewport(x, y, width, height);
+}
+
+SM_PRIVATE
+vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id) {
+
+  /* vertex_s v1; */
+  glm_vec3_copy(vec3_new(position[0], position[1], 0.0f), quad[0].position);
+  glm_vec4_ucopy(color, quad[0].color);
+  glm_vec2_copy(vec2_new(0.0f, 0.0f), quad[0].tex_coord);
+  quad[0].tex_id = tex_id;
+
+  /* vertex_s v2; */
+  glm_vec3_copy(vec3_new(size[0] + position[0], position[1], 0.0f), quad[1].position);
+  glm_vec4_ucopy(color, quad[1].color);
+  glm_vec2_copy(vec2_new(1.0f, 0.0f), quad[1].tex_coord);
+  quad[1].tex_id = tex_id;
+
+  /* vertex_s v3; */
+  glm_vec3_copy(vec3_new(size[0] + position[0], size[1] + position[1], 0.0f), quad[2].position);
+  glm_vec4_ucopy(color, quad[2].color);
+  glm_vec2_copy(vec2_new(1.0f, 1.0f), quad[2].tex_coord);
+  quad[2].tex_id = tex_id;
+
+  /* vertex_s v4; */
+  glm_vec3_copy(vec3_new(position[0], size[1] + position[1], 0.0f), quad[3].position);
+  glm_vec4_ucopy(color, quad[3].color);
+  glm_vec2_copy(vec2_new(0.0f, 1.0f), quad[3].tex_coord);
+  quad[3].tex_id = tex_id;
+
+  /* quad[0] = v1; */
+  /* quad[1] = v2; */
+  /* quad[2] = v3; */
+  /* quad[3] = v4; */
+
+  return quad + 4;
+}
+
+SM_PRIVATE
+void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
                                   float deg_angle) {
 
   SM_ASSERT(renderer);
 
   /* check if this new quad will not exceed the vertex buffer */
   if (renderer->index_count + 6 > renderer->max_indices) {
+    /* in case of overflow, flush the current batch */
     renderer2D_flush(renderer);
+    /* and start a new batch */
     renderer2D_start_batch(renderer);
   }
 
   if (deg_angle == 0.0f || deg_angle == 360.0f) {
-    renderer->__vertex_buffer = new_quad(renderer->__vertex_buffer, position, size, color, tex_id);
-    renderer->index_count += 6;
-    __stats.quad_count++;
-    return;
+    renderer->__vertex_buffer = sm__renderer2D_new_quad(renderer->__vertex_buffer, position, size, color, tex_id);
+    goto increment;
   }
 
   vec3 center = {position[0] + size[0] * 0.5f, position[1] + size[1] * 0.5f, 0.0f};
@@ -466,6 +436,8 @@ void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 si
   }
 
   renderer->__vertex_buffer += QUAD_SIZE;
+
+increment:
   renderer->index_count += 6;
   __stats.quad_count++;
 }

@@ -11,7 +11,7 @@ struct renderer2D_s;
 
 struct renderer2D_s *renderer2D_new(void);
 
-bool renderer2D_ctor(struct renderer2D_s *renderer, device_api_e device);
+bool renderer2D_ctor(struct renderer2D_s *renderer);
 void renderer2D_dtor(struct renderer2D_s *renderer);
 void renderer2D_begin(struct renderer2D_s *renderer);
 void renderer2D_end(struct renderer2D_s *renderer);
@@ -19,9 +19,8 @@ void renderer2D_end(struct renderer2D_s *renderer);
 void renderer2D_clear(struct renderer2D_s *renderer);
 void renderer2D_set_clear_color(struct renderer2D_s *renderer, vec4 color);
 
-void renderer2D_draw_quad(struct renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id);
-void renderer2D_draw_quad_rotated(struct renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
-                                  float deg_angle);
+void renderer2D_draw_quad(struct renderer2D_s *renderer, vec2 position, vec2 size, vec4 color);
+void renderer2D_draw_quad_rotated(struct renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float deg_angle);
 void renderer2D_draw_sprite(struct renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler);
 void renderer2D_draw_sprite_rotated(struct renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler,
                                     float deg_angle);
