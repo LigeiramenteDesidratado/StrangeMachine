@@ -7,5 +7,7 @@ record.txt
 .deps
 *.diff
 .ccls-cache/
+vgcore.*
+*.trace
 compile_commands.json
 build/
