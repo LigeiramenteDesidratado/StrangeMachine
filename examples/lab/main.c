@@ -12,27 +12,30 @@
 #include "math/smMath.h"
 #include "renderer/smRenderer2D.h"
 #include "resource/smResource.h"
+#include "resource/smTextureResourcePub.h"
 #include "smInput.h"
 #include "util/colors.h"
 
 typedef struct {
 
-  layer_s *layer;
+  struct layer_s *layer;
   struct renderer2D_s *renderer;
 
   int draw_quads;
+  vec2 size;
+  float space_between;
   bool rotate;
   float angle_rad;
   vec4 color;
 
-  int selected;
+  size_t selected;
   texture_handler_s *textures;
 
 } lab_s;
 
 static void SimpleOverlay(bool *p_open) {
   static int corner = 0;
-  ImGuiIO *io = igGetIO();
+
   ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
                                   ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
                                   ImGuiWindowFlags_NoNav;
@@ -49,14 +52,11 @@ static void SimpleOverlay(bool *p_open) {
     igSetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
     window_flags |= ImGuiWindowFlags_NoMove;
   }
+
   igSetNextWindowBgAlpha(0.35f); // Transparent background
   if (igBegin("Example: Simple overlay", p_open, window_flags)) {
     igText("Quad Count: %d", renderer2D_stats_get_quad_count());
     igText("Draw Calls: %d", renderer2D_stats_get_draw_call_count());
-    /* if (igIsMousePosValid()) */
-    /* igText("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y); */
-    /* else */
-    /* igText("Mouse Position: <invalid>"); */
   }
   igEnd();
 }
@@ -66,10 +66,10 @@ void on_attach(void *user_data) {
   assert(user_data);
 
   lab_s *lab = (lab_s *)user_data;
-  glm_vec4_copy(SM_MAIN_COLOR_1, lab->color);
+  glm_vec4_ucopy(SM_MAIN_COLOR_1, lab->color);
 
   lab->renderer = renderer2D_new();
-  if (!renderer2D_ctor(lab->renderer, OPENGL21))
+  if (!renderer2D_ctor(lab->renderer))
     exit(EXIT_FAILURE);
 
   resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL);
@@ -79,6 +79,8 @@ void on_attach(void *user_data) {
     SM_ARRAY_PUSH(lab->textures, texture);
   }
 
+  glm_vec2_one(lab->size);
+  lab->space_between = 0.5f;
   lab->selected = 0;
 }
 
@@ -88,17 +90,19 @@ void on_detach(void *user_data) {
 
   lab_s *lab = (lab_s *)user_data;
 
-  SM_ARRAY_DTOR(lab->textures);
+  for (size_t i = 0; i < SM_ARRAY_SIZE(lab->textures); ++i) {
+    texture_res_dtor(lab->textures[i]);
+  }
 
-  /* texture_dtor(lab->texture); */
+  SM_ARRAY_DTOR(lab->textures);
 
   renderer2D_dtor(lab->renderer);
 }
 
 void on_update(void *user_data, float dt) {
 
-  /* printf("on_update\n"); */
   assert(user_data);
+  (void)dt;
 
   lab_s *lab = (lab_s *)user_data;
 
@@ -107,34 +111,27 @@ void on_update(void *user_data, float dt) {
 
   renderer2D_begin(lab->renderer);
 
-  /* printf("selected: %d\n", lab->selected); */
+  texture_handler_s th = (SM_ARRAY_SIZE(lab->textures)) ? lab->textures[lab->selected] : (texture_handler_s){0};
 
-  for (size_t i = 0; i < lab->draw_quads; ++i) {
+  for (int i = 0; i < lab->draw_quads; ++i) {
 
     if (lab->rotate)
-      renderer2D_draw_sprite_rotated(lab->renderer, vec2_new((i * 0.6) + -1.0f, 0.0f), vec2_new(0.5, 0.5f),
-                                     lab->textures[lab->selected], glm_deg(lab->angle_rad * i));
+      renderer2D_draw_sprite_rotated(lab->renderer, vec2_new((i * lab->space_between) + -1.0f, 0.0f), lab->size, th,
+                                     glm_deg(lab->angle_rad * i));
     else
-      /* renderer2D_draw_quad(lab->renderer, vec2_new((i * 0.6) + -1.0f, 0.0f), vec2_new(0.5, 0.5f), lab->color, 0.0f);
-       */
-      renderer2D_draw_sprite(lab->renderer, vec2_new((i * 0.6) + -1.0f, 0.0f), vec2_new(0.5, 0.5f),
-                             lab->textures[lab->selected]);
+      renderer2D_draw_sprite(lab->renderer, vec2_new((i * lab->space_between) + -1.0f, 0.0f), lab->size, th);
+  }
+
+  if (lab->draw_quads) {
+    renderer2D_draw_quad(lab->renderer, vec2_new(0, 0), vec2_new(1.0f, 1.0f), lab->color);
+    renderer2D_draw_quad_rotated(lab->renderer, vec2_new(1, 0), vec2_new(1.0f, 1.0f), lab->color,
+                                 glm_deg(lab->angle_rad));
+    renderer2D_draw_sprite(lab->renderer, vec2_new(0, 1), vec2_new(1.0f, 1.0f), lab->textures[0]);
+    renderer2D_draw_sprite_rotated(lab->renderer, vec2_new(1, 1), vec2_new(1.0f, 1.0f), lab->textures[0],
+                                   glm_deg(lab->angle_rad));
   }
 
   renderer2D_end(lab->renderer);
-
-  // renderer2D_draw_quad(lab->renderer, vec2_new(-1.0, -1.0f), vec2_new(1.0, 1.0f), GREEN, 0.0f);
-  // renderer2D_draw_quad(lab->renderer, vec2_new(0.0, 0.0f), vec2_new(1.0, 1.0f), BLACK, 0.0f);
-  // renderer2D_draw_quad(lab->renderer, vec2_new(0.5, -1.5f), vec2_new(1.0, 1.0f), NAVY, 0.0f);
-  // renderer2D_draw_quad(lab->renderer, vec2_new(-1.5, 0.5f), vec2_new(1.0, 1.0f), MAROON, 0.0f);
-
-  // static float deg_ang = 0;
-  // deg_ang += dt * 45;
-  // renderer2D_draw_quad_rotated(lab->renderer, vec2_new(-1.0, -1.0f), vec2_new(0.5, 0.5f), YELLOW, 5.0f, 45 -
-  // deg_ang); renderer2D_draw_quad_rotated(lab->renderer, vec2_new(0.0, 0.0f), vec2_new(1.0, 1.0f), BLUE, 0.0f, 90 -
-  // deg_ang); renderer2D_draw_quad_rotated(lab->renderer, vec2_new(0.5, -1.5f), vec2_new(1.0, 1.0f), FUCHSIA, 0.0f, 180
-  // - deg_ang); renderer2D_draw_quad_rotated(lab->renderer, vec2_new(-1.5, 0.5f), vec2_new(1.0, 1.0f), PURPLE, 0.0f,
-  // deg_ang);
 }
 
 bool on_event(event_s *event, void *user_data) {
@@ -164,6 +161,8 @@ void on_gui(void *user_data) {
   if (show_demo_window)
     igShowDemoWindow(&show_demo_window);
 
+  igBegin("Settings", &show_demo_window, 0);
+
   igSliderInt("Draw quads", &lab->draw_quads, 0, 1025, NULL, 0);
   igCheckbox("Rotate", &lab->rotate);
   igSliderAngle("Angle", &lab->angle_rad, 0.0f, 360.0f, NULL, 0);
@@ -171,16 +170,33 @@ void on_gui(void *user_data) {
   igSeparator();
 
   if (igTreeNode_Str("Assets")) {
-    resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL);
-    const char *name = NULL;
-    while ((name = resource_iter_next(&iter))) {
 
-      if (igSelectable_Bool(name, lab->selected + 1 == iter.index, 0, (ImVec2){0, 0}))
-        lab->selected = iter.index - 1;
+    for (size_t i = 0; i < SM_ARRAY_SIZE(lab->textures); ++i) {
+
+      const char *name = texture_res_get_name(lab->textures[i]);
+
+      if (igSelectable_Bool(name, lab->selected == i, 0, (ImVec2){0, 0}))
+        lab->selected = i;
+
+      igSameLine(300, -1);
+      igText("%d", lab->textures[i].handle);
     }
 
+    /*   resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL); */
+    /*   const char *name = NULL; */
+    /*   while ((name = resource_iter_next(&iter))) { */
+    /**/
+    /*     if (igSelectable_Bool(name, lab->selected + 1 == iter.index, 0, (ImVec2){0, 0})) */
+    /*       lab->selected = iter.index - 1; */
+    /**/
+    /*     igSameLine(300, -1); */
+    /*     igText("3,456 bytes"); */
+    /*   } */
+    /**/
     igTreePop();
   }
+
+  igEnd();
 
   static bool show_overlay = true;
   if (show_overlay)
@@ -198,15 +214,10 @@ int main(void) {
 
   lab->draw_quads = 4;
 
-  layer_s *layer = calloc(1, sizeof(layer_s));
-  layer->name = "lab";
-  layer->user_data = lab;
-  layer->on_attach = on_attach;
-  layer->on_detach = on_detach;
-  layer->on_update = on_update;
-  layer->on_event = on_event;
-  layer->on_gui = on_gui;
-
+  struct layer_s *layer = layer_new();
+  if (!layer_ctor(layer, "lab", lab, on_attach, on_detach, on_update, on_gui, on_event)) {
+    exit(EXIT_FAILURE);
+  }
   lab->layer = layer;
 
   application_push_layer(app, layer);
@@ -214,7 +225,6 @@ int main(void) {
   application_do(app);
 
   application_dtor(app);
-  free(layer);
   free(lab);
 
   return EXIT_SUCCESS;
