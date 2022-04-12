@@ -1,9 +1,11 @@
 #include "smpch.h"
 
-#include "smAssert.h"
-#include "smMem.h"
-#include "smStackLayer.h"
-#include "smWindow.h"
+#include "core/smAssert.h"
+#include "core/smMem.h"
+#include "core/smStackLayer.h"
+#include "core/smWindow.h"
+
+#include "core/util/smBitMask.h"
 
 #include "smCamera.h"
 
@@ -24,12 +26,12 @@ static void sm_at_exit(void) {
 }
 #endif
 
-typedef struct {
+typedef struct application_s {
 
   struct window_s *window;
   struct stack_layer_s *stack;
 
-  cimgui_s cimgui;
+  cimgui_s *cimgui;
 
   bool is_running;
 
@@ -53,7 +55,7 @@ application_s *application_new(void) {
 
 bool application_on_event(event_s *event, void *user_data);
 bool application_on_window_close(event_s *event, void *user_data);
-void application_push_overlay(application_s *app, layer_s *layer);
+void application_push_overlay(application_s *app, struct layer_s *layer);
 
 bool application_ctor(application_s *app, const char *name) {
 
@@ -70,25 +72,29 @@ bool application_ctor(application_s *app, const char *name) {
 
   window_set_callback(window, application_on_event, app);
 
+  app->cimgui = cimgui_new();
+  if (!cimgui_ctor(app->cimgui, app->window)) {
+    SM_CORE_LOG_ERROR("failed to initialize cimgui");
+    return false;
+  }
+
+  input_init();
+  resource_init("assets/");
+
   struct stack_layer_s *stack = stack_layer_new();
   if (!stack_layer_ctor(stack)) {
     SM_CORE_LOG_ERROR("failed to initialize stack layer");
     return false;
   }
   app->stack = stack;
-  app->is_running = true;
 
-  input_init();
-  resource_init("assets/");
-
-  if (!cimgui_ctor(&app->cimgui, window)) {
-    SM_CORE_LOG_ERROR("failed to initialize cimgui");
-    return false;
-  }
-  application_push_overlay(app, &app->cimgui);
+  application_push_overlay(app, app->cimgui);
 
   event_category_e mask = SM_CATEGORY_WINDOW;
   event_set_print_mask(mask);
+
+  app->delta = 0.0;
+  app->is_running = true;
 
   return true;
 }
@@ -97,11 +103,15 @@ void application_dtor(application_s *app) {
 
   SM_CORE_ASSERT(app);
 
+  stack_layer_dtor(app->stack);
+
+  cimgui_dtor(app->cimgui);
+
   resource_teardown();
 
   input_tear_down();
 
-  stack_layer_dtor(app->stack);
+  device_teardown();
 
   window_dtor(app->window);
 
@@ -126,19 +136,22 @@ bool application_on_event(event_s *event, void *user_data) {
   /* TODO: move input handling to input layer */
   /* this is a hack to get the input working */
 
-  event_dispatch_categories(event, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE, app->cimgui.on_event,
-                            app->cimgui.user_data);
+  /* event_dispatch_categories(event, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE, app->cimgui.on_event, */
+  /*                           app->cimgui.user_data); */
+
+  if (SM_MASK_CHK(event->category, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE)) {
+    event->handled |= layer_event(app->cimgui, event);
+  }
+
   if (!event->handled)
     event_dispatch_categories(event, SM_CATEGORY_KEYBOARD | SM_CATEGORY_MOUSE, input_on_event, NULL);
 
   size_t stack_size = stack_layer_get_size(app->stack);
   for (size_t i = stack_size; i > 0; i--) {
-    layer_s *layer = stack_layer_get_layer(app->stack, i - 1);
+    struct layer_s *layer = stack_layer_get_layer(app->stack, i - 1);
     if (event->handled)
       break;
-    if (layer->on_event) {
-      event->handled = layer->on_event(event, layer->user_data);
-    }
+    layer_event(layer, event);
   }
 
   return event->handled;
@@ -181,41 +194,19 @@ void application_do(application_s *app) {
 
     size_t stack_size = stack_layer_get_size(app->stack);
     for (size_t i = 0; i < stack_size; ++i) {
-      layer_s *layer = stack_layer_get_layer(app->stack, i);
-      if (layer->on_update) {
-
-        layer->on_update(layer->user_data, app->delta);
-      }
+      struct layer_s *layer = stack_layer_get_layer(app->stack, i);
+      layer_update(layer, app->delta);
     }
 
-    cimgui_begin(&app->cimgui);
+    cimgui_begin(app->cimgui);
 
     stack_size = stack_layer_get_size(app->stack);
     for (size_t i = 0; i < stack_size; ++i) {
-      layer_s *layer = stack_layer_get_layer(app->stack, i);
-      if (layer->on_gui) {
-        layer->on_gui(layer->user_data);
-      }
+      struct layer_s *layer = stack_layer_get_layer(app->stack, i);
+      layer_gui(layer);
     }
 
-    igText("FPS: %f", app->elapsed);
-
-    cimgui_end(&app->cimgui);
-
-    // if (input_scan_key(sm_key_f)) {
-    //   resource_s *r = resource_get("images/test.png");
-    //   if (r) {
-    //     SM_CORE_LOG_INFO("resource found: %s", "images/test.png");
-    //   } else {
-    //     SM_CORE_LOG_INFO("resource not found: %s", "images/test.png");
-    //   }
-    // }
-
-    // resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL);
-    // const char *name = NULL;
-    // while ((name = resource_iter_next(&iter))) {
-    //   SM_CORE_LOG_INFO("%s", name);
-    // }
+    cimgui_end(app->cimgui);
 
     window_swap_buffers(app->window);
 
@@ -223,9 +214,9 @@ void application_do(application_s *app) {
 
     Uint64 end = SDL_GetPerformanceCounter();
 
-    app->delta = (end - start) / (double)SDL_GetPerformanceFrequency();
+    app->delta = (end - (double)start) / SDL_GetPerformanceFrequency();
 
-    if (--f == 0) {
+    if (--f <= 0) {
       app->elapsed = (1.0 / app->delta);
       f = 12;
     }
@@ -250,23 +241,22 @@ bool application_on_window_close(event_s *event, void *user_data) {
   return true;
 }
 
-void application_push_layer(application_s *app, layer_s *layer) {
+void application_push_layer(application_s *app, struct layer_s *layer) {
 
   SM_CORE_ASSERT(app);
   SM_CORE_ASSERT(layer);
 
   stack_layer_push(app->stack, layer);
-  if (layer->on_attach)
-    layer->on_attach(layer->user_data);
+  layer_attach(layer);
 }
 
-void application_push_overlay(application_s *app, layer_s *layer) {
+void application_push_overlay(application_s *app, struct layer_s *layer) {
 
   SM_CORE_ASSERT(app);
   SM_CORE_ASSERT(layer);
 
   stack_layer_push_overlay(app->stack, layer);
-  if (layer->on_attach)
-    layer->on_attach(layer->user_data);
+  layer_attach(layer);
 }
+
 #undef SM_MODULE_NAME

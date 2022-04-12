@@ -19,8 +19,8 @@ void application_dtor(struct application_s *app);
 /* Application main loop */
 void application_do(struct application_s *app);
 
-void application_push_layer(struct application_s *app, layer_s *layer);
-void application_push_overlay(struct application_s *app, layer_s *layer);
+void application_push_layer(struct application_s *app, struct layer_s *layer);
+void application_push_overlay(struct application_s *app, struct layer_s *layer);
 double aplication_get_fps(struct application_s *app);
 
 #endif /* SM_APPLICATION_H */
