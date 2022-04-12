@@ -16,8 +16,9 @@
 #define SM_MODULE_NAME "WINDOW"
 
 typedef struct {
-  SDL_Window *window;
-  SDL_GLContext gc;
+
+  SDL_Window *raw_window;
+  SDL_GLContext raw_context;
   uint32_t width, height;
   bool vsync;
 
@@ -39,7 +40,7 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
   SM_CORE_ASSERT(win);
   SM_CORE_ASSERT(name);
 
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     SM_CORE_LOG_ERROR("SDL_Init Error: %s", SDL_GetError());
     return false;
   }
@@ -49,21 +50,26 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-  win->window = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
-                                 SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+  win->raw_window = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
+                                     SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
 
-  if (win->window == NULL) {
+  if (win->raw_window == NULL) {
     SM_CORE_LOG_ERROR("SDL_CreateWindow Error: %s", SDL_GetError());
     return false;
   }
 
-  win->gc = SDL_GL_CreateContext(win->window);
-  if (win->gc == NULL) {
+  win->raw_context = SDL_GL_CreateContext(win->raw_window);
+  if (win->raw_context == NULL) {
     SM_CORE_LOG_ERROR("SDL_GL_CreateContext Error: %s", SDL_GetError());
     return false;
   }
 
   /* TODO: LOAD OPENGL FUNCTIONS PROPERLY */
+  if (SDL_GL_MakeCurrent(win->raw_window, win->raw_context) != 0) {
+    SM_CORE_LOG_ERROR("SDL_GL_MakeCurrent Error: %s", SDL_GetError());
+    return false;
+  }
+  gladLoadGL();
   if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
     SM_CORE_LOG_ERROR("failed to initialize OpengGL ctx: %s\n", SDL_GetError());
     return false;
@@ -84,6 +90,8 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
   win->width = width;
   win->height = height;
 
+  SM_LOG_INFO("Window created: %s", name);
+
   return true;
 }
 
@@ -91,8 +99,8 @@ void window_dtor(window_s *win) {
 
   SM_CORE_ASSERT(win);
 
-  SDL_GL_DeleteContext(win->gc);
-  SDL_DestroyWindow(win->window);
+  SDL_GL_DeleteContext(win->raw_context);
+  SDL_DestroyWindow(win->raw_window);
   SDL_Quit();
 
   SM_FREE(win);
@@ -221,20 +229,20 @@ void window_swap_buffers(window_s *win) {
 
   SM_CORE_ASSERT(win);
 
-  SDL_GL_SwapWindow(win->window);
+  SDL_GL_SwapWindow(win->raw_window);
 }
 
 void *window_get_window_raw(window_s *win) {
 
   SM_CORE_ASSERT(win);
 
-  return win->window;
+  return win->raw_window;
 }
 
 void *window_get_context_raw(window_s *win) {
 
   SM_CORE_ASSERT(win);
 
-  return win->gc;
+  return win->raw_context;
 }
 #undef SM_MODULE_NAME

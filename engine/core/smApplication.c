@@ -61,16 +61,14 @@ bool application_ctor(application_s *app, const char *name) {
 
   SM_CORE_ASSERT(app);
 
-  struct window_s *window = window_new();
-  if (!window_ctor(window, name, 800, 600)) {
+  app->window = window_new();
+  if (!window_ctor(app->window, name, 800, 600)) {
     SM_CORE_LOG_ERROR("failed to initialize window");
     return false;
   }
-  app->window = window;
 
-  app->delta = 0.0;
+  window_set_callback(app->window, application_on_event, app);
 
-  window_set_callback(window, application_on_event, app);
 
   app->cimgui = cimgui_new();
   if (!cimgui_ctor(app->cimgui, app->window)) {
