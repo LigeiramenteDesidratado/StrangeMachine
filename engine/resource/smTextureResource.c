@@ -116,6 +116,23 @@ texture_handler_s texture_res_new(const char *file) {
   return (texture_handler_s){handle};
 }
 
+/*
+ * Unload texture from GPU and CPU memory
+ * but keep the handle in the handle pool
+ */
+void texture_res_unload_data(texture_handler_s handler) {
+
+  SM_ASSERT(TEXTURE_RESOURCE);
+  SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
+
+  texture_res_unload_gpu_data(handler);
+  texture_res_unload_cpu_data(handler);
+}
+
+/*
+ * Unload texture from GPU and CPU memory
+ * and remove the handle from the handle pool
+ */
 void texture_res_dtor(texture_handler_s handler) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
@@ -174,6 +191,10 @@ const char *texture_res_get_name(texture_handler_s handler) {
   return texture->name;
 }
 
+/*
+ * Unload texture from CPU memory only
+ * but keep the handle in the handle pool
+ */
 void texture_res_unload_cpu_data(texture_handler_s handler) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
@@ -186,6 +207,11 @@ void texture_res_unload_cpu_data(texture_handler_s handler) {
   stbi_image_free(texture->cpu_data);
   texture->cpu_data = NULL;
 }
+
+/*
+ * Unload texture from GPU memory only
+ * but keep the handle in the handle pool
+ */
 
 void texture_res_unload_gpu_data(texture_handler_s handler) {
 
@@ -231,6 +257,9 @@ bool texture_res_has_gpu_data(texture_handler_s handler) {
   return texture->gpu_data != NULL;
 }
 
+/*
+ * Load texture into GPU memory
+ */
 bool texture_res_load_gpu_data(texture_handler_s handler) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
@@ -262,6 +291,9 @@ bool texture_res_load_gpu_data(texture_handler_s handler) {
   return true;
 }
 
+/*
+ * Load texture into CPU memory
+ */
 void texture_res_load_cpu_data(texture_handler_s handler) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
