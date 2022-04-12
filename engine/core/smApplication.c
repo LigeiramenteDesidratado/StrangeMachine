@@ -157,7 +157,7 @@ bool application_on_event(event_s *event, void *user_data) {
   return event->handled;
 }
 
-void application_cap_frame_rate(long *then, float *remainder) {
+void sm__application_cap_frame_rate(long *then, float *remainder) {
   long wait, frameTime;
   wait = (long int)(16 + *remainder);
 
@@ -210,7 +210,7 @@ void application_do(application_s *app) {
 
     window_swap_buffers(app->window);
 
-    application_cap_frame_rate(&then, &remainder);
+    sm__application_cap_frame_rate(&then, &remainder);
 
     Uint64 end = SDL_GetPerformanceCounter();
 

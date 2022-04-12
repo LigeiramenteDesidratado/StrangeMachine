@@ -24,6 +24,7 @@
 #else
 
   #define SM_ASSERT(...)
+  #define SM_CORE_ASSERT(...)
 
 #endif
 

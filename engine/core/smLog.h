@@ -26,19 +26,19 @@
 
 #else
 
-  #define SM_LOG_TRACE(...) (void *)0
-  #define SM_LOG_DEBUG(...) (void *)0
-  #define SM_LOG_INFO(...)  (void *)0
-  #define SM_LOG_WARN(...)  (void *)0
-  #define SM_LOG_ERROR(...) (void *)0
-  #define SM_LOG_FATAL(...) (void *)0
+  #define SM_LOG_TRACE(...)
+  #define SM_LOG_DEBUG(...)
+  #define SM_LOG_INFO(...)
+  #define SM_LOG_WARN(...)
+  #define SM_LOG_ERROR(...)
+  #define SM_LOG_FATAL(...)
 
-  #define SM_CORE_LOG_TRACE(...) (void *)0
-  #define SM_CORE_LOG_DEBUG(...) (void *)0
-  #define SM_CORE_LOG_INFO(...)  (void *)0
-  #define SM_CORE_LOG_WARN(...)  (void *)0
-  #define SM_CORE_LOG_ERROR(...) (void *)0
-  #define SM_CORE_LOG_FATAL(...) (void *)0
+  #define SM_CORE_LOG_TRACE(...)
+  #define SM_CORE_LOG_DEBUG(...)
+  #define SM_CORE_LOG_INFO(...)
+  #define SM_CORE_LOG_WARN(...)
+  #define SM_CORE_LOG_ERROR(...)
+  #define SM_CORE_LOG_FATAL(...)
 
 #endif
 
