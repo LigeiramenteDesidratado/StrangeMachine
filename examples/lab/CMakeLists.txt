@@ -9,6 +9,5 @@ add_executable(${PROJECT_NAME} main.c)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/engine/)
-message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC StrangeMachineEngine dl)

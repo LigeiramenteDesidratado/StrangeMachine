@@ -20,6 +20,7 @@ list(APPEND SM_SOURCE_FILES
   core/smPool.c
   core/smHandle.c
   core/smStackLayer.c
+  core/smLayer.c
   core/smKeyCode.c
 
   core/util/smString.c

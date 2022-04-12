@@ -13,15 +13,24 @@ static void sm__cimgui_on_detach(void *user_data);
 static bool sm__cimgui_on_event(event_s *event, void *user_data);
 static void sm__set_dark_theme_colors();
 
+cimgui_s *cimgui_new(void) {
+
+  return layer_new();
+}
+
 bool cimgui_ctor(cimgui_s *cimgui, struct window_s *window) {
 
-  cimgui->name = "cimgui";
-  cimgui->user_data = window;
-  cimgui->on_attach = sm__cimgui_on_attach;
-  cimgui->on_detach = sm__cimgui_on_detach;
-  cimgui->on_event = sm__cimgui_on_event;
+  SM_ASSERT(cimgui);
 
-  return true;
+  return layer_ctor(cimgui, "CImGui", window, sm__cimgui_on_attach, sm__cimgui_on_detach, NULL, NULL,
+                    sm__cimgui_on_event);
+}
+
+void cimgui_dtor(cimgui_s *cimgui) {
+
+  SM_ASSERT(cimgui);
+
+  layer_dtor(cimgui);
 }
 
 static void sm__cimgui_on_attach(void *user_data) {
@@ -30,16 +39,20 @@ static void sm__cimgui_on_attach(void *user_data) {
 
   struct window_s *window = user_data;
 
-  ImGuiContext *im_ctx = igCreateContext(NULL);
-  SM_UNUSED(im_ctx);
-
-  ImGuiIO *io = igGetIO();
-  SM_UNUSED(io);
+  igCreateContext(NULL);
 
   SDL_Window *raw_win = window_get_window_raw(window);
-  SDL_GLContext *raw_ctx = window_get_context_raw(window);
+  void *raw_ctx = window_get_context_raw(window);
 
   sm__set_dark_theme_colors();
+
+  ImGuiIO *io = igGetIO();
+  io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  // ioptr->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+#ifdef IMGUI_HAS_DOCK
+  io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
+  io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+#endif
 
   ImGui_ImplSDL2_InitForOpenGL(raw_win, raw_ctx);
   ImGui_ImplOpenGL2_Init();
