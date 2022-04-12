@@ -8,6 +8,5 @@ add_subdirectory(engine)
 if (BUILD_EXAMPLES)
   #  add_subdirectory(examples/terror-em-sl)
   add_subdirectory(examples/lab)
-  # Temporary
-  file(COPY ps1.png  goth.png  goth.glb  plane.obj  plane.mtl DESTINATION .)
+  add_subdirectory(examples/debug)
 endif()
