@@ -6,16 +6,10 @@ find_package(SDL2 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
-endif()
-
 message(STATUS "${PROJECT_NAME}:")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
-message(STATUS "C flags, Debug configuration: ${CMAKE_C_FLAGS_DEBUG}")
-message(STATUS "C flags, Release configuration: ${CMAKE_C_FLAGS_RELEASE}")
-message(STATUS "PROJECT_NAME: " ${PROJECT_NAME})
-message(STATUS "LIBRARY_NAME: " ${LIBRARY_NAME})
+message(STATUS "Debug cfg: ${CMAKE_C_FLAGS_DEBUG}")
+message(STATUS "Release cfg: ${CMAKE_C_FLAGS_RELEASE}")
 
 set(SM_SOURCE_FILES)
 
@@ -96,10 +90,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_USE_COLOR)
 target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:Debug>:SM_DEBUG>")
 
 
-target_compile_options(${PROJECT_NAME} PRIVATE -fPIC -Wall)
-if(NOT WIN32)
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wextra -Wpedantic)
-endif()
+# target_compile_flags(${PROJECT_NAME} PRIVATE SM_FLAGS)
 
 
 # cimgui library
