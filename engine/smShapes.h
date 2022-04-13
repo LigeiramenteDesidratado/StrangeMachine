@@ -1,7 +1,7 @@
 #ifndef SM_SHAPES_H
 #define SM_SHAPES_H
 
-#include <stdbool.h>
+#include "smpch.h"
 
 #include "math/smMath.h"
 
