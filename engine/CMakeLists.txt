@@ -23,6 +23,9 @@ list(APPEND SM_SOURCE_FILES
   core/smLayer.c
   core/smKeyCode.c
 
+  core/thread/smThread.c
+  core/thread/synchronization/smMutex.c
+
   core/util/smString.c
   core/util/smFile.c
   core/util/smDir.c

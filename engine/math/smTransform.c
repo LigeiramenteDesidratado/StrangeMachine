@@ -1,7 +1,14 @@
-#include "math/smTransform.h"
+#include "smpch.h"
+
 #include "cglm/quat.h"
+#include "cglm/vec3.h"
 #include "cglm/vec4.h"
-#include "util/common.h"
+
+#include "math/smMath.h"
+
+#include "core/smCore.h"
+
+#include "math/smTransform.h"
 #include <math.h>
 
 void quat_mul_vec3(versor q, vec3 v, vec3 out) {
