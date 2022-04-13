@@ -43,6 +43,8 @@ void GL21texture_dtor(texture_s *texture) {
   SM_ASSERT(texture != NULL);
 
   glCall(glDeleteTextures(1, &texture->texture));
+
+  SM_FREE(texture);
 }
 
 void GL21texture_bind(texture_s const *texture, uint32_t tex_index) {
