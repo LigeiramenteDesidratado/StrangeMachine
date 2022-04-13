@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "core/data/smArray.h"
-
 #include "cimgui/smCimguiImpl.h"
 #include "core/smApplication.h"
 #include "core/smKeyCode.h"
@@ -29,7 +27,7 @@ typedef struct {
   vec4 color;
 
   size_t selected;
-  texture_handler_s *textures;
+  texture_handler_s selected_texture;
 
 } lab_s;
 
@@ -75,8 +73,9 @@ void on_attach(void *user_data) {
   resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL);
   const char *name = NULL;
   while ((name = resource_iter_next(&iter))) {
-    texture_handler_s texture = resource_load_texture(name);
-    SM_ARRAY_PUSH(lab->textures, texture);
+    lab->selected_texture = resource_load_texture(name);
+    if (lab->selected_texture.handle)
+      break;
   }
 
   glm_vec2_one(lab->size);
@@ -90,11 +89,11 @@ void on_detach(void *user_data) {
 
   lab_s *lab = (lab_s *)user_data;
 
-  for (size_t i = 0; i < SM_ARRAY_SIZE(lab->textures); ++i) {
-    texture_res_dtor(lab->textures[i]);
-  }
+  /* for (size_t i = 0; i < lab->texture_count; ++i) { */
+  /*   texture_res_dtor(lab->textures[i]); */
+  /* } */
 
-  SM_ARRAY_DTOR(lab->textures);
+  /* free(lab->textures); */
 
   renderer2D_dtor(lab->renderer);
 }
@@ -111,24 +110,25 @@ void on_update(void *user_data, float dt) {
 
   renderer2D_begin(lab->renderer);
 
-  texture_handler_s th = (SM_ARRAY_SIZE(lab->textures)) ? lab->textures[lab->selected] : (texture_handler_s){0};
+  /* texture_handler_s th = (lab->texture_count) ? lab->textures[lab->selected] : (texture_handler_s){0}; */
 
   for (int i = 0; i < lab->draw_quads; ++i) {
 
     if (lab->rotate)
-      renderer2D_draw_sprite_rotated(lab->renderer, vec2_new((i * lab->space_between) + -1.0f, 0.0f), lab->size, th,
-                                     glm_deg(lab->angle_rad * i));
+      renderer2D_draw_sprite_rotated(lab->renderer, vec2_new((i * lab->space_between) + -1.0f, 0.0f), lab->size,
+                                     lab->selected_texture, glm_deg(lab->angle_rad * i));
     else
-      renderer2D_draw_sprite(lab->renderer, vec2_new((i * lab->space_between) + -1.0f, 0.0f), lab->size, th);
+      renderer2D_draw_sprite(lab->renderer, vec2_new((i * lab->space_between) + -1.0f, 0.0f), lab->size,
+                             lab->selected_texture);
   }
 
   if (lab->draw_quads) {
     renderer2D_draw_quad(lab->renderer, vec2_new(0, 0), vec2_new(1.0f, 1.0f), lab->color);
     renderer2D_draw_quad_rotated(lab->renderer, vec2_new(1, 0), vec2_new(1.0f, 1.0f), lab->color,
                                  glm_deg(lab->angle_rad));
-    renderer2D_draw_sprite(lab->renderer, vec2_new(0, 1), vec2_new(1.0f, 1.0f), lab->textures[0]);
-    renderer2D_draw_sprite_rotated(lab->renderer, vec2_new(1, 1), vec2_new(1.0f, 1.0f), lab->textures[0],
-                                   glm_deg(lab->angle_rad));
+    /* renderer2D_draw_sprite(lab->renderer, vec2_new(0, 1), vec2_new(1.0f, 1.0f), lab->textures[0]); */
+    /* renderer2D_draw_sprite_rotated(lab->renderer, vec2_new(1, 1), vec2_new(1.0f, 1.0f), lab->textures[0], */
+    /*                                glm_deg(lab->angle_rad)); */
   }
 
   renderer2D_end(lab->renderer);
@@ -171,28 +171,19 @@ void on_gui(void *user_data) {
 
   if (igTreeNode_Str("Assets")) {
 
-    for (size_t i = 0; i < SM_ARRAY_SIZE(lab->textures); ++i) {
-
-      const char *name = texture_res_get_name(lab->textures[i]);
-
-      if (igSelectable_Bool(name, lab->selected == i, 0, (ImVec2){0, 0}))
-        lab->selected = i;
+    resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL);
+    const char *name = NULL;
+    while ((name = resource_iter_next(&iter))) {
+      texture_handler_s hadlr = resource_load_texture(name);
+      if (igSelectable_Bool(name, lab->selected == iter.index, 0, (ImVec2){0, 0})) {
+        lab->selected = iter.index;
+        lab->selected_texture = hadlr;
+      }
 
       igSameLine(300, -1);
-      igText("%d", lab->textures[i].handle);
+      igText("%d", hadlr.handle);
     }
 
-    /*   resource_iter_s iter = resource_iter_new(RESOURCE_TYPE_IMAGE, RESOURCE_STATUS_MASK_ALL); */
-    /*   const char *name = NULL; */
-    /*   while ((name = resource_iter_next(&iter))) { */
-    /**/
-    /*     if (igSelectable_Bool(name, lab->selected + 1 == iter.index, 0, (ImVec2){0, 0})) */
-    /*       lab->selected = iter.index - 1; */
-    /**/
-    /*     igSameLine(300, -1); */
-    /*     igText("3,456 bytes"); */
-    /*   } */
-    /**/
     igTreePop();
   }
 
@@ -223,6 +214,8 @@ int main(void) {
   application_push_layer(app, layer);
 
   application_do(app);
+
+  layer_dtor(layer);
 
   application_dtor(app);
   free(lab);
