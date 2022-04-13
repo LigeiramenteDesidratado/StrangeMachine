@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21.4)
 
-project(StrangeMachineEngine LANGUAGES C)
+project(StrangeMachineEngine LANGUAGES C CXX)
 
 find_package(SDL2 REQUIRED)
 find_package(Threads REQUIRED)
@@ -78,6 +78,8 @@ list(APPEND SM_SOURCE_FILES
   math/smTransform.c
   vendor/logc/src/log.c
   vendor/gladGL21/glad.c
+  vendor/cimgui/imgui/backends/imgui_impl_opengl2.cpp
+  vendor/cimgui/imgui/backends/imgui_impl_sdl.cpp
   )
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
@@ -114,7 +116,7 @@ add_subdirectory(vendor/cglm)
 #  add_subdirectory(vendor/dmon)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "include" ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC cglm PRIVATE assimp stdc++ cimgui SDL2 m)
+target_link_libraries(${PROJECT_NAME} PUBLIC cglm PRIVATE assimp stdc++ cimgui SDL2 m GL)
 
 # Copy content to build folder:
 add_custom_command(
