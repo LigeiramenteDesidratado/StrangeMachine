@@ -36,6 +36,12 @@ typedef struct {
 
   resource_type_e type;
 
+  struct {
+
+    uint32_t handle;
+
+  } handler;
+
 } resource_s;
 
 bool resource_init(const char *folder);
