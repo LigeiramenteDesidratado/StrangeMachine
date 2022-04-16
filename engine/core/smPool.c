@@ -1,7 +1,9 @@
 #include "smpch.h"
 
-#include "core/smCore.h"
+#include "core/smAssert.h"
+#include "core/smBase.h"
 #include "core/smHandle.h"
+#include "core/smMem.h"
 
 #include "core/data/smArray.h"
 
@@ -24,7 +26,7 @@ handle_pool_s *pool_new(void) {
 
 bool pool_ctor(handle_pool_s *pool, uint32_t capacity) {
 
-  // Align count to 16, for a better aligned internal memory
+  /* Align count to 16, for a better aligned internal memory */
   uint32_t size = sm_align_mask(capacity, 15);
 
   SM_ARRAY_NEW(pool->dense, size);

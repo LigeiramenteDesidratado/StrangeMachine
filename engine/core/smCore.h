@@ -7,6 +7,9 @@
 #include "core/smLog.h"
 #include "core/smWindow.h"
 
+#include "core/smPool.h"
+#include "core/smHandle.h"
+
 #include "core/smKeyCode.h"
 #include "core/smMouseCode.h"
 

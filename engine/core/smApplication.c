@@ -1,5 +1,8 @@
 #include "smpch.h"
 
+#include "core/smBase.h"
+#include "core/smLog.h"
+
 #include "core/smAssert.h"
 #include "core/smMem.h"
 #include "core/smStackLayer.h"
