@@ -34,16 +34,16 @@ static camera_s last_free_camera = {0};
 
 void camera_update_vectors(float dt);
 
-void camera_init(vec3 position, vec3 target, vec3 up, cam_mode_e mode, cam_projection_e projection) {
+void camera_init(sm_vec3 position, sm_vec3 target, sm_vec3 up, cam_mode_e mode, cam_projection_e projection) {
 
   CAMERA.move_speed = 12.0f;
   CAMERA.sensitive = 1.4f;
   CAMERA.target_distance = 10.2f;
   CAMERA.fovy = 75.0f;
 
-  glm_vec3_copy(position, CAMERA.position);
-  glm_vec3_copy(target, CAMERA.target);
-  glm_vec3_copy(up, CAMERA.up);
+  glm_vec3_copy(position.data, CAMERA.position);
+  glm_vec3_copy(target.data, CAMERA.target);
+  glm_vec3_copy(up.data, CAMERA.up);
 
   CAMERA.mode = mode;
   CAMERA.projection = projection;

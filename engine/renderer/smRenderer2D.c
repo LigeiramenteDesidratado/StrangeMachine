@@ -68,12 +68,12 @@ typedef struct renderer2D_s {
 SM_PRIVATE
 vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id);
 SM_PRIVATE
-void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
+void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color, float tex_id,
                                   float deg_angle);
 
 /* public functions */
-void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color);
-void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float deg_angle);
+void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color);
+void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color, float deg_angle);
 void renderer2D_draw_sprite(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler);
 void renderer2D_draw_sprite_rotated(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler,
                                     float deg_angle);
@@ -199,7 +199,7 @@ bool renderer2D_ctor(renderer2D_s *renderer) {
   if (!DEVICE->index_buffer_ctor(renderer->EBO, &ebo_desc))
     return false;
 
-  camera_init(vec3_new(0.0f, 3.0f, 8.0f), vec3_new(0.0f, 2.0f, 0.0f), vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON,
+  camera_init(sm_vec3_new(0.0f, 3.0f, 8.0f), sm_vec3_new(0.0f, 2.0f, 0.0f), sm_vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON,
               ORTHOGONAL);
 
   DEVICE->shader_unbind(renderer->program);
@@ -293,12 +293,12 @@ void renderer2D_end(renderer2D_s *renderer) {
 
 #define QUAD_SIZE 4
 
-void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color) {
+void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color) {
 
   sm__renderer2D_draw_quad_pro(renderer, position, size, color, SM_DRAW_VERTEX_COLOR, 0.0f);
 }
 
-void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float deg_angle) {
+void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color, float deg_angle) {
 
   sm__renderer2D_draw_quad_pro(renderer, position, size, color, SM_DRAW_VERTEX_COLOR, deg_angle);
 }
@@ -329,11 +329,11 @@ void renderer2D_draw_sprite_rotated(renderer2D_s *renderer, vec2 position, vec2 
   sm__renderer2D_draw_quad_pro(renderer, position, size, SM_RED_COLOR, tex_id, deg_angle);
 }
 
-void renderer2D_set_clear_color(renderer2D_s *renderer, vec4 color) {
+void renderer2D_set_clear_color(renderer2D_s *renderer, sm_vec4 color) {
 
   SM_ASSERT(renderer);
 
-  DEVICE->clear_color(color[0], color[1], color[2], color[3]);
+  DEVICE->clear_color(color.x, color.y, color.z, color.w);
 }
 
 void renderer2D_clear(renderer2D_s *renderer) {
@@ -353,28 +353,36 @@ void renderer2D_set_viewport(renderer2D_s *renderer, uint32_t x, uint32_t y, uin
 SM_PRIVATE
 vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id) {
 
+  sm_vec3 pos_data[QUAD_SIZE] = {sm_vec3_new(position[0], position[1], 0.0f),
+                                 sm_vec3_new(size[0] + position[0], position[1], 0.0f),
+                                 sm_vec3_new(size[0] + position[0], size[1] + position[1], 0.0f),
+                                 sm_vec3_new(position[0], size[1] + position[1], 0.0f)};
+
+  sm_vec2 tex_data[QUAD_SIZE] = {sm_vec2_new(0.0f, 0.0f), sm_vec2_new(1.0f, 0.0f), sm_vec2_new(1.0f, 1.0f),
+                                 sm_vec2_new(0.0f, 1.0f)};
+
   /* vertex_s v1; */
-  glm_vec3_copy(vec3_new(position[0], position[1], 0.0f), quad[0].position);
+  glm_vec3_copy(pos_data[0].data, quad[0].position);
   glm_vec4_ucopy(color, quad[0].color);
-  glm_vec2_copy(vec2_new(0.0f, 0.0f), quad[0].tex_coord);
+  glm_vec2_copy(tex_data[0].data, quad[0].tex_coord);
   quad[0].tex_id = tex_id;
 
   /* vertex_s v2; */
-  glm_vec3_copy(vec3_new(size[0] + position[0], position[1], 0.0f), quad[1].position);
+  glm_vec3_copy(pos_data[1].data, quad[1].position);
   glm_vec4_ucopy(color, quad[1].color);
-  glm_vec2_copy(vec2_new(1.0f, 0.0f), quad[1].tex_coord);
+  glm_vec2_copy(tex_data[1].data, quad[1].tex_coord);
   quad[1].tex_id = tex_id;
 
   /* vertex_s v3; */
-  glm_vec3_copy(vec3_new(size[0] + position[0], size[1] + position[1], 0.0f), quad[2].position);
+  glm_vec3_copy(pos_data[2].data, quad[2].position);
   glm_vec4_ucopy(color, quad[2].color);
-  glm_vec2_copy(vec2_new(1.0f, 1.0f), quad[2].tex_coord);
+  glm_vec2_copy(tex_data[2].data, quad[2].tex_coord);
   quad[2].tex_id = tex_id;
 
   /* vertex_s v4; */
-  glm_vec3_copy(vec3_new(position[0], size[1] + position[1], 0.0f), quad[3].position);
+  glm_vec3_copy(pos_data[3].data, quad[3].position);
   glm_vec4_ucopy(color, quad[3].color);
-  glm_vec2_copy(vec2_new(0.0f, 1.0f), quad[3].tex_coord);
+  glm_vec2_copy(tex_data[3].data, quad[3].tex_coord);
   quad[3].tex_id = tex_id;
 
   /* quad[0] = v1; */
@@ -386,7 +394,7 @@ vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4
 }
 
 SM_PRIVATE
-void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 size, vec4 color, float tex_id,
+void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color, float tex_id,
                                   float deg_angle) {
 
   SM_ASSERT(renderer);
@@ -400,7 +408,7 @@ void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 si
   }
 
   if (deg_angle == 0.0f || deg_angle == 360.0f) {
-    renderer->__vertex_buffer = sm__renderer2D_new_quad(renderer->__vertex_buffer, position, size, color, tex_id);
+    renderer->__vertex_buffer = sm__renderer2D_new_quad(renderer->__vertex_buffer, position, size, color.data, tex_id);
     goto increment;
   }
 
@@ -410,8 +418,12 @@ void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 si
 
   /* use TRS to rotate around the center */
   glm_translate(transform, center);
-  glm_rotate(transform, glm_rad(deg_angle), vec3_new(0.0f, 0.0f, 1.0f));
-  glm_scale(transform, vec3_new(size[0], size[1], 1.0f));
+
+  sm_vec3 rotation = sm_vec3_new(0.0f, 0.0f, 1.0f);
+  glm_rotate(transform, glm_rad(deg_angle), rotation.data);
+
+  sm_vec3 scale = sm_vec3_new(size[0], size[1], 1.0f);
+  glm_scale(transform, scale.data);
 
   vec2 tex_coords[QUAD_SIZE] = {
       {0.0f, 0.0f},
@@ -430,7 +442,7 @@ void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 si
   for (int i = 0; i < QUAD_SIZE; i++) {
 
     glm_mat4_mulv3(transform, quad_vertex_positions[i], 1.0f, renderer->__vertex_buffer[i].position);
-    glm_vec4_ucopy(color, renderer->__vertex_buffer[i].color);
+    glm_vec4_ucopy(color.data, renderer->__vertex_buffer[i].color);
     glm_vec2_copy(tex_coords[i], renderer->__vertex_buffer[i].tex_coord);
     renderer->__vertex_buffer[i].tex_id = tex_id;
   }

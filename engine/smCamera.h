@@ -8,7 +8,7 @@
 struct camera_s;
 
 // Constructor
-void camera_init(vec3 position, vec3 target, vec3 up, cam_mode_e mode, cam_projection_e projection);
+void camera_init(sm_vec3 position, sm_vec3 target, sm_vec3 up, cam_mode_e mode, cam_projection_e projection);
 
 // Destructor
 void camera_tear_down(void);

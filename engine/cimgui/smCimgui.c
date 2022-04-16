@@ -103,7 +103,7 @@ void cimgui_end(cimgui_s *cimgui) {
   ImGui_ImplOpenGL2_RenderDrawData(igGetDrawData());
 }
 
-#define VEC4_TO_IM_VEC4(VEC4) ((ImVec4){VEC4[0], VEC4[1], VEC4[2], VEC4[3]})
+#define VEC4_TO_IM_VEC4(VEC4) ((ImVec4){VEC4.data[0], VEC4.data[1], VEC4.data[2], VEC4.data[3]})
 
 static void sm__set_dark_theme_colors() {
 
