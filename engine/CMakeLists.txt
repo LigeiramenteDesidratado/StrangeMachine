@@ -22,6 +22,8 @@ list(APPEND SM_SOURCE_FILES
   core/smStackLayer.c
   core/smLayer.c
   core/smKeyCode.c
+  core/smTimer.c
+  core/smTime.c
 
   core/thread/smThread.c
   core/thread/synchronization/smMutex.c
@@ -44,6 +46,9 @@ list(APPEND SM_SOURCE_FILES
   resource/smResource.c
   resource/smTextureResource.c
 
+  scene/smScene.c
+  scene/smComponents.c
+
   event/smEvent.c
 
   smLoader.c
@@ -64,7 +69,7 @@ list(APPEND SM_SOURCE_FILES
   #  smRearrangeBones.c
   #  smShader.c
   #  smShaderProgram.c
-  smShapes.c
+  # smShapes.c
   #  smSkeleton.c
   #  smSkinnedMesh.c
   #  smSkinnedModel.c
@@ -75,7 +80,7 @@ list(APPEND SM_SOURCE_FILES
   #  smSkyBox.c
   #  smCollision.c
 
-  math/smTransform.c
+  # math/smTransform.c
   vendor/logc/src/log.c
   vendor/gladGL21/glad.c
   vendor/cimgui/imgui/backends/imgui_impl_opengl2.cpp
