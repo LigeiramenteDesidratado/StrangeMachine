@@ -21,7 +21,6 @@ This is a early-stage game engine for creating ps1 like games
 
 # Build (only linux for now)
   ```sh
-  mkdir build && cd build
-  cmake -D CMAKE_BUILD_TYPE=Debug -D BUILD_EXAMPLES=ON  ..
-  cmake --build .
+  cmake -S . -B build -D CMAKE_BUILD_TYPE=Debug -D BUILD_EXAMPLES=ON
+  cmake --build build
   ```
