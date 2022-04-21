@@ -27,10 +27,10 @@ SET(CMAKE_C_FLAGS_DEBUG " ${SM_FLAGS_DEBUG_FLAGS}")
 SET(CMAKE_C_FLAGS_RELEASE " ${SM_FLAGS_RELEASE_FLAGS}")
 
 
-add_subdirectory(engine)
+add_subdirectory(StrangeMachine)
 if (BUILD_EXAMPLES)
   #  add_subdirectory(examples/terror-em-sl)
   # add_subdirectory(examples/lab)
-  add_subdirectory(examples/debug)
-  add_subdirectory(examples/entity)
+  add_subdirectory(TestSites/debug)
+  add_subdirectory(TestSites/entity)
 endif()

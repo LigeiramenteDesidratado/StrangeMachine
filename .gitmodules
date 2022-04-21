@@ -1,12 +1,12 @@
-[submodule "engine/vendor/cimgui"]
-	path = engine/vendor/cimgui
+[submodule "StrangeMachine/vendor/cimgui"]
+	path = StrangeMachine/vendor/cimgui
 	url = https://github.com/cimgui/cimgui.git
-[submodule "engine/vendor/logc"]
-	path = engine/vendor/logc
+[submodule "StrangeMachine/vendor/logc"]
+	path = StrangeMachine/vendor/logc
 	url = git@github.com:rxi/log.c.git
-[submodule "engine/vendor/cglm"]
-	path = engine/vendor/cglm
+[submodule "StrangeMachine/vendor/cglm"]
+	path = StrangeMachine/vendor/cglm
 	url = https://github.com/recp/cglm.git
-[submodule "engine/vendor/dmon"]
-	path = engine/vendor/dmon
+[submodule "StrangeMachine/vendor/dmon"]
+	path = StrangeMachine/vendor/dmon
 	url = https://github.com/septag/dmon
