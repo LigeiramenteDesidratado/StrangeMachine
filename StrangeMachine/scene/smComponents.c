@@ -7,6 +7,9 @@
 
 #include "scene/smComponents.h"
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "COMPONENTS"
+
 const component_s SM_POSITION_COMP = 1 << 0;
 const component_s SM_VELOCITY_COMP = 1 << 1;
 const component_s SM_FORCE_COMP = 1 << 2;
@@ -62,3 +65,5 @@ void component_teardown(void) {
 
   SM_ARRAY_DTOR(COMPONENTS);
 }
+
+#undef SM_MODULE_NAME

@@ -11,6 +11,9 @@
 
 #include "scene/smSceneDecl.h"
 
+#undef SM_MODULE_NAME
+#define SM_MODULE_NAME "SCENE"
+
 SM_PRIVATE
 uint32_t sm__log2_32(uint32_t value);
 
@@ -106,7 +109,7 @@ sm_entity_s scene_new_entity(scene_s *scene, component_s archetype) {
     new_chunk->pool = pool_new();
 
     if (!pool_ctor(new_chunk->pool, 16384)) {
-      printf("failed to create pool for archetype %lu\n", archetype);
+      SM_LOG_WARN("failed to create pool for archetype %lu", archetype);
       return (sm_entity_s){0};
     }
 
@@ -125,13 +128,13 @@ sm_entity_s scene_new_entity(scene_s *scene, component_s archetype) {
   }
 
   sm_handle handle = handle_new(chunk->pool);
-  assert(handle != SM_INVALID_HANDLE);
+  SM_ASSERT(handle != SM_INVALID_HANDLE);
 
   chunk->count++;
 
   void *data = NULL;
   data = SM_REALLOC(chunk->data, chunk->size * chunk->count);
-  assert(data);
+  SM_ASSERT(data);
   chunk->data = data;
 
   return (sm_entity_s){.handle = handle, .archetype_index = archetype};
@@ -139,14 +142,14 @@ sm_entity_s scene_new_entity(scene_s *scene, component_s archetype) {
 
 void scene_set_component(scene_s *scene, sm_entity_s entity, void *data) {
 
-  assert(scene);
+  SM_ASSERT(scene);
 
   chunk_s *chunk = SM_HT_GET(scene->map_archetype, entity.archetype_index);
   if (chunk == NULL) {
-    printf("no chunk for archetype %lu\n", entity.archetype_index);
+    SM_LOG_WARN("no chunk for archetype %lu", entity.archetype_index);
     return;
   }
-  assert(chunk->pool);
+  SM_ASSERT(chunk->pool);
 
   uint32_t index = sm_handle_index(entity.handle);
 
@@ -174,8 +177,8 @@ void scene_get_component(scene_s *scene, sm_entity_s entity, void *data) {
 
 void scene_set_system(scene_s *scene, component_s comp, system_f system, uint32_t flags) {
 
-  assert(scene);
-  assert(SM_MASK_CHK_EQ(scene->registered_components, comp) && "component not registered");
+  SM_ASSERT(scene);
+  SM_ASSERT(SM_MASK_CHK_EQ(scene->registered_components, comp) && "component not registered");
 
   system_s sys;
   sys.components = comp;
@@ -218,7 +221,7 @@ void scene_do(scene_s *scene, float dt) {
       chunk_s *chunk = SM_HT_GET(scene->map_archetype, sys->components);
 
       if (chunk == NULL) {
-        printf("no chunk found for system %lu\n", sys->components);
+        /* SM_LOG_WARN("no chunk found for system %lu", sys->components); */
         continue;
       }
 
@@ -239,7 +242,7 @@ void scene_do(scene_s *scene, float dt) {
         chunk_s *chunk = scene->map_archetype[j].value;
 
         if (!chunk->pool) {
-          printf("no pool for archetype %zu", j);
+          SM_LOG_WARN("no pool for archetype %zu", j);
           continue;
         }
 
@@ -291,3 +294,4 @@ uint32_t sm__log2_32(uint32_t value) {
   value |= value >> 16;
   return sm__tab32[(uint32_t)(value * 0x07C4ACDD) >> 27];
 }
+#undef SM_MODULE_NAME

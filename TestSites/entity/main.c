@@ -139,19 +139,13 @@ void on_attach(void *user_data) {
   if (!scene_ctor(lab->scene, SM_FORCE_COMP | SM_VELOCITY_COMP | SM_POSITION_COMP | SM_SPEED_COMP))
     exit(EXIT_FAILURE);
 
-  /* SM_POSITION_COMP | SM_VELOCITY_COMP | SM_FORCE_COMP | SM_COLOR_COMP | SM_DRAWBLE_COMP | SM_TRANSFORM_COMP */
-
   scene_set_system(lab->scene, SM_POSITION_COMP | SM_FORCE_COMP, apply_force, SM_SYSTEM_EXCLUSIVE_FLAG);
-  scene_set_system(lab->scene, SM_POSITION_COMP | SM_VELOCITY_COMP, apply_vel, SM_SYSTEM_EXCLUSIVE_FLAG);
-  scene_set_system(lab->scene, SM_POSITION_COMP, output_position, SM_SYSTEM_INCLUSIVE_FLAG);
-  scene_set_system(lab->scene, SM_SPEED_COMP, output_speed, SM_SYSTEM_INCLUSIVE_FLAG);
+  scene_set_system(lab->scene, SM_POSITION_COMP | SM_VELOCITY_COMP, apply_vel, SM_SYSTEM_INCLUSIVE_FLAG);
 
   lab->player = calloc(ENTITY_COUNT, sizeof(sm_entity_s));
-  /* lab->player[lab->player_count++] = scene_new_entity(lab->scene, SM_SPEED_COMP | SM_POSITION_COMP |
-   * SM_VELOCITY_COMP); */
 
   for (size_t i = 0; i < ENTITY_COUNT; ++i) {
-    lab->player[lab->player_count] = scene_new_entity(lab->scene, SM_SPEED_COMP | SM_POSITION_COMP | SM_VELOCITY_COMP);
+    lab->player[lab->player_count] = scene_new_entity(lab->scene, SM_POSITION_COMP | SM_VELOCITY_COMP | SM_SPEED_COMP);
     int32_t x = rand() % 600 + 1;
     int32_t y = rand() % 600 + 1;
     int32_t z = 0.0f;
@@ -159,8 +153,12 @@ void on_attach(void *user_data) {
     int32_t negy = (rand() % 6) - 3;
     int32_t negz = 0.0f;
 
-    float val[6] = {x, y, z, negx, negy, negz};
-    scene_set_component(lab->scene, lab->player[lab->player_count], val);
+    scene_set_component(lab->scene, lab->player[lab->player_count], &(struct {
+                          float position[3];
+                          float velocity[3];
+                          float speed;
+                        }){{x, y, z}, {negx, negy, negz}, 1.0f});
+
     lab->player_count++;
   }
 }
@@ -189,18 +187,18 @@ void on_update(void *user_data, float dt) {
 
   renderer2D_begin(lab->renderer);
 
-  /* float data[6] = {0}; */
-  /* for (size_t i = 0; i < lab->player_count; ++i) { */
-  /*   scene_get_component(lab->scene, lab->player[i], data); */
-  /*   sm_vec2 pos = sm_vec2_new(data[0], data[1]); */
-  /*   sm_vec2 size = sm_vec2_new(1.5f, 1.5f); */
-  /*   float colorx = sinf(data[2] * 0.1f) * 0.5f + 0.5f; */
-  /*   float colory = cosf(data[2] * 0.1f) * 0.5f + 0.5f; */
-  /*   float colorz = atanf(data[2] * 0.1f) * 0.5f + 0.5f; */
-  /*   sm_vec4 color = sm_vec4_new(colorx, colory, colorz, 1.0f); */
-  /**/
-  /*   renderer2D_draw_quad(lab->renderer, pos.data, size.data, color); */
-  /* } */
+  float data[7] = {0};
+  for (size_t i = 0; i < lab->player_count; ++i) {
+    scene_get_component(lab->scene, lab->player[i], data);
+    sm_vec2 pos = sm_vec2_new(data[0], data[1]);
+    sm_vec2 size = sm_vec2_new(1.5f, 1.5f);
+    float colorx = sinf(data[2] * 0.1f) * 0.5f + 0.5f;
+    float colory = cosf(data[2] * 0.1f) * 0.5f + 0.5f;
+    float colorz = atanf(data[2] * 0.1f) * 0.5f + 0.5f;
+    sm_vec4 color = sm_vec4_new(colorx, colory, colorz, 1.0f);
+
+    renderer2D_draw_quad(lab->renderer, pos.data, size.data, color);
+  }
 
   renderer2D_end(lab->renderer);
 }
