@@ -35,6 +35,8 @@ list(APPEND SM_SOURCE_FILES
   renderer/smRenderer2D.c
   renderer/smDevice.c
 
+  renderer/smRenderer3D.c
+
   renderer/api/GL21/smVertexBuffer.c
   renderer/api/GL21/smIndexBuffer.c
   renderer/api/GL21/smShader.c
@@ -48,6 +50,7 @@ list(APPEND SM_SOURCE_FILES
 
   scene/smScene.c
   scene/smComponents.c
+  scene/smSystem.c
 
   event/smEvent.c
 
@@ -80,7 +83,7 @@ list(APPEND SM_SOURCE_FILES
   #  smSkyBox.c
   #  smCollision.c
 
-  # math/smTransform.c
+  math/smTransform.c
   vendor/logc/src/log.c
   vendor/gladGL21/glad.c
   vendor/cimgui/imgui/backends/imgui_impl_opengl2.cpp

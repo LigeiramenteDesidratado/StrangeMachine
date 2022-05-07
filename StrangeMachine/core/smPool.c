@@ -11,8 +11,8 @@
 
 typedef struct {
 
-  sm_handle *dense;
-  uint32_t *sparse;
+  SM_ARRAY(sm_handle) dense;
+  SM_ARRAY(uint32_t) sparse;
 
 } handle_pool_s;
 

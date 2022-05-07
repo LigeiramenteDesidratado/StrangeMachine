@@ -6,6 +6,8 @@
 #include "core/smAssert.h"
 #include "core/smMem.h"
 
+#define SM_ARRAY(ARRAY) ARRAY*
+
 #define SM_SIZE_HEADER_SIZE     (sizeof(size_t))
 #define SM_CAPACITY_HEADER_SIZE (sizeof(size_t))
 #define SM_HEADER_OFFSET        (SM_SIZE_HEADER_SIZE + SM_CAPACITY_HEADER_SIZE)

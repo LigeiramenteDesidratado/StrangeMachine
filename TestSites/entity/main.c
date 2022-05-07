@@ -16,14 +16,22 @@
 #include "smInput.h"
 #include "util/colors.h"
 
+#define REF(X) X
+
 typedef struct {
 
   struct layer_s *layer;
+
+  /* reference to the current scene */
+  REF(struct sm_scene_s *) scene;
+
   struct renderer2D_s *renderer;
-  struct scene_s *scene;
-  sm_entity_s entity;
-  size_t player_count;
-  sm_entity_s *player;
+  size_t entities_count;
+  sm_entity_s *entities;
+  sm_entity_s transform_entity;
+  sm_entity_s camera_entity;
+
+  texture_handler_s texture;
 
 } lab_s;
 
@@ -55,7 +63,9 @@ static void SimpleOverlay(bool *p_open) {
   igEnd();
 }
 
-void apply_force(system_iterator_s *iter, float dt) {
+void apply_force(sm_system_iterator_s *iter, float dt) {
+
+  (void)dt;
 
   printf("apply force\n");
 
@@ -63,10 +73,13 @@ void apply_force(system_iterator_s *iter, float dt) {
 
     sm_vec3 *position = (sm_vec3 *)iter->iter_data[0].data;
     sm_vec3 *force = (sm_vec3 *)iter->iter_data[1].data;
+
+    (void)position;
+    (void)force;
   }
 }
 
-void apply_vel(system_iterator_s *iter, float dt) {
+void apply_vel(sm_system_iterator_s *iter, float dt) {
 
   while (system_iter_next(iter)) {
 
@@ -75,20 +88,24 @@ void apply_vel(system_iterator_s *iter, float dt) {
 
     /* window 800x600 */
     /* bounce off the walls */
-    if (position->x < 0.0f) {
-      position->x = 0.0f;
+
+    int32_t width = 800.0f / 2.0f;
+    int32_t height = 600.0f / 2.0f;
+
+    if (position->x < -width) {
+      position->x = -width;
       velocity->x = -velocity->x;
     }
-    if (position->x > 60.0f) {
-      position->x = 60.0f;
+    if (position->x > width) {
+      position->x = width;
       velocity->x = -velocity->x;
     }
-    if (position->y < 0.0f) {
-      position->y = 0.0f;
+    if (position->y < -height) {
+      position->y = -height;
       velocity->y = -velocity->y;
     }
-    if (position->y > 60.0f) {
-      position->y = 60.0f;
+    if (position->y > height) {
+      position->y = height;
       velocity->y = -velocity->y;
     }
 
@@ -100,30 +117,50 @@ void apply_vel(system_iterator_s *iter, float dt) {
   }
 }
 
-void output_position(system_iterator_s *iter, float dt) {
+void output_position(sm_system_iterator_s *iter, float dt) {
+
+  (void)dt;
 
   printf("output position\n");
 
   while (system_iter_next(iter)) {
 
     sm_vec3 *position = (sm_vec3 *)iter->iter_data[0].data;
-    /* printf("%f %f %f\n", position->x, position->y, position->z); */
+    (void)position;
   }
 }
 
-void output_speed(system_iterator_s *iter, float dt) {
+void output_speed(sm_system_iterator_s *iter, float dt) {
+
+  (void)dt;
 
   printf("output speed\n");
 
   while (system_iter_next(iter)) {
 
     speed_s *speed = (speed_s *)iter->iter_data[0].data;
+
     speed->speed += 1.0f;
     printf("%f\n", speed->speed);
   }
 }
 
-#define ENTITY_COUNT 100
+void transform_system(sm_system_iterator_s *iter, float dt) {
+
+  (void)dt;
+
+  printf("transform system\n");
+
+  while (system_iter_next(iter)) {
+
+    sm_mat4 *transform = (sm_mat4 *)iter->iter_data[0].data;
+
+    sm_mat4_print((*transform));
+
+  }
+}
+
+#define ENTITY_COUNT 1684
 
 void on_attach(void *user_data) {
 
@@ -136,31 +173,40 @@ void on_attach(void *user_data) {
     exit(EXIT_FAILURE);
 
   lab->scene = scene_new();
-  if (!scene_ctor(lab->scene, SM_FORCE_COMP | SM_VELOCITY_COMP | SM_POSITION_COMP | SM_SPEED_COMP))
+  if (!scene_ctor(lab->scene, SM_TRANSFORM_COMP | SM_FORCE_COMP | SM_VELOCITY_COMP | SM_POSITION_COMP | SM_SPEED_COMP))
     exit(EXIT_FAILURE);
 
-  scene_set_system(lab->scene, SM_POSITION_COMP | SM_FORCE_COMP, apply_force, SM_SYSTEM_EXCLUSIVE_FLAG);
-  scene_set_system(lab->scene, SM_POSITION_COMP | SM_VELOCITY_COMP, apply_vel, SM_SYSTEM_INCLUSIVE_FLAG);
+  scene_register_system(lab->scene, SM_POSITION_COMP | SM_FORCE_COMP, apply_force, SM_SYSTEM_EXCLUSIVE_FLAG);
+  scene_register_system(lab->scene, SM_POSITION_COMP | SM_VELOCITY_COMP, apply_vel, SM_SYSTEM_INCLUSIVE_FLAG);
+  scene_register_system(lab->scene, SM_TRANSFORM_COMP, transform_system, SM_SYSTEM_INCLUSIVE_FLAG);
+  
 
-  lab->player = calloc(ENTITY_COUNT, sizeof(sm_entity_s));
+  lab->transform_entity = scene_new_entity(lab->scene, SM_TRANSFORM_COMP);
+  scene_set_component(lab->scene, lab->transform_entity, &sm_mat4_identity());
+
+  lab->entities = calloc(ENTITY_COUNT, sizeof(sm_entity_s));
 
   for (size_t i = 0; i < ENTITY_COUNT; ++i) {
-    lab->player[lab->player_count] = scene_new_entity(lab->scene, SM_POSITION_COMP | SM_VELOCITY_COMP | SM_SPEED_COMP);
-    int32_t x = rand() % 600 + 1;
-    int32_t y = rand() % 600 + 1;
-    int32_t z = 0.0f;
-    int32_t negx = ((rand() % 6) - 3);
-    int32_t negy = (rand() % 6) - 3;
-    int32_t negz = 0.0f;
+    lab->entities[lab->entities_count] =
+        scene_new_entity(lab->scene, SM_POSITION_COMP | SM_VELOCITY_COMP | SM_SPEED_COMP);
+    int32_t posx = (rand() % 800) - 400.0f;
+    int32_t posy = (rand() % 600) - 300.0f;
+    int32_t posz = 0.0f;
+    int32_t velx = (rand() % 6) - 3;
+    int32_t vely = (rand() % 6) - 3;
+    int32_t velz = 0.0f;
 
-    scene_set_component(lab->scene, lab->player[lab->player_count], &(struct {
+    scene_set_component(lab->scene, lab->entities[lab->entities_count], &(struct {
                           float position[3];
                           float velocity[3];
                           float speed;
-                        }){{x, y, z}, {negx, negy, negz}, 1.0f});
+                        }){{posx, posy, posz}, {velx, vely, velz}, 1.0f});
 
-    lab->player_count++;
+    lab->entities_count++;
   }
+
+  lab->texture = resource_load_texture("assets/z.png");
+  lab->camera_entity = scene_new_entity(lab->scene, SM_TRANSFORM_COMP);
 }
 
 void on_detach(void *user_data) {
@@ -180,6 +226,10 @@ void on_update(void *user_data, float dt) {
 
   lab_s *lab = (lab_s *)user_data;
 
+  if (input_scan_key(sm_key_space)) {
+    printf("sm_key_space pressed\n");
+  }
+
   scene_do(lab->scene, dt);
 
   renderer2D_set_clear_color(lab->renderer, SM_BACKGROUND_COLOR);
@@ -187,17 +237,13 @@ void on_update(void *user_data, float dt) {
 
   renderer2D_begin(lab->renderer);
 
-  float data[7] = {0};
-  for (size_t i = 0; i < lab->player_count; ++i) {
-    scene_get_component(lab->scene, lab->player[i], data);
+  for (size_t i = 0; i < lab->entities_count; ++i) {
+
+    const float *data = scene_get_component(lab->scene, lab->entities[i]);
     sm_vec2 pos = sm_vec2_new(data[0], data[1]);
     sm_vec2 size = sm_vec2_new(1.5f, 1.5f);
-    float colorx = sinf(data[2] * 0.1f) * 0.5f + 0.5f;
-    float colory = cosf(data[2] * 0.1f) * 0.5f + 0.5f;
-    float colorz = atanf(data[2] * 0.1f) * 0.5f + 0.5f;
-    sm_vec4 color = sm_vec4_new(colorx, colory, colorz, 1.0f);
 
-    renderer2D_draw_quad(lab->renderer, pos.data, size.data, color);
+    renderer2D_draw_sprite(lab->renderer, pos.data, size.data, lab->texture);
   }
 
   renderer2D_end(lab->renderer);
@@ -227,14 +273,18 @@ void on_gui(void *user_data) {
   lab_s *lab = (lab_s *)user_data;
 
   static bool show_demo_window = false;
+
+  if (input_scan_key_lock(sm_key_escape))
+    show_demo_window = !show_demo_window;
+
   if (show_demo_window)
     igShowDemoWindow(&show_demo_window);
 
-  igBegin("Settings", &show_demo_window, 0);
-
-  igSliderInt("Quad Count", &lab->player_count, 0, ENTITY_COUNT, NULL, 0);
-
-  igEnd();
+  /* igBegin("Settings", &show_demo_window, 0); */
+  /**/
+  /* igSliderInt("Quad Count", (int32_t *)&lab->entities_count, 0, ENTITY_COUNT, NULL, 0); */
+  /**/
+  /* igEnd(); */
 
   static bool show_overlay = true;
   if (show_overlay)

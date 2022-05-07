@@ -199,8 +199,8 @@ bool renderer2D_ctor(renderer2D_s *renderer) {
   if (!DEVICE->index_buffer_ctor(renderer->EBO, &ebo_desc))
     return false;
 
-  camera_init(sm_vec3_new(0.0f, 0.0f, -1.0f), sm_vec3_new(0.0f, 0.0f, 0.0f), sm_vec3_new(0.0f, 1.0f, 0.0f),
-              THIRD_PERSON, PERSPECTIVE);
+  camera_init(sm_vec3_new(0.0f, 0.0f, 3.0f), sm_vec3_new(0.0f, 0.0f, 0.0f), sm_vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON,
+              ORTHOGONAL);
 
   DEVICE->shader_unbind(renderer->program);
 
@@ -267,7 +267,7 @@ void renderer2D_begin(renderer2D_s *renderer) {
 
   mat4 view, proj;
   camera_get_view(view);
-  camera_get_projection_matrix(800 / (float)600, proj);
+  camera_get_projection_matrix(800.0f / 600.0f, proj);
 
   DEVICE->shader_bind(renderer->program);
 
@@ -340,7 +340,7 @@ void renderer2D_clear(renderer2D_s *renderer) {
 
   SM_ASSERT(renderer);
 
-  DEVICE->clear();
+  DEVICE->clear(0x00004000);
 }
 
 void renderer2D_set_viewport(renderer2D_s *renderer, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {

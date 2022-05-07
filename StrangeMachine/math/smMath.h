@@ -3,9 +3,8 @@
 
 #include "vendor/cglm/include/cglm/cglm.h"
 
-#include "smTransform.h"
-
 #define CMP(X, Y) (fabsf((X) - (Y)) <= FLT_EPSILON * fmaxf(1.0f, fmaxf(fabsf(X), fabsf(Y))))
+#define EPSILON 0.000001f
 
 /* Use the same memory for the anonynous structure and the byte array field `data` */
 typedef struct sm__vec2 {
@@ -97,9 +96,9 @@ typedef struct sm__vec3 {
 #define sm_vec3_new(X, Y, Z) ((sm_vec3){.x = X, .y = Y, .z = Z})
 #define sm_vec3_zero()       ((sm_vec3){.x = 0.0f, .y = 0.0f, .z = 0.0f})
 #define sm_vec3_one()        ((sm_vec3){.x = 1.0f, .y = 1.0f, .z = 1.0f})
-#define sm_vec3_right        sm_vec3_new(1.0f, 0.0f, 0.0f)
-#define sm_vec3_up           sm_vec3_new(0.0f, 1.0f, 0.0f)
-#define sm_vec3_forward      sm_vec3_new(0.0f, 0.0f, 1.0f)
+#define sm_vec3_right()      sm_vec3_new(1.0f, 0.0f, 0.0f)
+#define sm_vec3_up()         sm_vec3_new(0.0f, 1.0f, 0.0f)
+#define sm_vec3_forward()    sm_vec3_new(0.0f, 0.0f, 1.0f)
 
 /* A vector with 4 float components */
 typedef CGLM_ALIGN_IF(16) struct sm__vec4 {
@@ -231,8 +230,8 @@ typedef CGLM_ALIGN_MAT struct sm__mat4 {
   printf("\t%s---------\n\t|%7.3f|%7.3f|%7.3f|%7.3f|\n\t|%"                                                            \
          "7.3f|%7.3f|%7.3f|%7.3f|\n\t|%7.3f|%7.3f|%7.3f|%7.3f|\n\t|%7.3f|%7."                                          \
          "3f|%7.3f|%7.3f|\n\t---------------------------------\n",                                                     \
-         #M, M.v[0], M.v[1], M.v[2], M.v[3], M.v[4], M.v[5], M.v[6], M.v[7], M.v[8], M.v[9], M.v[10], M.v[11],         \
-         M.v[12], M.v[13], M.v[14], M.v[15])
+         #M, M.float16[0], M.float16[1], M.float16[2], M.float16[3], M.float16[4], M.float16[5], M.float16[6], M.float16[7], M.float16[8], M.float16[9], M.float16[10], M.float16[11],         \
+         M.float16[12], M.float16[13], M.float16[14], M.float16[15])
 
 #define sm_mat4_new(inXX, inXY, inXZ, inXW, inYX, inYY, inYZ, inYW, inZX, inZY, inZZ, inZW, inTX, inTY, inTZ, inTW) \
   ((sm_mat4) { \
@@ -254,5 +253,45 @@ typedef CGLM_ALIGN_MAT struct sm__mat4 {
    .yx=0.0f, .yy=1.0f, .yz=0.0f, .yw=0.0f, \
    .zx=0.0f, .zy=0.0f, .zz=1.0f, .zw=0.0f, \
    .tx=0.0f, .ty=0.0f, .tz=0.0f, .tw=1.0f})
+
+
+typedef struct sm__transform_s {
+
+  union{
+    struct {
+      sm_vec4 position; /* position x y z plus padding */
+      sm_vec4 rotation; /* rotation x y z w*/
+      sm_vec4 scale; /* scale x y z plus padding */
+    };
+
+    vec4 data[3];
+  };
+
+} sm_transform_s;
+
+#define sm_transform_new(POSITION, ROTATION, SCALE)                                                                    \
+  ((sm_transform_s){.position = {POSITION[0], POSITION[1], POSITION[2]},                                               \
+                    .rotation = {ROTATION[0], ROTATION[1], ROTATION[2], ROTATION[3]},                                  \
+                    .scale = {                                                                                         \
+                        SCALE[0],                                                                                      \
+                        SCALE[1],                                                                                      \
+                        SCALE[2],                                                                                      \
+                    }})
+
+#define sm_transform_zero()     ((sm_transform_s){sm_vec4_zero(), sm_vec4_new(0.0f, 0.0f, 0.0f, 1.0f), sm_vec4_one()})
+
+#define sm_transform_print(T)                                                                                             \
+  printf("%s:\n", #T);                                                                                                 \
+  printf("posit: %f, %f, %f\n", T.position.x, T.position.y, T.position.z);                                          \
+  printf("rotat: %f, %f, %f, %f\n", T.rotation.x, T.rotation.y, T.rotation.z, T.rotation.w);                       \
+  printf("scale: %f, %f, %f\n", T.scale.x, T.scale.y, T.scale.z);
+
+sm_transform_s transform_combine(sm_transform_s a, sm_transform_s b);
+void transform_to_mat4(sm_transform_s t, mat4 out);
+sm_transform_s transform_mat4_to_transform(mat4 m);
+sm_transform_s transform_inverse(sm_transform_s t);
+void transform_point(sm_transform_s a, vec3 b, vec3 out);
+void transform_vec3(sm_transform_s a, vec3 b, vec3 out);
+sm_transform_s transform_mix(sm_transform_s a, sm_transform_s b, float t);
 
 #endif /* SM_MATH_MATH_H */

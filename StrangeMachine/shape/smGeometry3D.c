@@ -1,5 +1,3 @@
-
-
 #include "smGeometry3D.h"
 
 float line3D_length(line3D line) {

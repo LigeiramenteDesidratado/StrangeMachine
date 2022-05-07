@@ -1,63 +1,44 @@
 #include "smpch.h"
 
-#include <math.h>
-
 #include "core/smCore.h"
 
-#include "core/data/smArray.h"
-#include "core/util/smBitMask.h"
-
-#include "core/data/smHashTable.h"
-
-#include "scene/smSceneDecl.h"
+#include "scene/smComponents.h"
+#include "scene/smEntity.h"
+#include "scene/smSystem.h"
 
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "SCENE"
 
-SM_PRIVATE
-uint32_t sm__log2_32(uint32_t value);
-
 #define BIT (sizeof(uint64_t) * 8)
 
-typedef struct {
-
-  uint32_t flags;
-  /* components that the system is designed to work with */
-  component_s components;
-  system_f system;
-
-} system_s;
-
-typedef struct {
+typedef struct sm__chunk_s {
 
   struct handle_pool_s *pool;
 
+  bool alligned;
   size_t count; /* number of components in the pool */
   size_t size;  /* total size in bytes  */
 
-  component_desc_s *desc;
+  SM_ARRAY(sm_component_desc_s) desc;
 
   void *data;
 
-} chunk_s;
+} sm_chunk_s;
 
-typedef struct {
+typedef struct sm__chunk_m {
 
-  component_s key;
-  chunk_s *value;
+  sm_component_t key;
+  sm_chunk_s *value;
 
-} map_chunk_s;
+} sm_chunk_m;
 
-typedef struct scene {
+typedef struct sm__scene_s {
 
   /* All registered components in the scene */
-  const component_s registered_components;
+  const sm_component_t registered_components;
 
-  /* goup all possible combinations of components */
-  /* chunk_s *set_archetype; */
-
-  map_chunk_s *map_archetype;
-  system_s *systems;
+  sm_chunk_m *map_archetype;
+  SM_ARRAY(sm_system_s) systems;
 
 } scene_s;
 
@@ -68,13 +49,13 @@ scene_s *scene_new(void) {
   return scene;
 }
 
-bool scene_ctor(scene_s *scene, component_s comp) {
+bool scene_ctor(scene_s *scene, sm_component_t comp) {
 
   SM_ASSERT(scene);
 
   memcpy((void *)&scene->registered_components, &comp, sizeof(comp));
 
-  chunk_s *df = NULL;
+  sm_chunk_s *df = NULL;
   SM_HT_DEFAULT(scene->map_archetype, df);
 
   return true;
@@ -84,12 +65,15 @@ void scene_dtor(scene_s *scene) {
 
   SM_ASSERT(scene);
 
-  if (scene->systems) {
+  if (scene->systems)
     SM_ARRAY_DTOR(scene->systems);
-  }
+
   for (size_t i = 0; i < SM_HT_LENGTH(scene->map_archetype); ++i) {
     pool_dtor(scene->map_archetype[i].value->pool);
-    SM_FREE(scene->map_archetype[i].value->data);
+
+    (scene->map_archetype[i].value->alligned) ? SM_ALIGNED_FREE(scene->map_archetype[i].value->data)
+                                              : SM_FREE(scene->map_archetype[i].value->data);
+
     SM_ARRAY_DTOR(scene->map_archetype[i].value->desc);
     free(scene->map_archetype[i].value);
   }
@@ -99,12 +83,12 @@ void scene_dtor(scene_s *scene) {
   SM_FREE(scene);
 }
 
-sm_entity_s scene_new_entity(scene_s *scene, component_s archetype) {
+sm_entity_s scene_new_entity(scene_s *scene, sm_component_t archetype) {
 
-  chunk_s *chunk = SM_HT_GET(scene->map_archetype, archetype);
+  sm_chunk_s *chunk = SM_HT_GET(scene->map_archetype, archetype);
 
   if (chunk == NULL) {
-    chunk_s *new_chunk = calloc(1, sizeof(chunk_s));
+    sm_chunk_s *new_chunk = calloc(1, sizeof(sm_chunk_s));
 
     new_chunk->pool = pool_new();
 
@@ -112,11 +96,11 @@ sm_entity_s scene_new_entity(scene_s *scene, component_s archetype) {
       SM_LOG_WARN("failed to create pool for archetype %lu", archetype);
       return (sm_entity_s){0};
     }
-
     for (uint32_t i = 0; i < BIT; i++) {
-      component_s c = archetype & (component_s)(1ULL << i);
+      sm_component_t c = archetype & (sm_component_t)(1ULL << i);
       if (c) {
-        component_desc_s desc = *component_get_desc(c);
+        sm_component_desc_s desc = *component_get_desc(c);
+        new_chunk->alligned |= desc.alligned;
         desc.offset += new_chunk->size;
         SM_ARRAY_PUSH(new_chunk->desc, desc);
         new_chunk->size += desc.size;
@@ -133,8 +117,19 @@ sm_entity_s scene_new_entity(scene_s *scene, component_s archetype) {
   chunk->count++;
 
   void *data = NULL;
-  data = SM_REALLOC(chunk->data, chunk->size * chunk->count);
-  SM_ASSERT(data);
+  if (chunk->alligned) {
+
+    data = SM_ALIGNED_ALLOC(16, chunk->size * chunk->count);
+    SM_ASSERT(data);
+    if (chunk->data) {
+      memcpy(data, chunk->data, chunk->size * (chunk->count - 1));
+      SM_ALIGNED_FREE(chunk->data);
+    }
+
+  } else {
+    data = SM_REALLOC(chunk->data, chunk->size * chunk->count);
+    SM_ASSERT(data);
+  }
   chunk->data = data;
 
   return (sm_entity_s){.handle = handle, .archetype_index = archetype};
@@ -144,7 +139,7 @@ void scene_set_component(scene_s *scene, sm_entity_s entity, void *data) {
 
   SM_ASSERT(scene);
 
-  chunk_s *chunk = SM_HT_GET(scene->map_archetype, entity.archetype_index);
+  sm_chunk_s *chunk = SM_HT_GET(scene->map_archetype, entity.archetype_index);
   if (chunk == NULL) {
     SM_LOG_WARN("no chunk for archetype %lu", entity.archetype_index);
     return;
@@ -156,14 +151,14 @@ void scene_set_component(scene_s *scene, sm_entity_s entity, void *data) {
   memcpy((uint8_t *)chunk->data + (index * chunk->size), data, chunk->size);
 }
 
-void scene_get_component(scene_s *scene, sm_entity_s entity, void *data) {
+const void *scene_get_component(scene_s *scene, sm_entity_s entity) {
 
   SM_ASSERT(scene);
 
-  chunk_s *chunk = SM_HT_GET(scene->map_archetype, entity.archetype_index);
+  sm_chunk_s *chunk = SM_HT_GET(scene->map_archetype, entity.archetype_index);
   if (chunk == NULL) {
     SM_LOG_INFO("no chunk for archetype %lu", entity.archetype_index);
-    return;
+    return NULL;
   }
 
   SM_ASSERT(chunk->pool);
@@ -172,40 +167,22 @@ void scene_get_component(scene_s *scene, sm_entity_s entity, void *data) {
   uint32_t index = sm_handle_index(entity.handle);
   SM_ASSERT(index < chunk->count);
 
-  memcpy(data, (uint8_t *)chunk->data + (index * chunk->size), chunk->size);
+  return (uint8_t *)chunk->data + (index * chunk->size);
+
+  /* memcpy(data, (uint8_t *)chunk->data + (index * chunk->size), chunk->size); */
 }
 
-void scene_set_system(scene_s *scene, component_s comp, system_f system, uint32_t flags) {
+void scene_register_system(scene_s *scene, sm_component_t comp, system_f system, uint32_t flags) {
 
   SM_ASSERT(scene);
   SM_ASSERT(SM_MASK_CHK_EQ(scene->registered_components, comp) && "component not registered");
 
-  system_s sys;
+  sm_system_s sys;
   sys.components = comp;
   sys.system = system;
   sys.flags = flags;
 
   SM_ARRAY_PUSH(scene->systems, sys);
-}
-
-bool system_iter_next(system_iterator_s *iter) {
-
-  if (iter->index >= iter->length) {
-    return false;
-  }
-
-  iter->iter_data_count = 0;
-
-  for (uint32_t i = 0; i < SM_ARRAY_SIZE(iter->desc); i++) {
-    const component_desc_s *desc = &iter->desc[i];
-    iter->iter_data[i].data = ((uint8_t *)iter->data) + (iter->index * iter->size) + desc->offset;
-    iter->iter_data[i].size = desc->size;
-    iter->iter_data_count++;
-  }
-
-  iter->index++;
-
-  return true;
 }
 
 void scene_do(scene_s *scene, float dt) {
@@ -214,18 +191,18 @@ void scene_do(scene_s *scene, float dt) {
 
   for (size_t i = 0; i < SM_ARRAY_SIZE(scene->systems); ++i) {
 
-    system_s *sys = &scene->systems[i];
+    sm_system_s *sys = &scene->systems[i];
 
     if (SM_MASK_CHK(sys->flags, SM_SYSTEM_EXCLUSIVE_FLAG)) {
 
-      chunk_s *chunk = SM_HT_GET(scene->map_archetype, sys->components);
+      sm_chunk_s *chunk = SM_HT_GET(scene->map_archetype, sys->components);
 
       if (chunk == NULL) {
         /* SM_LOG_WARN("no chunk found for system %lu", sys->components); */
         continue;
       }
 
-      system_iterator_s iter;
+      sm_system_iterator_s iter;
       iter.length = chunk->count;
       iter.size = chunk->size;
       iter.data = chunk->data;
@@ -238,30 +215,29 @@ void scene_do(scene_s *scene, float dt) {
 
       for (size_t j = 0; j < SM_HT_LENGTH(scene->map_archetype); ++j) {
 
-        component_s key = scene->map_archetype[j].key;
-        chunk_s *chunk = scene->map_archetype[j].value;
+        sm_component_t key = scene->map_archetype[j].key;
+        sm_chunk_s *chunk = scene->map_archetype[j].value;
 
         if (!chunk->pool) {
           SM_LOG_WARN("no pool for archetype %zu", j);
           continue;
         }
 
-        system_iterator_s iter = {0};
+        sm_system_iterator_s iter = {0};
         iter.size = chunk->size;
         size_t offset = 0;
         iter.length = chunk->count;
         iter.data = chunk->data;
         iter.index = 0;
-
         if (SM_MASK_CHK_EQ(key, sys->components)) {
 
           for (uint32_t k = 0; k < BIT; ++k) {
 
-            component_s cmp = key & (component_s)(1ULL << k);
+            sm_component_t cmp = key & (sm_component_t)(1ULL << k);
 
             if (cmp) {
 
-              component_desc_s desc = *component_get_desc(cmp);
+              sm_component_desc_s desc = *component_get_desc(cmp);
 
               if (SM_MASK_CHK(sys->components, cmp)) {
 
@@ -280,18 +256,4 @@ void scene_do(scene_s *scene, float dt) {
   }
 }
 
-/* https://stackoverflow.com/a/11398748 */
-SM_PRIVATE
-const uint32_t sm__tab32[32] = {0, 9,  1,  10, 13, 21, 2,  29, 11, 14, 16, 18, 22, 25, 3, 30,
-                                8, 12, 20, 28, 15, 17, 24, 7,  19, 27, 23, 6,  26, 5,  4, 31};
-
-SM_PRIVATE
-uint32_t sm__log2_32(uint32_t value) {
-  value |= value >> 1;
-  value |= value >> 2;
-  value |= value >> 4;
-  value |= value >> 8;
-  value |= value >> 16;
-  return sm__tab32[(uint32_t)(value * 0x07C4ACDD) >> 27];
-}
 #undef SM_MODULE_NAME

@@ -43,6 +43,7 @@ typedef struct application_s {
 
   struct timer_s *timer;
 
+  float thickness;
   double delta;
   double fps;
 
@@ -115,6 +116,7 @@ bool application_ctor(application_s *app, const char *name) {
 
   app->delta = 0.0;
   app->is_running = true;
+  app->thickness = 1.0;
 
   return true;
 }
@@ -200,7 +202,7 @@ void application_do(application_s *app) {
     size_t stack_size = stack_layer_get_size(app->stack);
     for (size_t i = 0; i < stack_size; ++i) {
       struct layer_s *layer = stack_layer_get_layer(app->stack, i);
-      layer_update(layer, app->delta);
+      layer_update(layer, app->delta * app->thickness);
     }
 
     static bool open = true;
@@ -217,6 +219,8 @@ void application_do(application_s *app) {
 
     if (open)
       sm__application_status_gui(app);
+
+    /* igSliderFloat("dt", &app->thickness, -1.0, 1.0, "%.3f", 0); */
 
     cimgui_end(app->cimgui);
 
@@ -313,7 +317,7 @@ void sm__application_status_gui(application_s *app) {
   igSetNextWindowBgAlpha(0.35f); // Transparent background
   if (igBegin("Application status overlay", NULL, window_flags)) {
     igText("average %.3f ms/frame (%.1f FPS)", 1000.0f / app->fps, app->fps);
-    igText("Delta: %f", app->delta);
+    igText("Delta: %f", app->delta * app->thickness);
     igText("Vsync: %s", window_is_vsync(app->window) ? "true" : "false");
   }
   igEnd();

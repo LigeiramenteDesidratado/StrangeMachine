@@ -2,6 +2,8 @@
 
 #include "math/smMath.h"
 
+#include "core/smLog.h"
+
 #include "smCameraP.h"
 #include "smInput.h"
 

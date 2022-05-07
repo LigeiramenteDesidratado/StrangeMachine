@@ -42,7 +42,7 @@ typedef void (*texture_dtor_f)(struct texture_s *texture);
 typedef void (*texture_bind_f)(struct texture_s const *texture, uint32_t tex_index);
 typedef void (*texture_unbind_f)(struct texture_s const *texture, uint32_t tex_index);
 
-typedef void (*clear_f)(void);
+typedef void (*clear_f)(uint32_t mask);
 typedef void (*clear_color_f)(float r, float g, float b, float a);
 typedef void (*set_viewport_f)(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 typedef void (*draw_indexed_f)(uint32_t index_count);

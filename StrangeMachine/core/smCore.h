@@ -7,8 +7,8 @@
 #include "core/smLog.h"
 #include "core/smWindow.h"
 
-#include "core/smPool.h"
 #include "core/smHandle.h"
+#include "core/smPool.h"
 
 #include "core/smKeyCode.h"
 #include "core/smMouseCode.h"
@@ -21,5 +21,8 @@
 
 #include "core/thread/smThread.h"
 #include "core/thread/synchronization/smMutex.h"
+
+#include "core/data/smArray.h"
+#include "core/data/smHashTable.h"
 
 #endif /* SM_CORE_H */

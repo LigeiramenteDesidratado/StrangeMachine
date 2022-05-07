@@ -1,41 +1,43 @@
 #ifndef SM_SCENE_COMPONENTS_H
 #define SM_SCENE_COMPONENTS_H
 
-#include "math/smMath.h"
 #include "smpch.h"
 
-typedef uint64_t component_s;
+#include "math/smMath.h"
 
-extern const component_s SM_POSITION_COMP;
-typedef vec3 position_s;
+typedef uint64_t sm_component_t;
 
-extern const component_s SM_VELOCITY_COMP;
+extern const sm_component_t SM_TRANSFORM_COMP;
+/* typedef struct sm__transform_s sm_transform_s; */
+
+extern const sm_component_t SM_VELOCITY_COMP;
 typedef vec3 velocity_s;
 
-extern const component_s SM_FORCE_COMP;
+extern const sm_component_t SM_FORCE_COMP;
 typedef vec3 force_s;
 
-extern const component_s SM_SPEED_COMP;
+extern const sm_component_t SM_SPEED_COMP;
 typedef struct {
   float speed;
 } speed_s;
 
-typedef struct {
+typedef struct sm__component_desc_s {
 
   /* component name */
   char *name;
   /* size in bytes of the component */
   size_t size;
   size_t offset;
+  bool alligned;
 
-  uint32_t id;
+  sm_component_t id;
 
-} component_desc_s;
+} sm_component_desc_s;
 
 void component_init(void);
 void component_teardown(void);
 
-void component_register_component(component_desc_s *desc);
-const component_desc_s *component_get_desc(component_s id);
+void component_register_component(sm_component_desc_s *desc);
+const sm_component_desc_s *component_get_desc(sm_component_t id);
 
 #endif /* SM_SCENE_COMPONENTS_H */

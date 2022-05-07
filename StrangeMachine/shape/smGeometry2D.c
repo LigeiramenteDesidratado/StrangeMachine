@@ -3,56 +3,56 @@
 #include "cglm/vec2.h"
 #include "math/smMath.h"
 
-float line2D_length(line2D line) {
-  vec2 out;
-  glm_vec2_sub(line.end, line.start, out);
-  return glm_vec2_norm(out);
+float line2D_length(sm_line2D line) {
+  sm_vec2 out;
+  glm_vec2_sub(line.end.data, line.start.data, out.data);
+  return glm_vec2_norm(out.data);
 }
 
-float line2D_length_squared(line2D line) {
-  vec2 out;
-  glm_vec2_sub(line.end, line.start, out);
-  return glm_vec2_norm2(out);
+float line2D_length_squared(sm_line2D line) {
+  sm_vec2 out;
+  glm_vec2_sub(line.end.data, line.start.data, out.data);
+  return glm_vec2_norm2(out.data);
 }
 
-void rectangle2D_get_min(rectangle2D rectangle, vec2 out) {
-  vec2 p1, p2;
-  glm_vec2_copy(rectangle.origin, p1);
-  glm_vec2_add(rectangle.origin, rectangle.size, p2);
+void rectangle2D_get_min(sm_rectangle2D rectangle, vec2 out) {
+  sm_vec2 p1, p2;
+  glm_vec2_copy(rectangle.origin.data, p1.data);
+  glm_vec2_add(rectangle.origin.data, rectangle.size, p2.data);
 
-  out[0] = fminf(p1[0], p2[0]);
-  out[1] = fminf(p1[1], p2[1]);
+  out[0] = fminf(p1.x, p2.x);
+  out[1] = fminf(p1.y, p2.y);
 }
 
-void rectangle2D_get_max(rectangle2D rectangle, vec2 out) {
-  vec2 p1, p2;
-  glm_vec2_copy(rectangle.origin, p1);
-  glm_vec2_add(rectangle.origin, rectangle.size, p2);
+void rectangle2D_get_max(sm_rectangle2D rectangle, vec2 out) {
+  sm_vec2 p1, p2;
+  glm_vec2_copy(rectangle.origin.data, p1.data);
+  glm_vec2_add(rectangle.origin.data, rectangle.size, p2.data);
 
-  out[0] = fmaxf(p1[0], p2[0]);
-  out[1] = fmaxf(p1[1], p2[1]);
+  out[0] = fmaxf(p1.x, p2.x);
+  out[1] = fmaxf(p1.y, p2.y);
 }
 
-rectangle2D rectangle2D_from_min_max(vec2 min, vec2 max) {
-  rectangle2D out;
-  glm_vec2_copy(min, out.origin);
+sm_rectangle2D rectangle2D_from_min_max(vec2 min, vec2 max) {
+  sm_rectangle2D out;
+  glm_vec2_copy(min, out.origin.data);
   glm_vec2_sub(max, min, out.size);
   return out;
 }
 
-interval2D interval2D_from_rectangle(rectangle2D rectangle, vec2 axis) {
-  interval2D out;
-  vec2 min, max;
+sm_interval2D interval2D_from_rectangle(sm_rectangle2D rectangle, vec2 axis) {
+  sm_interval2D out;
+  sm_vec2 min, max;
 
-  rectangle2D_get_min(rectangle, min);
-  rectangle2D_get_max(rectangle, max);
+  rectangle2D_get_min(rectangle, min.data);
+  rectangle2D_get_max(rectangle, max.data);
 
   /* use the min and max to build a set of vertices */
   vec2 verts[] = {
-      {min[0], min[1]},
-      {min[0], max[1]},
-      {max[0], max[1]},
-      {max[0], min[1]},
+      {min.x, min.y},
+      {min.x, max.y},
+      {max.x, max.y},
+      {max.x, min.y},
   };
 
   /* project each vertex onto the axis */
@@ -71,46 +71,47 @@ interval2D interval2D_from_rectangle(rectangle2D rectangle, vec2 axis) {
   return out;
 }
 
-bool interval2D_overlap_on_axis(rectangle2D rectangle1, rectangle2D rectangle2, vec2 axis) {
-  interval2D a = interval2D_from_rectangle(rectangle1, axis);
-  interval2D b = interval2D_from_rectangle(rectangle2, axis);
+bool interval2D_overlap_on_axis(sm_rectangle2D rectangle1, sm_rectangle2D rectangle2, vec2 axis) {
+  sm_interval2D a = interval2D_from_rectangle(rectangle1, axis);
+  sm_interval2D b = interval2D_from_rectangle(rectangle2, axis);
 
   return ((b.min <= a.max) && (a.min <= b.max));
 }
 
 /* Point containment */
-bool point2D_on_line(point2D point, line2D line) {
+bool point2D_on_line(sm_point2D point, sm_line2D line) {
   /* find the slope of the line */
-  float dx = line.end[0] - line.start[0];
-  float dy = line.end[1] - line.start[1];
+  float dx = line.end.x - line.start.x;
+  float dy = line.end.y - line.start.y;
 
   float slope = dy / dx;
 
   /* find the y-intercept of the line */
-  float y_intercept = line.start[1] - slope * line.start[0];
+  float y_intercept = line.start.y - slope * line.start.x;
 
   /* check line equation */
-  return CMP(point[1], slope * point[0] + y_intercept);
+  return CMP(point.y, slope * point.x + y_intercept);
 }
 
-bool point2D_in_circle(point2D point, circle2D circle) {
+bool point2D_in_circle(sm_point2D point, sm_circle2D circle) {
 
-  line2D line = line2D_new(point, circle.position);
+  sm_line2D line = sm_line2D_new(point, circle.position);
 
   return line2D_length_squared(line) < circle.radius * circle.radius;
 }
 
-bool point2D_in_rectangle(point2D point, rectangle2D rectangle) {
-  vec2 min, max;
-  rectangle2D_get_min(rectangle, min);
-  rectangle2D_get_max(rectangle, max);
+bool point2D_in_rectangle(sm_point2D point, sm_rectangle2D rectangle) {
+  sm_vec2 min, max;
 
-  return min[0] <= point[0] && min[1] <= point[1] && point[0] <= max[0] && point[1] <= max[1];
+  rectangle2D_get_min(rectangle, min.data);
+  rectangle2D_get_max(rectangle, max.data);
+
+  return min.x <= point.x && min.y <= point.y && point.x <= max.x && point.y <= max.y;
 }
 
-bool point2D_in_oriented_rectangle(point2D point, oriented_rectangle2D oriented_rectangle) {
+bool point2D_in_oriented_rectangle(sm_point2D point, sm_oriented_rectangle2D oriented_rectangle) {
   vec2 rot_vec;
-  glm_vec2_sub(point, oriented_rectangle.position, rot_vec);
+  glm_vec2_sub(point.data, oriented_rectangle.position.data, rot_vec);
   float theta = -glm_rad(oriented_rectangle.rotation);
 
   mat2 z_rotation_2x2 = {{cosf(theta), sinf(theta)}, {-sinf(theta), cosf(theta)}};
@@ -124,15 +125,15 @@ bool point2D_in_oriented_rectangle(point2D point, oriented_rectangle2D oriented_
 }
 
 /* Line containment */
-bool line2D_intersects_rectangle(line2D line, rectangle2D rectangle);
-bool line2D_intersects_oriented_rectangle(line2D line, oriented_rectangle2D oriented_rectangle);
+bool line2D_intersects_rectangle(sm_line2D line, sm_rectangle2D rectangle);
+bool line2D_intersects_oriented_rectangle(sm_line2D line, sm_oriented_rectangle2D oriented_rectangle);
 
-bool line2D_intersects_circle(line2D line, circle2D circle) {
+bool line2D_intersects_circle(sm_line2D line, sm_circle2D circle) {
   vec2 ab;
-  glm_vec2_sub(line.end, line.start, ab);
+  glm_vec2_sub(line.end.data, line.start.data, ab);
 
   vec2 ac;
-  glm_vec2_sub(circle.position, line.start, ac);
+  glm_vec2_sub(circle.position.data, line.start.data, ac);
 
   float ab_length_squared = glm_vec2_norm2(ab);
 
@@ -144,38 +145,38 @@ bool line2D_intersects_circle(line2D line, circle2D circle) {
     return false;
   }
 
-  point2D closest_point;
-  glm_vec2_scale(ab, t, closest_point);
-  glm_vec2_add(line.start, closest_point, closest_point);
+  sm_point2D closest_point;
+  glm_vec2_scale(ab, t, closest_point.data);
+  glm_vec2_add(line.start.data, closest_point.data, closest_point.data);
 
-  line2D circle_to_closest_point;
-  glm_vec2_copy(circle.position, circle_to_closest_point.start);
-  glm_vec2_copy(closest_point, circle_to_closest_point.end);
+  sm_line2D circle_to_closest_point;
+  glm_vec2_copy(circle.position.data, circle_to_closest_point.start.data);
+  glm_vec2_copy(closest_point.data, circle_to_closest_point.end.data);
 
   return line2D_length_squared(circle_to_closest_point) < circle.radius * circle.radius;
 }
 
-bool line2D_intersects_rectangle(line2D line, rectangle2D rectangle) {
+bool line2D_intersects_rectangle(sm_line2D line, sm_rectangle2D rectangle) {
   if (point2D_in_rectangle(line.start, rectangle) || point2D_in_rectangle(line.end, rectangle)) {
     return true;
   }
 
-  vec2 norm;
-  glm_vec2_sub(line.end, line.start, norm);
-  glm_vec2_normalize(norm);
+  sm_vec2 norm;
+  glm_vec2_sub(line.end.data, line.start.data, norm.data);
+  glm_vec2_normalize(norm.data);
 
-  norm[0] = (norm[0] != 0.0f) ? 1.0f / norm[0] : 0.0f;
-  norm[1] = (norm[1] != 0.0f) ? 1.0f / norm[1] : 0.0f;
+  norm.x = (norm.x != 0.0f) ? 1.0f / norm.x : 0.0f;
+  norm.y = (norm.y != 0.0f) ? 1.0f / norm.y : 0.0f;
 
   vec2 min, max;
   rectangle2D_get_min(rectangle, min);
   rectangle2D_get_max(rectangle, max);
 
-  glm_vec2_sub(min, line.start, min);
-  glm_vec2_sub(max, line.start, max);
+  glm_vec2_sub(min, line.start.data, min);
+  glm_vec2_sub(max, line.start.data, max);
 
-  glm_vec2_mul(min, norm, min);
-  glm_vec2_mul(max, norm, max);
+  glm_vec2_mul(min, norm.data, min);
+  glm_vec2_mul(max, norm.data, max);
 
   float min_t = fmaxf(fminf(min[0], max[0]), fminf(min[1], max[1]));
   float max_t = fminf(fmaxf(min[0], max[0]), fmaxf(min[1], max[1]));
@@ -188,42 +189,42 @@ bool line2D_intersects_rectangle(line2D line, rectangle2D rectangle) {
   return t > 0.0f && t * t < line2D_length_squared(line);
 }
 
-bool line2D_intersects_oriented_rectangle(line2D line, oriented_rectangle2D oriented_rectangle) {
+bool line2D_intersects_oriented_rectangle(sm_line2D line, sm_oriented_rectangle2D oriented_rectangle) {
   // TODO: implement this
   return false;
 }
 
 /* Circle containment */
 
-bool circle2D_intersects_circle(circle2D circle1, circle2D circle2) {
-  float distance_squared = glm_vec2_distance2(circle1.position, circle2.position);
+bool circle2D_intersects_circle(sm_circle2D circle1, sm_circle2D circle2) {
+  float distance_squared = glm_vec2_distance2(circle1.position.data, circle2.position.data);
   return distance_squared <= (circle1.radius + circle2.radius) * (circle1.radius + circle2.radius);
 }
 
-bool circle2D_intersects_rectangle(circle2D circle, rectangle2D rectangle) {
-  vec3 min, max;
-  rectangle2D_get_min(rectangle, min);
-  rectangle2D_get_max(rectangle, max);
+bool circle2D_intersects_rectangle(sm_circle2D circle, sm_rectangle2D rectangle) {
+  sm_vec3 min, max;
+  rectangle2D_get_min(rectangle, min.data);
+  rectangle2D_get_max(rectangle, max.data);
 
   /* find the closest point on the rectangle to the circle */
-  point2D closest_point;
-  glm_vec2_copy(circle.position, closest_point);
+  sm_point2D closest_point;
+  glm_vec2_copy(circle.position.data, closest_point.data);
 
-  if (closest_point[0] < min[0]) {
-    closest_point[0] = min[0];
-  } else if (closest_point[0] > max[0]) {
-    closest_point[0] = max[0];
+  if (closest_point.x < min.x) {
+    closest_point.x = min.x;
+  } else if (closest_point.x > max.x) {
+    closest_point.x = max.x;
   }
 
   /* check if the closest point is inside the circle */
-  line2D line = line2D_new(circle.position, closest_point);
+  sm_line2D line = sm_line2D_new(circle.position, closest_point);
   return line2D_length_squared(line) < circle.radius * circle.radius;
 }
 
-bool circle2D_intersects_oriented_rectangle(circle2D circle, oriented_rectangle2D oriented_rectangle) {
+bool circle2D_intersects_oriented_rectangle(sm_circle2D circle, sm_oriented_rectangle2D oriented_rectangle) {
   /* create a line from the center of the circle to the center of the oriented rectangle */
-  vec2 r;
-  glm_vec2_sub(circle.position, oriented_rectangle.position, r);
+  sm_vec2 r;
+  glm_vec2_sub(circle.position.data, oriented_rectangle.position.data, r.data);
 
   float theta = -glm_rad(oriented_rectangle.rotation);
 
@@ -234,28 +235,28 @@ bool circle2D_intersects_oriented_rectangle(circle2D circle, oriented_rectangle2
 }
 
 /* Rectangle containment */
-bool rectangle2D_intersects_rectangle(rectangle2D rectangle1, rectangle2D rectangle2) {
-  vec3 min1, max1;
-  rectangle2D_get_min(rectangle1, min1);
-  rectangle2D_get_max(rectangle1, max1);
+bool rectangle2D_intersects_rectangle(sm_rectangle2D rectangle1, sm_rectangle2D rectangle2) {
+  sm_vec3 min1, max1;
+  rectangle2D_get_min(rectangle1, min1.data);
+  rectangle2D_get_max(rectangle1, max1.data);
 
-  vec3 min2, max2;
-  rectangle2D_get_min(rectangle2, min2);
-  rectangle2D_get_max(rectangle2, max2);
+  sm_vec3 min2, max2;
+  rectangle2D_get_min(rectangle2, min2.data);
+  rectangle2D_get_max(rectangle2, max2.data);
 
   /* check for overlap on X and Y axes separately */
-  bool x_overlap = (min2[0] <= max1[0]) && (min1[0] <= max2[0]);
-  bool y_overlap = (min2[1] <= max1[1]) && (min1[1] <= max2[1]);
+  bool x_overlap = (min2.x <= max1.x) && (min1.x <= max2.x);
+  bool y_overlap = (min2.y <= max1.y) && (min1.y <= max2.y);
 
   return x_overlap && y_overlap;
 }
 
-bool rectangle2D_intersects_rectangle_SAT(rectangle2D rectangle1, rectangle2D rectangle2) {
+bool rectangle2D_intersects_rectangle_SAT(sm_rectangle2D rectangle1, sm_rectangle2D rectangle2) {
   /* there are two potential axes for the separation between the two rectangles, the X and the Y axis */
-  vec2 axis_to_check[2] = {{1.0f, 0.0f}, {0.0f, 1.0f}};
+  sm_vec2 axis_to_check[2] = {sm_vec2_new(1.0f, 0.0f), sm_vec2_new(0.0f, 1.0f)};
 
   for (int i = 0; i < 2; ++i) {
-    if (!interval2D_overlap_on_axis(rectangle1, rectangle2, axis_to_check[i])) {
+    if (!interval2D_overlap_on_axis(rectangle1, rectangle2, axis_to_check[i].data)) {
       return false;
     }
   }
@@ -263,24 +264,24 @@ bool rectangle2D_intersects_rectangle_SAT(rectangle2D rectangle1, rectangle2D re
   return true;
 }
 
-circle2D circle2D_containing_points(point2D *points, int count) {
-  point2D center;
+sm_circle2D circle2D_containing_points(sm_point2D *points, int count) {
+  sm_point2D center;
   for (int i = 0; i < count; ++i) {
-    glm_vec2_add(center, points[i], center);
+    glm_vec2_add(center.data, points[i].data, center.data);
   }
 
   /* divide by the number of points */
-  glm_vec2_scale(center, 1.0f / (float)count, center);
+  glm_vec2_scale(center.data, 1.0f / (float)count, center.data);
 
-  circle2D circle;
-  glm_vec2_copy(center, circle.position);
+  sm_circle2D circle;
+  glm_vec2_copy(center.data, circle.position.data);
   circle.radius = 0.0f;
 
   for (int i = 1; i < count; ++i) {
-    vec2 sq;
-    glm_vec2_sub(center, points[0], sq);
+    sm_vec2 sq;
+    glm_vec2_sub(center.data, points[0].data, sq.data);
 
-    float distance = glm_vec2_norm2(sq);
+    float distance = glm_vec2_norm2(sq.data);
     if (distance > circle.radius) {
       circle.radius = distance;
     }
@@ -290,18 +291,18 @@ circle2D circle2D_containing_points(point2D *points, int count) {
   return circle;
 }
 
-rectangle2D rectangle2D_containing_points(point2D *points, int count) {
-  vec2 min, max;
-  glm_vec2_copy(points[0], min);
-  glm_vec2_copy(points[0], max);
+sm_rectangle2D rectangle2D_containing_points(sm_point2D *points, int count) {
+  sm_vec2 min, max;
+  glm_vec2_copy(points[0].data, min.data);
+  glm_vec2_copy(points[0].data, max.data);
 
   for (int i = 1; i < count; ++i) {
-    min[0] = points[i][0] < min[0] ? points[i][0] : min[0];
-    min[1] = points[i][1] < min[1] ? points[i][1] : min[1];
+    min.x = points[i].x < min.x ? points[i].x : min.x;
+    min.y = points[i].y < min.y ? points[i].y : min.y;
 
-    max[0] = points[i][0] > max[0] ? points[i][0] : max[0];
-    max[1] = points[i][1] > max[1] ? points[i][1] : max[1];
+    max.x = points[i].x > max.x ? points[i].x : max.x;
+    max.y = points[i].y > max.y ? points[i].y : max.y;
   }
 
-  return rectangle2D_from_min_max(min, max);
+  return rectangle2D_from_min_max(min.data, max.data);
 }
