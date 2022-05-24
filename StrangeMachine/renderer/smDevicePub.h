@@ -5,6 +5,8 @@
 #include "renderer/api/smTypes.h"
 #include "renderer/smDeviceDefs.h"
 
+typedef void *(*loadproc_f)(const char *name);
+
 /* Polymorphic behavior functions */
 /* Shader */
 typedef struct shader_s *(*shader_new_f)(void);
@@ -42,10 +44,12 @@ typedef void (*texture_dtor_f)(struct texture_s *texture);
 typedef void (*texture_bind_f)(struct texture_s const *texture, uint32_t tex_index);
 typedef void (*texture_unbind_f)(struct texture_s const *texture, uint32_t tex_index);
 
-typedef void (*clear_f)(uint32_t mask);
+typedef void (*clear_f)(buffer_bit_e mask);
 typedef void (*clear_color_f)(float r, float g, float b, float a);
 typedef void (*set_viewport_f)(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 typedef void (*draw_indexed_f)(uint32_t index_count);
+typedef void (*enable_f)(enable_flags_e mask);
+typedef bool (*loader_f)(loadproc_f load);
 
 /* The scene_s "class" has three behavior functions. The draw_f, do_f and get_look_at_f functions
  * are supposed to be polymorphic and can be overridden by the child classes. */
@@ -54,10 +58,14 @@ typedef struct {
   /* api will works like a runtime type check */
   device_api_e device_api;
 
+  loader_f loader;
+
   clear_f clear;
   clear_color_f clear_color;
   set_viewport_f set_viewport;
   draw_indexed_f draw_indexed;
+
+  enable_f enable;
 
   /* Shader */
   shader_new_f shader_new;

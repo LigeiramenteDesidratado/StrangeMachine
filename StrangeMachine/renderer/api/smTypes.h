@@ -1,8 +1,6 @@
 #ifndef SM_TYPES_H
 #define SM_TYPES_H
 
-#include "renderer/api/smDescriptor.h"
-
 struct shader_s;
 struct index_buffer_s;
 struct vertex_buffer_s;
@@ -42,5 +40,19 @@ typedef enum {
    : (TYPE) == SM_MAT3  ? "mat3"                                                                                       \
    : (TYPE) == SM_MAT4  ? "mat4"                                                                                       \
                         : "unknown")
+
+typedef enum {
+
+  SM_DEPTH_TEST = 0x0B71,
+
+} enable_flags_e;
+
+typedef enum {
+
+  SM_DEPTH_BUFFER_BIT = 0x00000100,   /* GL_DEPTH_BUFFER_BIT   */
+  SM_STENCIL_BUFFER_BIT = 0x00000400, /* GL_STENCIL_BUFFER_BIT */
+  SM_COLOR_BUFFER_BIT = 0x00004000,   /* GL_COLOR_BUFFER_BIT */
+
+} buffer_bit_e;
 
 #endif /* SM_TYPES_H */

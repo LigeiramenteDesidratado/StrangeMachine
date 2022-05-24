@@ -4,12 +4,11 @@
 #include "math/smMath.h"
 
 #include "renderer/api/smDescriptor.h"
+#include "renderer/api/smTypes.h"
 #include "renderer/smDevicePub.h"
 
 #include "smCamera.h"
 #include "util/colors.h"
-
-#include "vendor/gladGL21/glad.h"
 
 typedef struct sm__vertex_s {
   vec3 position;
@@ -85,35 +84,31 @@ bool renderer3D_ctor(sm_renderer3D_s *renderer) {
   if (!DEVICE->vertex_buffer_ctor(renderer->VBO, &vbo_desc))
     return false;
 
-  renderer->VBO = DEVICE->vertex_buffer_new();
-  if (!DEVICE->vertex_buffer_ctor(renderer->VBO, &vbo_desc))
-    return false;
-
   attribute_desc_s attr_desc[4] = {{
                                        .index = POSITION_LOC,
                                        .size = sizeof(vec3) / sizeof(float),
-                                       .type = 0x1406, /* GL_FLOAT */
+                                       .type = SM_FLOAT,
                                        .stride = sizeof(sm_vertex_s),
                                        .pointer = (const void *)offsetof(sm_vertex_s, position),
                                    },
                                    {
                                        .index = TEX_COORD_LOC,
                                        .size = sizeof(vec2) / sizeof(float),
-                                       .type = 0x1406, /* GL_FLOAT */
+                                       .type = SM_FLOAT,
                                        .stride = sizeof(sm_vertex_s),
                                        .pointer = (const void *)offsetof(sm_vertex_s, tex_coord),
                                    },
-                                    {
-                                        .index = COLOR_LOC,
-                                        .size = sizeof(vec4) / sizeof(float),
-                                        .type = 0x1406, /* GL_FLOAT */
-                                        .stride = sizeof(sm_vertex_s),
-                                        .pointer = (const void *)offsetof(sm_vertex_s, color),
-                                    },
+                                   {
+                                       .index = COLOR_LOC,
+                                       .size = sizeof(vec4) / sizeof(float),
+                                       .type = SM_FLOAT,
+                                       .stride = sizeof(sm_vertex_s),
+                                       .pointer = (const void *)offsetof(sm_vertex_s, color),
+                                   },
                                    {
                                        .index = NORMAL_LOC,
                                        .size = sizeof(vec3) / sizeof(float),
-                                       .type = 0x1406, /* GL_FLOAT */
+                                       .type = SM_FLOAT,
                                        .stride = sizeof(sm_vertex_s),
                                        .pointer = (const void *)offsetof(sm_vertex_s, normal),
                                    }};
@@ -150,7 +145,6 @@ void renderer3D_dtor(sm_renderer3D_s *renderer) {
   DEVICE->index_buffer_dtor(renderer->EBO);
   DEVICE->vertex_buffer_dtor(renderer->VBO);
   DEVICE->shader_dtor(renderer->program);
-
   SM_FREE(renderer->indices);
   SM_FREE((sm_vertex_s *)renderer->vertices);
 
@@ -202,7 +196,7 @@ void renderer3D_begin(sm_renderer3D_s *renderer) {
 
   DEVICE->shader_bind(renderer->program);
 
-  glEnable(GL_DEPTH_TEST);
+  DEVICE->enable(SM_DEPTH_TEST);
 
   DEVICE->shader_set_uniform(renderer->program, "u_view", view, SM_MAT4);
   DEVICE->shader_set_uniform(renderer->program, "u_projection", proj, SM_MAT4);
@@ -230,7 +224,7 @@ void renderer3D_clear(sm_renderer3D_s *renderer) {
 
   SM_ASSERT(renderer);
 
-  DEVICE->clear(0x00004000 | 0x00000100 | 0x00000400);
+  DEVICE->clear(SM_DEPTH_BUFFER_BIT | SM_COLOR_BUFFER_BIT);
 }
 
 void renderer3D_draw_cube_transform(sm_renderer3D_s *renderer, sm_transform_s transform, sm_vec4 color) {

@@ -4,10 +4,16 @@
 #include "smpch.h"
 
 #include "core/smCore.h"
+#include "renderer/api/smTypes.h"
+#include "renderer/smDevicePub.h"
+#include "vendor/gladGL21/glad.h"
+
+bool GL21loader(loadproc_f load);
 
 #ifdef SM_DEBUG
 bool GL21log_call();
 void GL21clear_error();
+GLint GL21map_sm_to_gl_type(types_e type);
 
   #define glCall(CALL)                                                                                                 \
     do {                                                                                                               \

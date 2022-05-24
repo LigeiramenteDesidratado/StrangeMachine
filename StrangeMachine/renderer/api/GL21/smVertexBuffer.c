@@ -73,7 +73,7 @@ void GL21vertex_buffer_set_pointer(vertex_buffer_s *vertex_buffer, attribute_des
   /* } */
 
   for (size_t i = 0; i < length; ++i) {
-    glCall(glVertexAttribPointer(attributes[i].index, attributes[i].size, attributes[i].type, GL_FALSE,
+    glCall(glVertexAttribPointer(attributes[i].index, attributes[i].size, GL21map_sm_to_gl_type(attributes[i].type), GL_FALSE,
                                  attributes[i].stride, attributes[i].pointer));
   }
 

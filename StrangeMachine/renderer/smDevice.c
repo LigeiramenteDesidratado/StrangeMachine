@@ -19,10 +19,14 @@ bool device_init(device_api_e api) {
   switch (DEVICE->device_api) {
   case OPENGL21: {
 
+    DEVICE->loader = GL21loader;
+
     DEVICE->clear_color = GL21clear_color;
     DEVICE->clear = GL21clear;
     DEVICE->set_viewport = GL21_viewport;
     DEVICE->draw_indexed = GL21draw_indexed;
+
+    DEVICE->enable = GL21enable;
 
     DEVICE->shader_new = GL21shader_new;
     DEVICE->shader_ctor = GL21shader_ctor;

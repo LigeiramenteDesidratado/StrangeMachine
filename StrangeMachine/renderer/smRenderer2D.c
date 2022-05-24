@@ -128,28 +128,28 @@ bool renderer2D_ctor(renderer2D_s *renderer) {
       {
           .index = POSITION_LOC,
           .size = sizeof(vec3) / sizeof(float),
-          .type = 0x1406, /* GL_FLOAT */
+          .type = SM_FLOAT,
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, position),
       },
       {
           .index = COLOR_LOC,
           .size = sizeof(vec4) / sizeof(float),
-          .type = 0x1406, /* GL_FLOAT */
+          .type = SM_FLOAT,
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, color),
       },
       {
           .index = TEX_COORD_LOC,
           .size = sizeof(vec2) / sizeof(float),
-          .type = 0x1406, /* GL_FLOAT */
+          .type = SM_FLOAT,
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, tex_coord),
       },
       {
           .index = TEX_ID_LOC,
           .size = sizeof(float) / sizeof(float),
-          .type = 0x1406, /* GL_FLOAT */
+          .type = SM_FLOAT,
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, tex_id),
       },
@@ -340,7 +340,7 @@ void renderer2D_clear(renderer2D_s *renderer) {
 
   SM_ASSERT(renderer);
 
-  DEVICE->clear(0x00004000);
+  DEVICE->clear(SM_COLOR_BUFFER_BIT);
 }
 
 void renderer2D_set_viewport(renderer2D_s *renderer, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
@@ -425,25 +425,25 @@ void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 si
   sm_vec3 scale = sm_vec3_new(size[0], size[1], 1.0f);
   glm_scale(transform, scale.data);
 
-  vec2 tex_coords[QUAD_SIZE] = {
-      {0.0f, 0.0f},
-      {1.0f, 0.0f},
-      {1.0f, 1.0f},
-      {0.0f, 1.0f},
+  static sm_vec2 tex_coords[QUAD_SIZE] = {
+      sm_vec2_new(0.0f, 0.0f),
+      sm_vec2_new(1.0f, 0.0f),
+      sm_vec2_new(1.0f, 1.0f),
+      sm_vec2_new(0.0f, 1.0f),
   };
 
-  vec4 quad_vertex_positions[QUAD_SIZE] = {
-      {-0.5f, -0.5f, 0.0f, 1.0f},
-      {0.5f, -0.5f, 0.0f, 1.0f},
-      {0.5f, 0.5f, 0.0f, 1.0f},
-      {-0.5f, 0.5f, 0.0f, 1.0f},
+  static sm_vec4 quad_vertex_positions[QUAD_SIZE] = {
+      sm_vec4_new(-0.5f, -0.5f, 0.0f, 1.0f),
+      sm_vec4_new(0.5f, -0.5f, 0.0f, 1.0f),
+      sm_vec4_new(0.5f, 0.5f, 0.0f, 1.0f),
+      sm_vec4_new(-0.5f, 0.5f, 0.0f, 1.0f),
   };
 
   for (int i = 0; i < QUAD_SIZE; i++) {
 
-    glm_mat4_mulv3(transform, quad_vertex_positions[i], 1.0f, renderer->__vertex_buffer[i].position);
+    glm_mat4_mulv3(transform, quad_vertex_positions[i].data, 1.0f, renderer->__vertex_buffer[i].position);
     glm_vec4_ucopy(color.data, renderer->__vertex_buffer[i].color);
-    glm_vec2_copy(tex_coords[i], renderer->__vertex_buffer[i].tex_coord);
+    glm_vec2_copy(tex_coords[i].data, renderer->__vertex_buffer[i].tex_coord);
     renderer->__vertex_buffer[i].tex_id = tex_id;
   }
 

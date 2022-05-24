@@ -3,6 +3,7 @@
 
 #include "smpch.h"
 
+#include "renderer/api/smDescriptor.h"
 #include "renderer/api/smTypes.h"
 
 struct index_buffer_s *GL21index_buffer_new(void);

@@ -3,6 +3,8 @@
 
 #include "smpch.h"
 
+#include "renderer/api/smTypes.h"
+
 typedef struct {
 
   bool dynamic;
@@ -15,7 +17,7 @@ typedef struct {
 
   uint32_t index;
   int32_t size;
-  uint32_t type;
+  types_e type;
   size_t stride;
   const void *pointer;
 

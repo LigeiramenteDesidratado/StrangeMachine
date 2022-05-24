@@ -1,6 +1,7 @@
 #include "vendor/gladGL21/glad.h"
 
 #include "renderer/api/GL21/smGLUtil.h"
+#include "renderer/api/smTypes.h"
 
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "GL21"
@@ -10,12 +11,16 @@ void GL21init(void) {
   SM_LOG_INFO("GL21 initialized");
 }
 
+void GL21enable(enable_flags_e flags) {
+  glCall(glEnable(flags));
+}
+
 void GL21clear_color(float r, float g, float b, float a) {
 
   glCall(glClearColor(r, g, b, a));
 }
 
-void GL21clear(uint32_t mask) {
+void GL21clear(buffer_bit_e mask) {
 
   /* Depois de 4 dias de debugging, finalmente posso morrer em paz. */
   glCall(glClear(mask));

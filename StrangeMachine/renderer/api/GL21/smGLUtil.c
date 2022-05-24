@@ -2,12 +2,18 @@
 
 #include "vendor/gladGL21/glad.h"
 
+#include "renderer/api/GL21/smGLUtil.h"
 #include "renderer/api/smTypes.h"
 
 #include "core/smCore.h"
 
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "GL21"
+
+bool GL21loader(loadproc_f load) {
+
+  return gladLoadGLLoader(load);
+}
 
 SM_PRIVATE
 const char *GL21error_to_string(GLenum error) {
