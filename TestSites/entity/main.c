@@ -145,18 +145,19 @@ void output_speed(sm_system_iterator_s *iter, float dt) {
   }
 }
 
-void transform_system(sm_system_iterator_s *iter, float dt) {
+void transform_move_system(sm_system_iterator_s *iter, float dt) {
 
   (void)dt;
 
-  printf("transform system\n");
-
   while (system_iter_next(iter)) {
 
-    sm_mat4 *transform = (sm_mat4 *)iter->iter_data[0].data;
+    sm_transform_s *transform = (sm_transform_s *)iter->iter_data[0].data;
+    sm_vec3 *velocity = (sm_vec3 *)iter->iter_data[1].data;
+    float *speed = (float *)iter->iter_data[2].data;
 
-    sm_mat4_print((*transform));
-
+    transform->position.x += velocity->x * (*speed) * dt;
+    transform->position.y += velocity->y * (*speed) * dt;
+    transform->position.z += velocity->z * (*speed) * dt;
   }
 }
 
@@ -173,13 +174,11 @@ void on_attach(void *user_data) {
     exit(EXIT_FAILURE);
 
   lab->scene = scene_new();
-  if (!scene_ctor(lab->scene, SM_TRANSFORM_COMP | SM_FORCE_COMP | SM_VELOCITY_COMP | SM_POSITION_COMP | SM_SPEED_COMP))
+  if (!scene_ctor(lab->scene, SM_TRANSFORM_COMP | SM_FORCE_COMP | SM_VELOCITY_COMP | SM_SPEED_COMP))
     exit(EXIT_FAILURE);
 
-  scene_register_system(lab->scene, SM_POSITION_COMP | SM_FORCE_COMP, apply_force, SM_SYSTEM_EXCLUSIVE_FLAG);
-  scene_register_system(lab->scene, SM_POSITION_COMP | SM_VELOCITY_COMP, apply_vel, SM_SYSTEM_INCLUSIVE_FLAG);
-  scene_register_system(lab->scene, SM_TRANSFORM_COMP, transform_system, SM_SYSTEM_INCLUSIVE_FLAG);
-  
+  scene_register_system(lab->scene, SM_TRANSFORM_COMP | SM_VELOCITY_COMP | SM_SPEED_COMP, transform_move_system,
+                        SM_SYSTEM_INCLUSIVE_FLAG);
 
   lab->transform_entity = scene_new_entity(lab->scene, SM_TRANSFORM_COMP);
   scene_set_component(lab->scene, lab->transform_entity, &sm_mat4_identity());
@@ -188,7 +187,7 @@ void on_attach(void *user_data) {
 
   for (size_t i = 0; i < ENTITY_COUNT; ++i) {
     lab->entities[lab->entities_count] =
-        scene_new_entity(lab->scene, SM_POSITION_COMP | SM_VELOCITY_COMP | SM_SPEED_COMP);
+        scene_new_entity(lab->scene, SM_TRANSFORM_COMP | SM_VELOCITY_COMP | SM_SPEED_COMP);
     int32_t posx = (rand() % 800) - 400.0f;
     int32_t posy = (rand() % 600) - 300.0f;
     int32_t posz = 0.0f;
@@ -196,11 +195,14 @@ void on_attach(void *user_data) {
     int32_t vely = (rand() % 6) - 3;
     int32_t velz = 0.0f;
 
-    scene_set_component(lab->scene, lab->entities[lab->entities_count], &(struct {
-                          float position[3];
+    scene_set_component(lab->scene, lab->entities[lab->entities_count],
+                        &(struct {
+                          sm_transform_s transform;
                           float velocity[3];
                           float speed;
-                        }){{posx, posy, posz}, {velx, vely, velz}, 1.0f});
+                        }){sm_transform_new(sm_vec4_new(posx, posy, posz, 0.0f), sm_vec4_one(), sm_vec4_one()),
+                           {velx, vely, velz},
+                           1.0f});
 
     lab->entities_count++;
   }
