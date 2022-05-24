@@ -105,7 +105,7 @@
 
 #endif /* Platform */
 
-#define SM_PLATFORM_MOVILE (SM_PLATFORM_ANDROID || SM_PLATFORM_IOS)
+#define SM_PLATFORM_MOBILE (SM_PLATFORM_ANDROID || SM_PLATFORM_IOS)
 #define SM_PLATFORM_DESKTOP                                                                                            \
   (SM_PLATFORM_WINDOWS || SM_PLATFORM_LINUX || SM_PLATFORM_OSX || SM_PLATFORM_BSD || SM_PLATFORM_HURD)
 

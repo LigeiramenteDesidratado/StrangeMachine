@@ -2,7 +2,6 @@
 
 #include "core/smCore.h"
 
-#include "core/data/smArray.h"
 #include "core/data/smHashTable.h"
 
 #include "core/util/smBitMask.h"
@@ -23,9 +22,9 @@
 #define DMON_ASSERT SM_ASSERT
 
 #define DMON_LOG_ERROR   SM_LOG_ERROR
-#define DMON_LOG_DEBUG   SM_LOG_DEBUG
+#define DMON_LOG_DEBUG   SM_LOG_TRACE
 #define _DMON_LOG_ERRORF SM_LOG_ERROR
-#define _DMON_LOG_DEBUGF SM_LOG_DEBUG
+#define _DMON_LOG_DEBUGF SM_LOG_TRACE
 #include "vendor/dmon/dmon.h"
 
 typedef struct {
@@ -196,7 +195,7 @@ texture_handler_s resource_load_texture(const char *resource) {
 
   snprintf(buf, sizeof(buf), "%s%s", root, resource);
 
-  SM_LOG_INFO("[%s] resource found", buf);
+  SM_LOG_TRACE("[%s] resource found", buf);
   texture_handler_s hdlr = texture_res_new(buf);
 
   res->handler.handle = hdlr.handle;
@@ -249,7 +248,7 @@ void sm__resource_on_found(const char *path) {
     return;
   }
 
-  SM_LOG_DEBUG("[%s] resource found (FOUND)", path);
+  SM_LOG_TRACE("[%s] resource found (FOUND)", path);
 
   resource_type_e ft = sm__resource_get_file_type(path);
   if (ft == RESOURCE_TYPE_INVALID) {
@@ -273,7 +272,7 @@ void sm__resource_on_delete(const char *path) {
   if (!SM_SH_DELETE(RESOURCE->map, path))
     SM_LOG_WARN("[%s] resource does not exist", path);
   else
-    SM_LOG_DEBUG("[%s] resource deleted", path);
+    SM_LOG_TRACE("[%s] resource deleted", path);
 }
 
 SM_PRIVATE
@@ -287,7 +286,7 @@ void sm__resource_on_reload(const char *path) {
     return;
   }
 
-  SM_LOG_DEBUG("[%s] resource reloaded", path);
+  SM_LOG_TRACE("[%s] resource reloaded", path);
   res->status |= RESOURCE_STATUS_RELOADED;
 }
 

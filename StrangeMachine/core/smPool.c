@@ -29,10 +29,10 @@ bool pool_ctor(handle_pool_s *pool, uint32_t capacity) {
   /* Align count to 16, for a better aligned internal memory */
   uint32_t size = sm_align_mask(capacity, 15);
 
-  SM_ARRAY_NEW(pool->dense, size);
-  SM_ARRAY_NEW(pool->sparse, size);
+  SM_ARRAY_CTOR(pool->dense, size);
+  SM_ARRAY_CTOR(pool->sparse, size);
 
-  for (size_t i = 0; i < SM_ARRAY_CAPACITY(pool->dense); i++) {
+  for (size_t i = 0; i < SM_ARRAY_CAP(pool->dense); i++) {
     pool->dense[i] = sm__handle_make(0, i);
   }
 
@@ -49,9 +49,9 @@ void pool_dtor(handle_pool_s *pool) {
 
 sm_handle handle_new(handle_pool_s *pool) {
 
-  if (SM_ARRAY_SIZE(pool->dense) < SM_ARRAY_CAPACITY(pool->dense)) {
+  if (SM_ARRAY_LEN(pool->dense) < SM_ARRAY_CAP(pool->dense)) {
 
-    uint32_t index = (uint32_t)SM_ARRAY_SIZE(pool->dense);
+    uint32_t index = (uint32_t)SM_ARRAY_LEN(pool->dense);
     sm_handle handle = pool->dense[index];
 
     uint32_t gen = sm_handle_gen(handle);
@@ -60,8 +60,8 @@ sm_handle handle_new(handle_pool_s *pool) {
 
     pool->dense[index] = new_handle;
     pool->sparse[_index] = index;
-    SM_ARRAY_SET_SIZE(pool->dense, SM_ARRAY_SIZE(pool->dense) + 1);
-    SM_ARRAY_SET_SIZE(pool->sparse, SM_ARRAY_SIZE(pool->sparse) + 1);
+    SM_ARRAY_SET_LEN(pool->dense, SM_ARRAY_LEN(pool->dense) + 1);
+    SM_ARRAY_SET_LEN(pool->sparse, SM_ARRAY_LEN(pool->sparse) + 1);
 
     return new_handle;
   }
@@ -75,24 +75,24 @@ bool handle_valid(const handle_pool_s *pool, sm_handle handle) {
   SM_ASSERT(handle);
 
   uint32_t index = pool->sparse[sm_handle_index(handle)];
-  return index < SM_ARRAY_SIZE(pool->dense) && pool->dense[index] == handle;
+  return index < SM_ARRAY_LEN(pool->dense) && pool->dense[index] == handle;
 }
 
 bool handle_full(const handle_pool_s *pool) {
-  return SM_ARRAY_SIZE(pool->dense) == SM_ARRAY_CAPACITY(pool->dense);
+  return SM_ARRAY_LEN(pool->dense) == SM_ARRAY_CAP(pool->dense);
 }
 
 void handle_del(handle_pool_s *pool, sm_handle handle) {
-  SM_ASSERT(SM_ARRAY_SIZE(pool->dense) > 0);
+  SM_ASSERT(SM_ARRAY_LEN(pool->dense) > 0);
   SM_CORE_ASSERT(handle_valid(pool, handle));
 
   uint32_t index = pool->sparse[sm_handle_index(handle)];
-  sm_handle last_handle = pool->dense[SM_ARRAY_SIZE(pool->dense) - 1];
+  sm_handle last_handle = pool->dense[SM_ARRAY_LEN(pool->dense) - 1];
 
   SM_ARRAY_POP(pool->dense);
   SM_ARRAY_POP(pool->sparse);
 
-  pool->dense[SM_ARRAY_SIZE(pool->dense)] = handle;
+  pool->dense[SM_ARRAY_LEN(pool->dense)] = handle;
   pool->sparse[sm_handle_index(last_handle)] = index;
   pool->dense[index] = last_handle;
 }

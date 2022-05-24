@@ -32,6 +32,8 @@ list(APPEND SM_SOURCE_FILES
   core/util/smFile.c
   core/util/smDir.c
 
+  core/data/smArray.c
+
   renderer/smRenderer2D.c
   renderer/smDevice.c
 

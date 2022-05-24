@@ -24,8 +24,8 @@ bool sm__file_has_ext(const char *file, const char *suffix) {
   if (!ext)
     return false;
 
-  const char **split = SM_STRING_SPLIT(suffix, ';');
-  for (size_t i = 0; i < SM_ARRAY_SIZE(split); i++) {
+  SM_ARRAY(const char *) split = SM_STRING_SPLIT(suffix, ';');
+  for (size_t i = 0; i < SM_ARRAY_LEN(split); i++) {
 
     if (!result && SM_STRING_EQ(split[i], ext)) {
       result = true;
@@ -53,9 +53,13 @@ const char *sm__file_get_ext(const char *file) {
 bool sm__file_exists(const char *file) {
 
   SM_CORE_ASSERT(file);
-
+#ifdef _MSC_VER
+  struct _stat sb;
+  return _stat(file, &sb) == 0 && S_ISREG(sb.st_mode);
+#else
   struct stat sb;
   return stat(file, &sb) == 0 && S_ISREG(sb.st_mode);
+#endif
 }
 
 const char *sm__file_read(const char *file) {
@@ -94,4 +98,5 @@ const char *sm__file_read(const char *file) {
   SM_LOG_INFO("[%s] text file loaded successfully", file);
   return text;
 }
+
 #undef SM_MODULE_NAME

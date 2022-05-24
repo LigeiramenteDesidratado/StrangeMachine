@@ -41,7 +41,7 @@ const char **sm__string_split(const char *str, char delim) {
   if (str[0] == '\0')
     return NULL;
 
-  const char **result = NULL;
+  SM_ARRAY(char *) result = NULL;
   size_t buf_index = 0;
   char buf[128];
 
@@ -64,7 +64,7 @@ const char **sm__string_split(const char *str, char delim) {
     buf[buf_index++] = *p;
   }
 
-  return result;
+  return (const SM_ARRAY(char *))result;
 }
 
 const char *sm__string_to_lower(const char *str) {

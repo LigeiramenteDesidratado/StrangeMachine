@@ -15,7 +15,7 @@ bool system_iter_next(sm_system_iterator_s *iter) {
 
   iter->iter_data_count = 0;
 
-  for (uint32_t i = 0; i < SM_ARRAY_SIZE(iter->desc); i++) {
+  for (uint32_t i = 0; i < SM_ARRAY_LEN(iter->desc); i++) {
     const sm_component_desc_s *desc = &iter->desc[i];
     iter->iter_data[i].data = ((uint8_t *)iter->data) + (iter->index * iter->size) + desc->offset;
     iter->iter_data[i].size = desc->size;

@@ -3,12 +3,15 @@
 #include "event/smEvent.h"
 
 #include "core/smAssert.h"
+#include "core/smBase.h"
 #include "core/smMem.h"
 #include "core/smWindowPub.h"
 
 #include "cimgui/smCimguiImpl.h"
 
 #include "vendor/gladGL21/glad.h"
+
+#include "renderer/smDevicePub.h"
 
 #include <SDL2/SDL.h>
 
@@ -45,51 +48,53 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
     return false;
   }
 
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  switch (DEVICE->device_api) {
+  case OPENGL21: {
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    win->raw_window = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
+                                       SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
 
-  win->raw_window = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
-                                     SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+    if (win->raw_window == NULL) {
+      SM_CORE_LOG_ERROR("SDL_CreateWindow Error: %s", SDL_GetError());
+      return false;
+    }
 
-  if (win->raw_window == NULL) {
-    SM_CORE_LOG_ERROR("SDL_CreateWindow Error: %s", SDL_GetError());
-    return false;
+    win->raw_context = SDL_GL_CreateContext(win->raw_window);
+    if (win->raw_context == NULL) {
+      SM_CORE_LOG_ERROR("SDL_GL_CreateContext Error: %s", SDL_GetError());
+      return false;
+    }
+
+    /* TODO: LOAD OPENGL FUNCTIONS PROPERLY */
+    if (SDL_GL_MakeCurrent(win->raw_window, win->raw_context) != 0) {
+      SM_CORE_LOG_ERROR("SDL_GL_MakeCurrent Error: %s", SDL_GetError());
+      return false;
+    }
+
+    if (!DEVICE->loader(SDL_GL_GetProcAddress)) {
+      SM_CORE_LOG_ERROR("failed to load GL functions: %s\n", SDL_GetError());
+      return false;
+    }
+
+    GLint n_attrs;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attrs);
+    SM_CORE_LOG_DEBUG("GL Renderer: %s", glGetString(GL_RENDERER));
+    SM_CORE_LOG_DEBUG("GL Version: %s", glGetString(GL_VERSION));
+    SM_CORE_LOG_DEBUG("GL MAX_VERTEX_ATTRIBS: %d", n_attrs);
+
+    // vsync enable by default
+    win->vsync = true;
+    if (SDL_GL_SetSwapInterval(win->vsync) < 0) {
+      SM_CORE_LOG_WARN("SDL_GL_SetSwapInterval Error: %s", SDL_GetError());
+    }
+
+    break;
   }
-
-  win->raw_context = SDL_GL_CreateContext(win->raw_window);
-  if (win->raw_context == NULL) {
-    SM_CORE_LOG_ERROR("SDL_GL_CreateContext Error: %s", SDL_GetError());
-    return false;
-  }
-
-  /* TODO: LOAD OPENGL FUNCTIONS PROPERLY */
-  if (SDL_GL_MakeCurrent(win->raw_window, win->raw_context) != 0) {
-    SM_CORE_LOG_ERROR("SDL_GL_MakeCurrent Error: %s", SDL_GetError());
-    return false;
-  }
-  /* bool err = gladLoadGL() == 0; */
-  /* if (err) { */
-  /*   SM_CORE_LOG_ERROR("gladLoadGL Error: %s", SDL_GetError()); */
-  /*   return false; */
-  /* } */
-  gladLoadGL();
-  if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
-    SM_CORE_LOG_ERROR("failed to initialize OpengGL ctx: %s\n", SDL_GetError());
-    return false;
-  }
-
-  GLint n_attrs;
-  glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attrs);
-  SM_CORE_LOG_DEBUG("GL Renderer: %s", glGetString(GL_RENDERER));
-  SM_CORE_LOG_DEBUG("GL Version: %s", glGetString(GL_VERSION));
-  SM_CORE_LOG_DEBUG("GL MAX_VERTEX_ATTRIBS: %d", n_attrs);
-
-  // vsync enable by default
-  win->vsync = true;
-  if (SDL_GL_SetSwapInterval(win->vsync) < 0) {
-    SM_CORE_LOG_WARN("SDL_GL_SetSwapInterval Error: %s", SDL_GetError());
+  default:
+    SM_UNIMPLEMENTED("Only Opengl 2.1 for now");
   }
 
   win->width = width;
@@ -104,7 +109,15 @@ void window_dtor(window_s *win) {
 
   SM_CORE_ASSERT(win);
 
-  SDL_GL_DeleteContext(win->raw_context);
+  switch (DEVICE->device_api) {
+  case OPENGL21: {
+    SDL_GL_DeleteContext(win->raw_context);
+    break;
+  }
+  default:
+    SM_UNIMPLEMENTED("Only Opengl 2.1 for now");
+  }
+
   SDL_DestroyWindow(win->raw_window);
   SDL_Quit();
 

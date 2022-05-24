@@ -173,8 +173,8 @@ void sm__mem_aligned_free(void *ptr) {
 #define BYTES2GB ((float)(1 << 30))
 
 void sm__mem_print(void) {
-  printf("allocations: %lu\ntotal (re)alloctions: %lu\nbytes: %lu %s\ntotal bytes: %s\nfree calls: %lu\n",
-         mem_info.allocs, mem_info.total_allocs, mem_info.bytes, (mem_info.bytes == 0) ? "" : "(Waring: memory leaks!)",
+  printf("dangling: %lu\ndangling bytes: %lu %s\ntotal (re)alloctions: %lu\ntotal bytes: %s\nfree calls: %lu\n",
+         mem_info.allocs, mem_info.bytes, (mem_info.bytes == 0) ? "" : "(Waring: memory leaks!)", mem_info.total_allocs,
          sm__mem_human_readable_size(), mem_info.frees);
 }
 

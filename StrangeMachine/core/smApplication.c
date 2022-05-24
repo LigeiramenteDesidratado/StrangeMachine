@@ -78,6 +78,12 @@ bool application_ctor(application_s *app, const char *name) {
 
   SM_CORE_ASSERT(app);
 
+#ifdef SM_DEBUG
+  atexit(sm_at_exit);
+#endif
+
+  device_init(OPENGL21);
+
   app->window = window_new();
   if (!window_ctor(app->window, name, 800, 600)) {
     SM_CORE_LOG_ERROR("failed to initialize window");
@@ -85,8 +91,6 @@ bool application_ctor(application_s *app, const char *name) {
   }
 
   window_set_callback(app->window, application_on_event, app);
-
-  device_init(OPENGL21);
 
   app->cimgui = cimgui_new();
   if (!cimgui_ctor(app->cimgui, app->window)) {
@@ -137,15 +141,11 @@ void application_dtor(application_s *app) {
 
   input_tear_down();
 
-  device_teardown();
-
   window_dtor(app->window);
 
-  SM_FREE(app);
+  device_teardown();
 
-#ifdef SM_DEBUG
-  sm_at_exit();
-#endif
+  SM_FREE(app);
 }
 
 bool application_on_event(event_s *event, void *user_data) {

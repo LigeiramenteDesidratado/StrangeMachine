@@ -12,7 +12,7 @@ const sm_component_t SM_VELOCITY_COMP = 1ULL << 1;
 const sm_component_t SM_FORCE_COMP = 1ULL << 2;
 const sm_component_t SM_SPEED_COMP = 1ULL << 3;
 
-sm_component_desc_s *COMPONENTS = NULL;
+SM_ARRAY(sm_component_desc_s) COMPONENTS = NULL;
 
 void component_init(void) {
 
@@ -38,7 +38,7 @@ void component_register_component(sm_component_desc_s *desc) {
   SM_ASSERT(desc->id != 0);
 
 #ifdef SM_DEBUG
-  for (size_t i = 0; i < SM_ARRAY_SIZE(COMPONENTS); i++) {
+  for (size_t i = 0; i < SM_ARRAY_LEN(COMPONENTS); i++) {
     SM_ASSERT(COMPONENTS[i].id != desc->id && "Component already registered");
   }
 #endif
@@ -50,7 +50,7 @@ const sm_component_desc_s *component_get_desc(sm_component_t id) {
 
   SM_ASSERT(COMPONENTS != NULL && "Component system not initialized");
 
-  for (size_t i = 0; i < SM_ARRAY_SIZE(COMPONENTS); i++) {
+  for (size_t i = 0; i < SM_ARRAY_LEN(COMPONENTS); i++) {
     if (COMPONENTS[i].id == id) {
       return &COMPONENTS[i];
     }

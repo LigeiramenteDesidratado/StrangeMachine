@@ -28,7 +28,7 @@ typedef struct {
 typedef struct texture_resource_s {
 
   struct handle_pool_s *handle_pool;
-  texture_s *textures;
+  SM_ARRAY(texture_s) textures;
 
 } texture_resource_s;
 
@@ -49,8 +49,8 @@ bool texture_res_init(size_t capacity) {
   }
   TEXTURE_RESOURCE->handle_pool = handle_pool;
 
-  SM_ARRAY_NEW(TEXTURE_RESOURCE->textures, capacity);
-  SM_ARRAY_SET_SIZE(TEXTURE_RESOURCE->textures, capacity);
+  SM_ARRAY_CTOR(TEXTURE_RESOURCE->textures, capacity);
+  SM_ARRAY_SET_LEN(TEXTURE_RESOURCE->textures, capacity);
   memset(TEXTURE_RESOURCE->textures, 0x0, sizeof(texture_s) * capacity);
 
   stbi_set_flip_vertically_on_load(true); /* tell stb_image.h to flip loaded texture's on the y-axis. */
@@ -62,7 +62,7 @@ void texture_res_teardown(void) {
 
   SM_ASSERT(TEXTURE_RESOURCE);
 
-  for (size_t i = 0; i < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures); i++) {
+  for (size_t i = 0; i < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures); i++) {
     texture_s *texture = &TEXTURE_RESOURCE->textures[i];
     if (texture->name)
       free(texture->name);
@@ -106,7 +106,7 @@ texture_handler_s texture_res_new(const char *file) {
     handle_del(TEXTURE_RESOURCE->handle_pool, handle);
     return (texture_handler_s){SM_INVALID_HANDLE};
   }
-  SM_LOG_INFO("[%s] (%dx%d:%d) image successfully loaded", file, width, height, channels);
+  SM_LOG_TRACE("[%s] (%dx%d:%d) image successfully loaded", file, width, height, channels);
 
   texture->name = strdup(file);
   texture->width = width;
@@ -149,7 +149,7 @@ uint32_t texture_res_get_width(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
   return texture->width;
@@ -161,7 +161,7 @@ uint32_t texture_res_get_height(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
   return texture->height;
@@ -173,7 +173,7 @@ uint32_t texture_res_get_channels(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
   return texture->channels;
@@ -185,7 +185,7 @@ const char *texture_res_get_name(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
   return texture->name;
@@ -201,7 +201,7 @@ void texture_res_unload_cpu_data(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
   stbi_image_free(texture->cpu_data);
@@ -219,7 +219,7 @@ void texture_res_unload_gpu_data(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
 
@@ -237,7 +237,7 @@ bool texture_res_has_cpu_data(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
 
@@ -250,7 +250,7 @@ bool texture_res_has_gpu_data(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
 
@@ -266,7 +266,7 @@ bool texture_res_load_gpu_data(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
 
@@ -286,7 +286,7 @@ bool texture_res_load_gpu_data(texture_handler_s handler) {
   }
   texture->gpu_data = gpu_texture;
 
-  SM_LOG_INFO("[%s] texture successfully uploaded to GPU", texture->name);
+  SM_LOG_TRACE("[%s] texture successfully uploaded to GPU", texture->name);
 
   return true;
 }
@@ -300,7 +300,7 @@ void texture_res_load_cpu_data(texture_handler_s handler) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
 
@@ -321,7 +321,7 @@ void texture_res_load_cpu_data(texture_handler_s handler) {
   texture->channels = channels;
   texture->cpu_data = data;
 
-  SM_LOG_INFO("[%s] texture successfully loaded from disk to main memory", texture->name);
+  SM_LOG_TRACE("[%s] texture successfully loaded from disk to main memory", texture->name);
 }
 
 void texture_res_bind(texture_handler_s handler, uint32_t tex_index) {
@@ -330,7 +330,7 @@ void texture_res_bind(texture_handler_s handler, uint32_t tex_index) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
 
@@ -350,7 +350,7 @@ void texture_res_unbind(texture_handler_s handler, uint32_t tex_index) {
   SM_ASSERT(handle_valid(TEXTURE_RESOURCE->handle_pool, handler.handle));
 
   uint32_t index = sm_handle_index(handler.handle);
-  SM_ASSERT(index < SM_ARRAY_SIZE(TEXTURE_RESOURCE->textures));
+  SM_ASSERT(index < SM_ARRAY_LEN(TEXTURE_RESOURCE->textures));
 
   texture_s *texture = &TEXTURE_RESOURCE->textures[index];
 

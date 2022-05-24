@@ -51,15 +51,21 @@ void on_attach(void *user_data) {
 
   lab->entity = calloc(16, sizeof(sm_entity_s));
 
-  for (size_t i = 0; i < 16; ++i) {
-    sm_entity_s entity = scene_new_entity(lab->scene, SM_TRANSFORM_COMP);
-    lab->entity[i] = entity;
-    sm_transform_s t; // = sm_transform_zero();
-    glm_vec4_copy(sm_vec4_new(i * 4, 0.0f, 0.0f, 0.0f).data, t.position.data);
-    glm_vec4_copy(((sm_vec4){.x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f}).data, t.rotation.data);
-    glm_vec4_copy(sm_vec4_one().data, t.scale.data);
-    scene_set_component(lab->scene, lab->entity[i], &t);
+  uint32_t i = 0;
+  for (float y = -1.0; y < 1.0; y += 0.5f) {
+    for (float x = -1.0; x < 1.0; x += 0.5f) {
+      sm_entity_s entity = scene_new_entity(lab->scene, SM_TRANSFORM_COMP);
+      lab->entity[i] = entity;
+      sm_transform_s t; // = sm_transform_zero();
+      glm_vec4_copy(sm_vec4_new(x * 5, y * 5, 0.0f, 0.0f).data, t.position.data);
+      glm_vec4_copy(((sm_vec4){.x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f}).data, t.rotation.data);
+      glm_vec4_copy(sm_vec4_one().data, t.scale.data);
+      scene_set_component(lab->scene, lab->entity[i], &t);
+      i += 1;
+    }
   }
+
+  /* for (size_t i = 0; i < 16; ++i) {} */
 
   lab->selected = 0;
   lab->colors[0] = BLACK;
@@ -100,8 +106,7 @@ void on_update(void *user_data, float dt) {
 
   lab_s *lab = (lab_s *)user_data;
 
-  sm_vec4 bg = SM_BACKGROUND_COLOR;
-  renderer3D_set_clear_color(lab->renderer3d, bg);
+  renderer3D_set_clear_color(lab->renderer3d, SM_BACKGROUND_COLOR);
   renderer3D_clear(lab->renderer3d);
 
   for (size_t i = 0; i < 16; ++i) {
@@ -110,7 +115,6 @@ void on_update(void *user_data, float dt) {
     renderer3D_draw_cube_transform(lab->renderer3d, *trans, lab->colors[i]);
     renderer3D_end(lab->renderer3d);
   }
-
 }
 
 bool on_event(event_s *event, void *user_data) {

@@ -3,130 +3,77 @@
 
 #include "smpch.h"
 
-#include "core/smAssert.h"
-#include "core/smMem.h"
+#define SM_ARRAY(ARRAY) ARRAY *
 
-#define SM_ARRAY(ARRAY) ARRAY*
+#define SM_STATIC_TYPE_ASSERT(X, Y) _Generic((Y), __typeof__(X) : _Generic((X), __typeof__(Y) : (void)NULL))
 
-#define SM_SIZE_HEADER_SIZE     (sizeof(size_t))
-#define SM_CAPACITY_HEADER_SIZE (sizeof(size_t))
-#define SM_HEADER_OFFSET        (SM_SIZE_HEADER_SIZE + SM_CAPACITY_HEADER_SIZE)
+#define SM__ARRAY_LEN_HEADER_SIZE (sizeof(size_t))
+#define SM__ARRAY_CAP_HEADER_SIZE (sizeof(size_t))
+#define SM__ARRAY_HEADER_OFFSET   (SM__ARRAY_LEN_HEADER_SIZE + SM__ARRAY_CAP_HEADER_SIZE)
 
-/* Buffer utilities */
-#define SM_BUFFER_NEW(T, buf, size)                                                                                    \
-  T *buf = NULL;                                                                                                       \
-  do {                                                                                                                 \
-    size_t *raw = SM_MALLOC(1 * sizeof(size_t) + sizeof(T) * size);                                                    \
-    if (raw = NULL)                                                                                                    \
-      err(EXIT_FAILURE, NULL); /* display the current errno information string and exit */                             \
-                                                                                                                       \
-    raw[0] = size;                                                                                                     \
-    buf = (void *)&raw[1];                                                                                             \
-  } while (0)
+#define SM__RAW(ARRAY) ((size_t *)((char *)ARRAY - SM__ARRAY_HEADER_OFFSET))
 
-#define SM_BUFFER_DTOR(buf)                                                                                            \
-  do {                                                                                                                 \
-    size_t *raw = ((size_t *)(buf)-1);                                                                                 \
-    SM_FREE(raw);                                                                                                      \
-    buf = NULL;                                                                                                        \
-  } while (0)
-
-#define SM_BUFFER_SIZE(buf) (*((size_t *)buf - 1))
+size_t *sm__array_ctor(size_t cap, size_t size);
+size_t *sm__array_dtor(size_t *array);
+size_t *sm__array_set_len(size_t *array, size_t len, size_t size);
+size_t *sm__array_set_cap(size_t *array, size_t cap, size_t size);
+size_t *sm__array_push(size_t *array, void *value, size_t size);
+size_t *sm__array_pop(size_t *array);
 
 /* array utilities */
-#define SM_ARRAY_NEW(arr, size)                                                                                        \
+#define SM_ARRAY_CTOR(ARR, CAPACITY)                                                                                   \
   do {                                                                                                                 \
-    if (arr)                                                                                                           \
+    if (ARR)                                                                                                           \
       continue;                                                                                                        \
-    size_t *raw = SM_MALLOC(SM_HEADER_OFFSET + sizeof((*arr)) * (size));                                               \
-    raw[0] = 0;                                                                                                        \
-    raw[1] = size;                                                                                                     \
-    arr = (void *)&raw[2];                                                                                             \
+    size_t *raw = sm__array_ctor((CAPACITY), sizeof((*ARR)));                                                          \
+    ARR = (void *)&raw[2];                                                                                             \
   } while (0)
 
-#define SM_ARRAY_NEW_EMPTY() (&((size_t *)SM_CALLOC(1, SM_HEADER_OFFSET))[2])
-
-#define SM_ARRAY_SET_SIZE(arr, size)                                                                                   \
+#define SM_ARRAY_DTOR(ARR)                                                                                             \
   do {                                                                                                                 \
-    SM_ASSERT(size >= 0 && "negative size");                                                                           \
-    size_t *raw = (!arr) ? SM_CALLOC(1, SM_HEADER_OFFSET + sizeof((*arr)) * (size)) : ((size_t *)(arr)-2);             \
-    if ((size) > raw[1]) {                                                                                             \
-      void *__tmp = NULL;                                                                                              \
-      __tmp = SM_REALLOC(raw, SM_HEADER_OFFSET + size * sizeof((*arr)));                                               \
-      if (__tmp == NULL)                                                                                               \
-        err(EXIT_FAILURE, NULL);                                                                                       \
-                                                                                                                       \
-      raw = __tmp;                                                                                                     \
-      raw[1] = size;                                                                                                   \
-    }                                                                                                                  \
-    raw[0] = size;                                                                                                     \
-    (arr) = (void *)&raw[2];                                                                                           \
-  } while (0)
-
-#define SM_ARRAY_SET_CAPACITY(arr, size)                                                                               \
-  do {                                                                                                                 \
-    SM_ASSERT(size > 0 && "negative size or non zero");                                                                \
-    size_t *raw = (!arr) ? SM_CALLOC(1, SM_HEADER_OFFSET + sizeof((*arr)) * (size)) : ((size_t *)(arr)-2);             \
-    {                                                                                                                  \
-      void *__tmp = NULL;                                                                                              \
-      __tmp = SM_REALLOC(raw, SM_HEADER_OFFSET + size * sizeof((*arr)));                                               \
-      if (__tmp == NULL)                                                                                               \
-        err(EXIT_FAILURE, NULL);                                                                                       \
-                                                                                                                       \
-      raw = __tmp;                                                                                                     \
-      raw[1] = size;                                                                                                   \
-    }                                                                                                                  \
-    raw[0] = (raw[0] > raw[1]) ? raw[1] : raw[0];                                                                      \
-    (arr) = (void *)&raw[2];                                                                                           \
-  } while (0)
-
-#define SM_ARRAY_DTOR(arr)                                                                                             \
-  do {                                                                                                                 \
-    if (arr) {                                                                                                         \
-      size_t *raw = ((size_t *)(arr)-2);                                                                               \
-      SM_FREE(raw);                                                                                                    \
-      arr = NULL;                                                                                                      \
+    if (ARR) {                                                                                                         \
+      size_t *raw = ((size_t *)(ARR)-2);                                                                               \
+      sm__array_dtor(raw);                                                                                             \
+      ARR = NULL;                                                                                                      \
     }                                                                                                                  \
   } while (0)
 
-#define SM_ARRAY_SIZE(arr)     ((arr) == NULL ? 0 : *((size_t *)arr - 2))
-#define SM_ARRAY_CAPACITY(arr) ((arr) == NULL ? 0 : *((size_t *)arr - 1))
-
-#define SM_ARRAY_PUSH(arr, value)                                                                                      \
+#define SM_ARRAY_SET_LEN(ARR, LEN)                                                                                     \
   do {                                                                                                                 \
-    size_t *raw = (!arr) ? SM_CALLOC(1, SM_HEADER_OFFSET + sizeof((value))) : ((size_t *)(arr)-2);                     \
-    raw[0] = raw[0] + 1;                                                                                               \
-    if (raw[1] == 0) { /* TODO : remove this check ? */                                                                \
-      raw[1] = 1;                                                                                                      \
-      {                                                                                                                \
-        void *__tmp = NULL;                                                                                            \
-        __tmp = SM_REALLOC(raw, SM_HEADER_OFFSET + raw[1] * sizeof((value)));                                          \
-        if (__tmp == NULL)                                                                                             \
-          err(EXIT_FAILURE, NULL);                                                                                     \
-                                                                                                                       \
-        raw = __tmp;                                                                                                   \
-      }                                                                                                                \
-      (arr) = (void *)&raw[2];                                                                                         \
-    }                                                                                                                  \
-    if (raw[0] > raw[1]) {                                                                                             \
-      raw[1] = (size_t)(2 * raw[1]);                                                                                   \
-      {                                                                                                                \
-        void *__tmp = NULL;                                                                                            \
-        __tmp = SM_REALLOC(raw, SM_HEADER_OFFSET + raw[1] * sizeof((value)));                                          \
-        if (__tmp == NULL)                                                                                             \
-          err(EXIT_FAILURE, NULL);                                                                                     \
-                                                                                                                       \
-        raw = __tmp;                                                                                                   \
-      }                                                                                                                \
-      (arr) = (void *)&raw[2];                                                                                         \
-    }                                                                                                                  \
-    memcpy(&(arr)[(raw)[0] - 1], &(value), sizeof((value)));                                                           \
+    size_t *raw = (!ARR) ? sm__array_ctor((LEN), sizeof((*ARR))) : SM__RAW((ARR));                                     \
+    raw = sm__array_set_len(raw, (LEN), sizeof((*ARR)));                                                               \
+    (ARR) = (void *)&raw[2];                                                                                           \
   } while (0)
 
-#define SM_ARRAY_POP(arr)                                                                                              \
+#define SM_ARRAY_SET_CAP(ARR, CAP)                                                                                     \
   do {                                                                                                                 \
-    if (arr) {                                                                                                         \
-      size_t *raw = ((size_t *)(arr)-2);                                                                               \
+    size_t *raw = (!ARR) ? sm__array_ctor((CAP), sizeof((*ARR))) : SM__RAW((ARR));                                     \
+    raw = sm__array_set_cap(raw, (CAP), sizeof((*ARR)));                                                               \
+    (ARR) = (void *)&raw[2];                                                                                           \
+  } while (0)
+
+#define SM_ARRAY_LEN(arr) ((arr) == NULL ? 0 : *((size_t *)arr - 2))
+#define SM_ARRAY_CAP(arr) ((arr) == NULL ? 0 : *((size_t *)arr - 1))
+
+#define SM_ARRAY_PUSH(ARR, VALUE)                                                                                      \
+  do {                                                                                                                 \
+    size_t *raw = (!ARR) ? sm__array_ctor(1, sizeof((*ARR))) : SM__RAW((ARR));                                         \
+    SM_STATIC_TYPE_ASSERT((*ARR), (VALUE));                                                                            \
+    raw = sm__array_push(raw, &(VALUE), sizeof((VALUE)));                                                              \
+    (ARR) = (void *)&raw[2];                                                                                           \
+  } while (0)
+
+/* WARNING: do not use SM_ARRAY_POP inside a loop that depends SM_ARRAY_LEN.
+ * like:
+ *  for (size_t i = 0; i < SM_ARRAY_LEN(array); ++i) {
+ *    // ...
+ *    SM_ARRAY_POP(array);
+ *  }
+ */
+#define SM_ARRAY_POP(ARR)                                                                                              \
+  do {                                                                                                                 \
+    if (ARR) {                                                                                                         \
+      size_t *raw = SM__RAW(ARR);                                                                                      \
       raw[0] = (raw[0] == 0) ? 0 : raw[0] - 1;                                                                         \
     }                                                                                                                  \
   } while (0)
@@ -146,6 +93,7 @@
 
 /* ALIGNED ARRAY */
 
+/* TODO: implement aligned array properly */
 #define SM_ALIGNED_ARRAY_SIZE(arr) ((arr) == NULL ? 0 : *((size_t *)arr - 2))
 
 #define SM_ALIGNED_ARRAY_NEW(arr, alignment, size)                                                                     \

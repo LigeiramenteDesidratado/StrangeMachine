@@ -270,13 +270,9 @@ typedef struct sm__transform_s {
 } sm_transform_s;
 
 #define sm_transform_new(POSITION, ROTATION, SCALE)                                                                    \
-  ((sm_transform_s){.position = {POSITION[0], POSITION[1], POSITION[2]},                                               \
-                    .rotation = {ROTATION[0], ROTATION[1], ROTATION[2], ROTATION[3]},                                  \
-                    .scale = {                                                                                         \
-                        SCALE[0],                                                                                      \
-                        SCALE[1],                                                                                      \
-                        SCALE[2],                                                                                      \
-                    }})
+  ((sm_transform_s){.position = POSITION,                                               \
+                    .rotation = ROTATION,                                  \
+                    .scale = SCALE})
 
 #define sm_transform_zero()     ((sm_transform_s){sm_vec4_zero(), sm_vec4_new(0.0f, 0.0f, 0.0f, 1.0f), sm_vec4_one()})
 

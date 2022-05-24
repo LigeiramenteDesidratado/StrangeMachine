@@ -189,7 +189,7 @@ void scene_do(scene_s *scene, float dt) {
 
   SM_ASSERT(scene);
 
-  for (size_t i = 0; i < SM_ARRAY_SIZE(scene->systems); ++i) {
+  for (size_t i = 0; i < SM_ARRAY_LEN(scene->systems); ++i) {
 
     sm_system_s *sys = &scene->systems[i];
 
