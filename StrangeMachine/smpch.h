@@ -14,5 +14,6 @@
 #include <stdlib.h>   /* malloc calloc realloc free */
 #include <string.h>   /* memcpy and string manipulation */
 #include <sys/stat.h> /* stat */
+#include <stdatomic.h>
 
 #endif /* SM_PCH_H */

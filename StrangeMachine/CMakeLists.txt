@@ -29,10 +29,11 @@ list(APPEND SM_SOURCE_FILES
   core/thread/synchronization/smMutex.c
 
   core/util/smString.c
-  core/util/smFile.c
+  core/util/smFilesystem.c
   core/util/smDir.c
 
   core/data/smArray.c
+  core/data/smHashMap.c
 
   renderer/smRenderer2D.c
   renderer/smDevice.c
@@ -47,8 +48,8 @@ list(APPEND SM_SOURCE_FILES
 
   cimgui/smCimgui.c
 
-  resource/smResource.c
-  resource/smTextureResource.c
+  # resource/smResource.c
+  # resource/smTextureResource.c
 
   scene/smScene.c
   scene/smComponents.c
@@ -104,11 +105,9 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC smpch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_USE_COLOR)
 target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:Debug>:SM_DEBUG>")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/StrangeMachine/vendor/cglm/include")
 
-
-# target_compile_flags(${PROJECT_NAME} PRIVATE SM_FLAGS)
-
-
+SET(CMAKE_C_FLAGS_DEBUG "-g3 ")
 # cimgui library
 option(IMGUI_STATIC "Static build" ON)
 #  add glad to the imgui library
@@ -120,7 +119,7 @@ add_subdirectory(vendor/cimgui)
 # cglm library
 option(CGLM_STATIC "Static build" ON)
 add_subdirectory(vendor/cglm)
-
+SET(CMAKE_C_FLAGS_DEBUG " ${SM_FLAGS_DEBUG_FLAGS}")
 
 # dmon
 #  add_subdirectory(vendor/dmon)

@@ -23,6 +23,6 @@
 #include "core/thread/synchronization/smMutex.h"
 
 #include "core/data/smArray.h"
-#include "core/data/smHashTable.h"
+#include "core/data/smHashMap.h"
 
 #endif /* SM_CORE_H */
