@@ -1,7 +1,7 @@
 #ifndef TRANSFORM_H
 #define TRANSFORM_H
 
-#include "vendor/cglm/include/cglm/cglm.h"
+#include "cglm/cglm.h"
 
 #define EPSILON 0.000001f
 

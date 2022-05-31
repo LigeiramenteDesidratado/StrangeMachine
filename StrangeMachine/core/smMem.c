@@ -127,15 +127,15 @@ void *sm__mem_aligned_alloc(size_t alignment, size_t size) {
     /* store the size at the begining of the array */
     *(size_t *)raw = size;
 
-    void *header_address = (void *)((((char *)raw) + SM_MEM_HEADER_SIZE)); /* not the actual address of the header */
+    char *header_address = (char *)((char *)raw + SM_MEM_HEADER_SIZE); /* not the actual address of the header */
 
-    void *aligned_address = (void *)((((uintptr_t)header_address) + alignment) & ~(alignment - 1));
+    char *aligned_address = (char *)((((uintptr_t)header_address) + alignment) & ~(alignment - 1));
     /* void *aligned_address = (void *)(((size_t)header_address + alignment) & ~(alignment - 1)); */
 
-    uint8_t offset = (char *)aligned_address - (char *)header_address;
+    uint8_t offset = (uint8_t)(aligned_address - header_address);
 
     /* store the offset 1 byte before the aligned address */
-    *((char *)aligned_address - 1) = offset;
+    *((uint8_t *)aligned_address - 1) = offset;
 
     ptr = aligned_address;
 
@@ -153,7 +153,7 @@ void sm__mem_aligned_free(void *ptr) {
   if (ptr) {
 
     /* get the offset by reading the byte before the aligned address */
-    uint8_t offset = *((char *)ptr - 1);
+    uint8_t offset = *((uint8_t *)ptr - 1);
 
     /* get the original address by subtracting the offset plus the header size from the aligned address */
     void *_ptr = ((char *)ptr) - (offset + SM_MEM_HEADER_SIZE);
@@ -168,9 +168,9 @@ void sm__mem_aligned_free(void *ptr) {
   }
 }
 
-#define BYTES2KB ((float)(1 << 10))
-#define BYTES2MB ((float)(1 << 20))
-#define BYTES2GB ((float)(1 << 30))
+#define BYTES2KB ((double)(1 << 10))
+#define BYTES2MB ((double)(1 << 20))
+#define BYTES2GB ((double)(1 << 30))
 
 void sm__mem_print(void) {
   printf("dangling: %lu\ndangling bytes: %lu %s\ntotal (re)alloctions: %lu\ntotal bytes: %s\nfree calls: %lu\n",
@@ -181,7 +181,7 @@ void sm__mem_print(void) {
 // return a string with human readable memory size
 static char *sm__mem_human_readable_size(void) {
   static char buf[32];
-  float size = (float)mem_info.total_bytes;
+  double size = (double)mem_info.total_bytes;
   if (size < BYTES2KB)
     sprintf(buf, "%.2f B", size);
   else if (size < BYTES2MB)

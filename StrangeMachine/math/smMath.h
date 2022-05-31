@@ -1,10 +1,10 @@
 #ifndef SM_MATH_MATH_H
 #define SM_MATH_MATH_H
 
-#include "vendor/cglm/include/cglm/cglm.h"
+#include "cglm/cglm.h"
 
 #define CMP(X, Y) (fabsf((X) - (Y)) <= FLT_EPSILON * fmaxf(1.0f, fmaxf(fabsf(X), fabsf(Y))))
-#define EPSILON 0.000001f
+#define EPSILON   0.000001f
 
 /* Use the same memory for the anonynous structure and the byte array field `data` */
 typedef struct sm__vec2 {
@@ -176,47 +176,46 @@ typedef CGLM_ALIGN_MAT struct sm__mat4 {
   union {
 
     struct {
-      vec4 right;    /* first column */
-      vec4 up;       /* second column */
-      vec4 forward;  /* third column */
-      vec4 position; /* fourth column */
+      sm_vec4 right;    /* first column */
+      sm_vec4 up;       /* second column */
+      sm_vec4 forward;  /* third column */
+      sm_vec4 position; /* fourth column */
     } vec4;
 
     struct {
-      vec3 right;            /* first column */
+      sm_vec3 right;         /* first column */
       float padding_rigth;   /* w value of right */
-      vec3 up;               /* second column */
+      sm_vec3 up;            /* second column */
       float padding_up;      /* w value of up */
-      vec3 forward;          /* third column */
+      sm_vec3 forward;       /* third column */
       float padding_forward; /* w value of forward */
-      vec3 position;         /* fourth column */
+      sm_vec3 position;      /* fourth column */
       float w_position;
 
     } vec3;
 
     /* basis vector notation */
     struct {
-      /*          row 1     row 2     row 3     row 4 */
-      /* col 1 */ float xx; float xy; float xz; float xw; /* right */
-      /* col 2 */ float yx; float yy; float yz; float yw; /* up */
-      /* col 3 */ float zx; float zy; float zz; float zw; /* forward */
-      /* col 4 */ float tx; float ty; float tz; float tw; /* position */
+      /* col 1 */ float xx, xy, xz, xw; /* right */
+      /* col 2 */ float yx, yy, yz, yw; /* up */
+      /* col 3 */ float zx, zy, zz, zw; /* forward */
+      /* col 4 */ float tx, ty, tz, tw; /* position */
     };
 
     /* column-row notation */
     struct {
-      float c0r0; float c0r1; float c0r2; float c0r3;
-      float c1r0; float c1r1; float c1r2; float c1r3;
-      float c2r0; float c2r1; float c2r2; float c2r3;
-      float c3r0; float c3r1; float c3r2; float c3r3;
+      float c0r0, c0r1, c0r2, c0r3;
+      float c1r0, c1r1, c1r2, c1r3;
+      float c2r0, c2r1, c2r2, c2r3;
+      float c3r0, c3r1, c3r2, c3r3;
     };
 
     /* row-column notation */
     struct {
-      float r0c0; float r1c0; float r2c0; float r3c0;
-      float r0c1; float r1c1; float r2c1; float r3c1;
-      float r0c2; float r1c2; float r2c2; float r3c2;
-      float r0c3; float r1c3; float r2c3; float r3c3;
+      float r0c0, r1c0, r2c0, r3c0;
+      float r0c1, r1c1, r2c1, r3c1;
+      float r0c2, r1c2, r2c2, r3c2;
+      float r0c3, r1c3, r2c3, r3c3;
     };
 
     mat4 data;
@@ -225,43 +224,75 @@ typedef CGLM_ALIGN_MAT struct sm__mat4 {
 
 } sm_mat4;
 
-
 #define sm_mat4_print(M)                                                                                               \
   printf("\t%s---------\n\t|%7.3f|%7.3f|%7.3f|%7.3f|\n\t|%"                                                            \
          "7.3f|%7.3f|%7.3f|%7.3f|\n\t|%7.3f|%7.3f|%7.3f|%7.3f|\n\t|%7.3f|%7."                                          \
          "3f|%7.3f|%7.3f|\n\t---------------------------------\n",                                                     \
-         #M, M.float16[0], M.float16[1], M.float16[2], M.float16[3], M.float16[4], M.float16[5], M.float16[6], M.float16[7], M.float16[8], M.float16[9], M.float16[10], M.float16[11],         \
-         M.float16[12], M.float16[13], M.float16[14], M.float16[15])
+         #M, M.float16[0], M.float16[1], M.float16[2], M.float16[3], M.float16[4], M.float16[5], M.float16[6],         \
+         M.float16[7], M.float16[8], M.float16[9], M.float16[10], M.float16[11], M.float16[12], M.float16[13],         \
+         M.float16[14], M.float16[15])
 
-#define sm_mat4_new(inXX, inXY, inXZ, inXW, inYX, inYY, inYZ, inYW, inZX, inZY, inZZ, inZW, inTX, inTY, inTZ, inTW) \
-  ((sm_mat4) { \
-   .xx=inXX, .xy=inXY, .xz=inXZ, .xw=inXW, \
-   .yx=inYX, .yy=inYY, .yz=inYZ, .yw=inYW, \
-   .zx=inZX, .zy=inZY, .zz=inZZ, .zw=inZW, \
-   .tx=inTX, .ty=inTY, .tz=inTZ, .tw=inTW})
+#define sm_mat4_new(inXX, inXY, inXZ, inXW, inYX, inYY, inYZ, inYW, inZX, inZY, inZZ, inZW, inTX, inTY, inTZ, inTW)    \
+  ((sm_mat4){.xx = inXX,                                                                                               \
+             .xy = inXY,                                                                                               \
+             .xz = inXZ,                                                                                               \
+             .xw = inXW,                                                                                               \
+             .yx = inYX,                                                                                               \
+             .yy = inYY,                                                                                               \
+             .yz = inYZ,                                                                                               \
+             .yw = inYW,                                                                                               \
+             .zx = inZX,                                                                                               \
+             .zy = inZY,                                                                                               \
+             .zz = inZZ,                                                                                               \
+             .zw = inZW,                                                                                               \
+             .tx = inTX,                                                                                               \
+             .ty = inTY,                                                                                               \
+             .tz = inTZ,                                                                                               \
+             .tw = inTW})
 
 #define sm_mat4_zero()                                                                                                 \
-  ((sm_mat4) { \
-   .xx=0.0f, .xy=0.0f, .xz=0.0f, .xw=0.0f, \
-   .yx=0.0f, .yy=0.0f, .yz=0.0f, .yw=0.0f, \
-   .zx=0.0f, .zy=0.0f, .zz=0.0f, .zw=0.0f, \
-   .tx=0.0f, .ty=0.0f, .tz=0.0f, .tw=0.0f})
+  ((sm_mat4){.xx = 0.0f,                                                                                               \
+             .xy = 0.0f,                                                                                               \
+             .xz = 0.0f,                                                                                               \
+             .xw = 0.0f,                                                                                               \
+             .yx = 0.0f,                                                                                               \
+             .yy = 0.0f,                                                                                               \
+             .yz = 0.0f,                                                                                               \
+             .yw = 0.0f,                                                                                               \
+             .zx = 0.0f,                                                                                               \
+             .zy = 0.0f,                                                                                               \
+             .zz = 0.0f,                                                                                               \
+             .zw = 0.0f,                                                                                               \
+             .tx = 0.0f,                                                                                               \
+             .ty = 0.0f,                                                                                               \
+             .tz = 0.0f,                                                                                               \
+             .tw = 0.0f})
 
 #define sm_mat4_identity()                                                                                             \
-  ((sm_mat4) { \
-   .xx=1.0f, .xy=0.0f, .xz=0.0f, .xw=0.0f, \
-   .yx=0.0f, .yy=1.0f, .yz=0.0f, .yw=0.0f, \
-   .zx=0.0f, .zy=0.0f, .zz=1.0f, .zw=0.0f, \
-   .tx=0.0f, .ty=0.0f, .tz=0.0f, .tw=1.0f})
-
+  ((sm_mat4){.xx = 1.0f,                                                                                               \
+             .xy = 0.0f,                                                                                               \
+             .xz = 0.0f,                                                                                               \
+             .xw = 0.0f,                                                                                               \
+             .yx = 0.0f,                                                                                               \
+             .yy = 1.0f,                                                                                               \
+             .yz = 0.0f,                                                                                               \
+             .yw = 0.0f,                                                                                               \
+             .zx = 0.0f,                                                                                               \
+             .zy = 0.0f,                                                                                               \
+             .zz = 1.0f,                                                                                               \
+             .zw = 0.0f,                                                                                               \
+             .tx = 0.0f,                                                                                               \
+             .ty = 0.0f,                                                                                               \
+             .tz = 0.0f,                                                                                               \
+             .tw = 1.0f})
 
 typedef struct sm__transform_s {
 
-  union{
+  union {
     struct {
       sm_vec4 position; /* position x y z plus padding */
       sm_vec4 rotation; /* rotation x y z w*/
-      sm_vec4 scale; /* scale x y z plus padding */
+      sm_vec4 scale;    /* scale x y z plus padding */
     };
 
     vec4 data[3];
@@ -270,16 +301,14 @@ typedef struct sm__transform_s {
 } sm_transform_s;
 
 #define sm_transform_new(POSITION, ROTATION, SCALE)                                                                    \
-  ((sm_transform_s){.position = POSITION,                                               \
-                    .rotation = ROTATION,                                  \
-                    .scale = SCALE})
+  ((sm_transform_s){.position = POSITION, .rotation = ROTATION, .scale = SCALE})
 
-#define sm_transform_zero()     ((sm_transform_s){sm_vec4_zero(), sm_vec4_new(0.0f, 0.0f, 0.0f, 1.0f), sm_vec4_one()})
+#define sm_transform_zero() ((sm_transform_s){sm_vec4_zero(), sm_vec4_new(0.0f, 0.0f, 0.0f, 1.0f), sm_vec4_one()})
 
-#define sm_transform_print(T)                                                                                             \
+#define sm_transform_print(T)                                                                                          \
   printf("%s:\n", #T);                                                                                                 \
-  printf("posit: %f, %f, %f\n", T.position.x, T.position.y, T.position.z);                                          \
-  printf("rotat: %f, %f, %f, %f\n", T.rotation.x, T.rotation.y, T.rotation.z, T.rotation.w);                       \
+  printf("posit: %f, %f, %f\n", T.position.x, T.position.y, T.position.z);                                             \
+  printf("rotat: %f, %f, %f, %f\n", T.rotation.x, T.rotation.y, T.rotation.z, T.rotation.w);                           \
   printf("scale: %f, %f, %f\n", T.scale.x, T.scale.y, T.scale.z);
 
 sm_transform_s transform_combine(sm_transform_s a, sm_transform_s b);

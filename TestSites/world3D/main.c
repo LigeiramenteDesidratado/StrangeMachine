@@ -52,8 +52,8 @@ void on_attach(void *user_data) {
   lab->entity = calloc(16, sizeof(sm_entity_s));
 
   uint32_t i = 0;
-  for (float y = -1.0; y < 1.0; y += 0.5f) {
-    for (float x = -1.0; x < 1.0; x += 0.5f) {
+  for (float y = -1.0; y < 1.0f; y += 0.5f) {
+    for (float x = -1.0; x < 1.0f; x += 0.5f) {
       sm_entity_s entity = scene_new_entity(lab->scene, SM_TRANSFORM_COMP);
       lab->entity[i] = entity;
       sm_transform_s t; // = sm_transform_zero();
@@ -157,7 +157,7 @@ void on_gui(void *user_data) {
   igCombo_Str("Selected cube", &lab->selected, " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0 8\0 9\0 10\0 11\0 12\0 13\0 14\0 15\0",
               6);
 
-  sm_transform_s *t = scene_get_component(lab->scene, lab->entity[lab->selected]);
+  sm_transform_s *t = (sm_transform_s *)scene_get_component(lab->scene, lab->entity[lab->selected]);
 
   igDragFloat3("Position", t->position.data, 0.01f, -100.f, 100.0f, "%.4f", 0);
   igDragFloat3("Scale", t->scale.data, 0.01f, 0.0f, 100.0f, "%.4f", 0);

@@ -33,9 +33,9 @@ bool system_iter_next(sm_system_iterator_s *iter);
 typedef uint32_t sm_system_flags_t;
 
 /* matches all archetypes that contains the components designed by the system */
-const extern sm_system_flags_t SM_SYSTEM_INCLUSIVE_FLAG;
+extern const sm_system_flags_t SM_SYSTEM_INCLUSIVE_FLAG;
 /* matches only the archetypes that contains the components designed by the system */
-const extern sm_system_flags_t SM_SYSTEM_EXCLUSIVE_FLAG;
+extern const sm_system_flags_t SM_SYSTEM_EXCLUSIVE_FLAG;
 
 typedef struct sm__system_s {
 

@@ -6,8 +6,6 @@ message(STATUS "C flags: ${CMAKE_C_FLAGS}")
 
 add_executable(${PROJECT_NAME} main.c)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/StrangeMachine/)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/StrangeMachine/)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC StrangeMachineEngine dl)

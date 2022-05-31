@@ -9,16 +9,18 @@
 #include "core/smTime.h"
 #include "core/smTimer.h"
 #include "core/smWindow.h"
+#include "core/util/smBitMask.h"
+
+#include "renderer/smDeviceDefs.h"
+#include "renderer/smDevicePub.h"
 
 #include "scene/smComponents.h"
-
-#include "core/util/smBitMask.h"
 
 #include "smCamera.h"
 
 #include "cimgui/smCimgui.h"
 
-#include "resource/smResource.h"
+/* #include "resource/smResource.h" */
 
 #include "smInput.h"
 
@@ -99,7 +101,7 @@ bool application_ctor(application_s *app, const char *name) {
   }
 
   input_init();
-  resource_init("assets/");
+  /* resource_init("assets/"); */
 
   struct stack_layer_s *stack = stack_layer_new();
   if (!stack_layer_ctor(stack)) {
@@ -137,7 +139,7 @@ void application_dtor(application_s *app) {
 
   cimgui_dtor(app->cimgui);
 
-  resource_teardown();
+  /* resource_teardown(); */
 
   input_tear_down();
 
@@ -197,12 +199,12 @@ void application_do(application_s *app) {
 
     input_do();
     window_do(app->window);
-    camera_do(app->delta);
+    camera_do((float)app->delta);
 
     size_t stack_size = stack_layer_get_size(app->stack);
     for (size_t i = 0; i < stack_size; ++i) {
       struct layer_s *layer = stack_layer_get_layer(app->stack, i);
-      layer_update(layer, app->delta * app->thickness);
+      layer_update(layer, (float)app->delta * app->thickness);
     }
 
     static bool open = true;
@@ -278,7 +280,7 @@ void sm__application_cap_frame_rate(long *then, float *remainder) {
   long wait, frameTime;
   wait = (long int)(16 + *remainder);
 
-  *remainder -= (int)*remainder;
+  *remainder -= fabsf(*remainder);
 
   frameTime = SM_GET_TICKS() - *then;
 
@@ -286,7 +288,7 @@ void sm__application_cap_frame_rate(long *then, float *remainder) {
   if (wait < 1) {
     wait = 1;
   }
-  SM_DELAY(wait);
+  SM_DELAY((uint32_t)wait);
 
   *remainder += 0.667f;
 
@@ -295,7 +297,7 @@ void sm__application_cap_frame_rate(long *then, float *remainder) {
 
 SM_PRIVATE
 void sm__application_status_gui(application_s *app) {
-  static int corner = 1;
+  int corner = (app != NULL) ? 1 : 0;
 
   ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
                                   ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
@@ -316,8 +318,8 @@ void sm__application_status_gui(application_s *app) {
 
   igSetNextWindowBgAlpha(0.35f); // Transparent background
   if (igBegin("Application status overlay", NULL, window_flags)) {
-    igText("average %.3f ms/frame (%.1f FPS)", 1000.0f / app->fps, app->fps);
-    igText("Delta: %f", app->delta * app->thickness);
+    igText("average %.3f ms/frame (%.1f FPS)", 1000.0 / app->fps, app->fps);
+    igText("Delta: %f", app->delta * (double)app->thickness);
     igText("Vsync: %s", window_is_vsync(app->window) ? "true" : "false");
   }
   igEnd();

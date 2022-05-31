@@ -1,9 +1,5 @@
 #include "smpch.h"
 
-#include "cglm/quat.h"
-#include "cglm/vec3.h"
-#include "cglm/vec4.h"
-
 #include "core/smCore.h"
 #include "math/smMath.h"
 
@@ -89,7 +85,7 @@ sm_transform_s transform_combine(sm_transform_s a, sm_transform_s b) {
 
 void transform_to_mat4(sm_transform_s t, mat4 out) {
   /* first, extract the rotation basis of the transform */
-  sm_vec3 x, y, z;
+  sm_vec4 x, y, z;
   glm_quat_rotatev(t.rotation.data, sm_vec3_right().data, x.data);
   glm_quat_rotatev(t.rotation.data, sm_vec3_up().data, y.data);
   glm_quat_rotatev(t.rotation.data, sm_vec3_forward().data, z.data);
@@ -99,14 +95,10 @@ void transform_to_mat4(sm_transform_s t, mat4 out) {
   glm_vec4_scale(y.data, t.scale.y, y.data);
   glm_vec4_scale(z.data, t.scale.z, z.data);
 
-  /* extract the position of the transform */
-  sm_vec3 p;
-  glm_vec4_copy(t.position.data, p.data);
-
-  sm_mat4 result = sm_mat4_new(x.x, x.y, x.z, 0.0f, // X basis (and scale)
-                               y.x, y.y, y.z, 0.0f, // Y basis (and scale)
-                               z.x, z.y, z.z, 0.0f, // Z basis (and scale)
-                               p.x, p.y, p.z, 1.0f  // Position
+  sm_mat4 result = sm_mat4_new(x.x, x.y, x.z, 0.0f,                           // X basis (and scale)
+                               y.x, y.y, y.z, 0.0f,                           // Y basis (and scale)
+                               z.x, z.y, z.z, 0.0f,                           // Z basis (and scale)
+                               t.position.x, t.position.y, t.position.z, 1.0f // Position
   );
 
   glm_mat4_copy(result.data, out);
