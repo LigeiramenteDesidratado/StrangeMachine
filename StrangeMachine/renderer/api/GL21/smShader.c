@@ -17,8 +17,8 @@ typedef struct {
 
 } shader_s;
 
-static GLuint shader_compile_vert(char *vertex);
-static GLuint shader_compile_frag(char *fragment);
+static GLuint shader_compile_vert(sm_string *vertex);
+static GLuint shader_compile_frag(sm_string *fragment);
 static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment);
 
 shader_s *GL21shader_new(void) {
@@ -35,21 +35,42 @@ bool GL21shader_ctor(shader_s *shader, const char *vertex_shader, const char *fr
   SM_ASSERT(shader);
   SM_ASSERT(desc);
 
-  char *vs_source = (char *)SM_FILE_READ(vertex_shader);
-  if (!vs_source)
-    return false;
+  sm_file_handle_s vertex_handle = {0};
+  sm_file_handle_s fragment_handle = {0};
 
-  char *fs_source = (char *)SM_FILE_READ(fragment_shader);
+  if (!sm_filesystem_open_c_str(vertex_shader, SM_FILE_MODE_READ, false, &vertex_handle)) {
+    SM_LOG_ERROR("Failed to open vertex shader file: %s", vertex_shader);
+    return false;
+  }
+
+  if (!sm_filesystem_open_c_str(fragment_shader, SM_FILE_MODE_READ, false, &fragment_handle)) {
+    SM_LOG_ERROR("Failed to open fragment shader file: %s", fragment_shader);
+    sm_filesystem_close(&vertex_handle);
+    return false;
+  }
+  sm_string *vs_source = sm_filesystem_read_all_text(&vertex_handle);
+  if (!vs_source) {
+    SM_LOG_ERROR("Failed to read vertex shader file: %s", vertex_shader);
+    sm_filesystem_close(&vertex_handle);
+    sm_filesystem_close(&fragment_handle);
+    return false;
+  }
+
+  sm_string *fs_source = sm_filesystem_read_all_text(&fragment_handle);
   if (!fs_source) {
-    SM_FREE(vs_source);
+    SM_LOG_ERROR("Failed to read fragment shader file: %s", fragment_shader);
+    sm_string_dtor(vs_source);
+    sm_filesystem_close(&vertex_handle);
+    sm_filesystem_close(&fragment_handle);
+
     return false;
   }
 
   GLuint vert = shader_compile_vert(vs_source);
   GLuint frag = shader_compile_frag(fs_source);
 
-  SM_FREE(vs_source);
-  SM_FREE(fs_source);
+  sm_string_dtor(vs_source);
+  sm_string_dtor(fs_source);
 
   if (!vert || !frag)
     return false;
@@ -138,22 +159,22 @@ void GL21shader_set_uniform_array(shader_s *shader, const char *name, void *valu
 
   switch (type) {
   case SM_INT:
-    glCall(glUniform1iv(location, size, (int *)value));
+    glCall(glUniform1iv(location, (GLsizei)size, (int *)value));
     break;
   case SM_FLOAT:
-    glCall(glUniform1fv(location, size, (float *)value));
+    glCall(glUniform1fv(location, (GLsizei)size, (float *)value));
     break;
   case SM_VEC2:
-    glCall(glUniform2fv(location, size, (float *)value));
+    glCall(glUniform2fv(location, (GLsizei)size, (float *)value));
     break;
   case SM_VEC3:
-    glCall(glUniform3fv(location, size, (float *)value));
+    glCall(glUniform3fv(location, (GLsizei)size, (float *)value));
     break;
   case SM_VEC4:
-    glCall(glUniform4fv(location, size, (float *)value));
+    glCall(glUniform4fv(location, (GLsizei)size, (float *)value));
     break;
   case SM_MAT4:
-    glCall(glUniformMatrix4fv(location, size, GL_FALSE, (float *)value));
+    glCall(glUniformMatrix4fv(location, (GLsizei)size, GL_FALSE, (float *)value));
     break;
   default:
     SM_LOG_WARN("Unsupported type (%d) %s", type, SM_TYPE_TO_STR(type));
@@ -238,10 +259,10 @@ void GL21shader_set_uniform_array(shader_s *shader, const char *name, void *valu
 //   return true;
 // }
 
-static GLuint shader_compile_vert(char *vertex) {
+static GLuint shader_compile_vert(sm_string *vertex) {
 
   GLuint v = glCreateShader(GL_VERTEX_SHADER);
-  const char *v_source = vertex;
+  const char *v_source = sm_string_c_str(vertex);
   glCall(glShaderSource(v, 1, &v_source, NULL));
   glCall(glCompileShader(v));
 
@@ -258,10 +279,10 @@ static GLuint shader_compile_vert(char *vertex) {
   return v;
 }
 
-static GLuint shader_compile_frag(char *fragment) {
+static GLuint shader_compile_frag(sm_string *fragment) {
 
   GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
-  const char *f_source = fragment;
+  const char *f_source = sm_string_c_str(fragment);
   glCall(glShaderSource(f, 1, &f_source, NULL));
   glCall(glCompileShader(f));
 
