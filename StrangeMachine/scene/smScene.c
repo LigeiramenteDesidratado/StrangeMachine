@@ -11,26 +11,20 @@
 
 #define BIT (sizeof(uint64_t) * 8)
 
+/* ECS allocates memory in "chuncks". A chunck always contains entities of a single archetype */
 typedef struct sm__chunk_s {
 
   struct handle_pool_s *pool;
 
   bool alligned;
-  size_t count; /* number of components in the pool */
-  size_t size;  /* total size in bytes  */
+  size_t length; /* number of components in the pool */
+  size_t size;   /* total size in bytes  */
 
   SM_ARRAY(sm_component_desc_s) desc;
 
   void *data;
 
 } sm_chunk_s;
-
-typedef struct sm__chunk_m {
-
-  sm_component_t key;
-  sm_chunk_s *value;
-
-} sm_chunk_m;
 
 typedef struct sm__scene_s {
 
@@ -90,17 +84,6 @@ void scene_dtor(scene_s *scene) {
   sm_hashmap_for_each_u64(scene->map_archetype, sm__scene_dtor_cb, NULL);
   sm_hashmap_dtor_u64(scene->map_archetype);
 
-  /* for (size_t i = 0; i < SM_HT_LENGTH(scene->map_archetype); ++i) { */
-  /*   pool_dtor(scene->map_archetype[i].value->pool); */
-  /**/
-  /*   (scene->map_archetype[i].value->alligned) ? SM_ALIGNED_FREE(scene->map_archetype[i].value->data) */
-  /*                                             : SM_FREE(scene->map_archetype[i].value->data); */
-  /**/
-  /*   SM_ARRAY_DTOR(scene->map_archetype[i].value->desc); */
-  /*   free(scene->map_archetype[i].value); */
-  /* } */
-  /* SM_HT_DTOR(scene->map_archetype); */
-
   SM_FREE(scene);
 }
 
@@ -135,20 +118,20 @@ sm_entity_s scene_new_entity(scene_s *scene, sm_component_t archetype) {
   sm_handle handle = handle_new(chunk->pool);
   SM_ASSERT(handle != SM_INVALID_HANDLE);
 
-  chunk->count++;
+  chunk->length++;
 
   void *data = NULL;
   if (chunk->alligned) {
 
-    data = SM_ALIGNED_ALLOC(16, chunk->size * chunk->count);
+    data = SM_ALIGNED_ALLOC(16, chunk->size * chunk->length);
     SM_ASSERT(data);
     if (chunk->data) {
-      memcpy(data, chunk->data, chunk->size * (chunk->count - 1));
+      memcpy(data, chunk->data, chunk->size * (chunk->length - 1));
       SM_ALIGNED_FREE(chunk->data);
     }
 
   } else {
-    data = SM_REALLOC(chunk->data, chunk->size * chunk->count);
+    data = SM_REALLOC(chunk->data, chunk->size * chunk->length);
     SM_ASSERT(data);
   }
   chunk->data = data;
@@ -186,11 +169,9 @@ const void *scene_get_component(scene_s *scene, sm_entity_s entity) {
   SM_ASSERT(handle_valid(chunk->pool, entity.handle));
 
   uint32_t index = sm_handle_index(entity.handle);
-  SM_ASSERT(index < chunk->count);
+  SM_ASSERT(index < chunk->length);
 
   return (uint8_t *)chunk->data + (index * chunk->size);
-
-  /* memcpy(data, (uint8_t *)chunk->data + (index * chunk->size), chunk->size); */
 }
 
 void scene_register_system(scene_s *scene, sm_component_t comp, system_f system, uint32_t flags) {
@@ -224,7 +205,7 @@ bool sm__scene_inclusive_cb(sm_component_t key, void *value, void *user_data) {
   sm_system_iterator_s iter = {0};
   iter.size = chunk->size;
   size_t offset = 0;
-  iter.length = chunk->count;
+  iter.length = chunk->length;
   iter.data = chunk->data;
   iter.index = 0;
   if (SM_MASK_CHK_EQ(key, u_data->sys->components)) {
@@ -238,7 +219,6 @@ bool sm__scene_inclusive_cb(sm_component_t key, void *value, void *user_data) {
         sm_component_desc_s desc = *component_get_desc(cmp);
 
         if (SM_MASK_CHK(u_data->sys->components, cmp)) {
-
           desc.offset = offset;
           SM_ARRAY_PUSH(iter.desc, desc);
         }
@@ -271,7 +251,7 @@ void scene_do(scene_s *scene, float dt) {
       }
 
       sm_system_iterator_s iter;
-      iter.length = chunk->count;
+      iter.length = chunk->length;
       iter.size = chunk->size;
       iter.data = chunk->data;
       iter.desc = chunk->desc;
@@ -280,7 +260,7 @@ void scene_do(scene_s *scene, float dt) {
       sys->system(&iter, dt);
 
     } else {
-      sm_hashmap_for_each_u64(scene->map_archetype, sm__scene_inclusive_cb, sys);
+      sm_hashmap_for_each_u64(scene->map_archetype, sm__scene_inclusive_cb, &(struct user_data){sys, dt});
     }
   }
 }
