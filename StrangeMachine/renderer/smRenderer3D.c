@@ -36,18 +36,15 @@ typedef struct sm__renderer3D_s {
 
 } sm_renderer3D_s;
 
-sm_renderer3D_s *renderer3D_new(void) {
-
-  sm_renderer3D_s *renderer = (sm_renderer3D_s *)SM_CALLOC(1, sizeof(sm_renderer3D_s));
-  SM_ASSERT(renderer);
-
-  return renderer;
-}
-
 SM_PRIVATE enum { POSITION_LOC = 0, TEX_COORD_LOC = 1, COLOR_LOC = 2, NORMAL_LOC = 3, MAX_LOCS } sm__rederer3D_loc_e;
 
-bool renderer3D_ctor(sm_renderer3D_s *renderer) {
+sm_renderer3D_s *RENDERER3D = NULL;
 
+void renderer3D_init(void) {
+
+  SM_ASSERT(RENDERER3D == NULL && "Renderer 3D already initialized");
+
+  sm_renderer3D_s *renderer = (sm_renderer3D_s *)SM_CALLOC(1, sizeof(sm_renderer3D_s));
   SM_ASSERT(renderer);
 
   size_t max_triangles = 4096; /* TODO: make this configurable */
@@ -70,7 +67,7 @@ bool renderer3D_ctor(sm_renderer3D_s *renderer) {
   renderer->program = DEVICE->shader_new();
   if (!DEVICE->shader_ctor(renderer->program, "StrangeMachine/glsl/renderer3D.vs", "StrangeMachine/glsl/renderer3D.fs",
                            attribute_loc, 4)) {
-    return false;
+    return;
   }
   DEVICE->shader_bind(renderer->program);
 
@@ -82,7 +79,7 @@ bool renderer3D_ctor(sm_renderer3D_s *renderer) {
 
   renderer->VBO = DEVICE->vertex_buffer_new();
   if (!DEVICE->vertex_buffer_ctor(renderer->VBO, &vbo_desc))
-    return false;
+    return;
 
   attribute_desc_s attr_desc[4] = {{
                                        .index = POSITION_LOC,
@@ -126,7 +123,7 @@ bool renderer3D_ctor(sm_renderer3D_s *renderer) {
 
   renderer->EBO = DEVICE->index_buffer_new();
   if (!DEVICE->index_buffer_ctor(renderer->EBO, &ebo_desc))
-    return false;
+    return;
 
   renderer->indices = SM_CALLOC(1, sizeof(uint32_t) * renderer->max_indices);
 
@@ -135,10 +132,12 @@ bool renderer3D_ctor(sm_renderer3D_s *renderer) {
   camera_init(sm_vec3_new(0.0f, 0.0f, 1.0f), sm_vec3_new(0.0f, 0.0f, 0.0f), sm_vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON,
               PERSPECTIVE);
 
-  return true;
+  RENDERER3D = renderer;
 }
 
-void renderer3D_dtor(sm_renderer3D_s *renderer) {
+void renderer3D_teardown(void) {
+
+  sm_renderer3D_s *renderer = RENDERER3D;
 
   SM_ASSERT(renderer);
 
@@ -151,7 +150,9 @@ void renderer3D_dtor(sm_renderer3D_s *renderer) {
   SM_FREE(renderer);
 }
 
-void renderer3D_flush(sm_renderer3D_s *renderer) {
+void renderer3D_flush(void) {
+
+  sm_renderer3D_s *renderer = RENDERER3D;
 
   SM_ASSERT(renderer);
 
@@ -178,7 +179,9 @@ void renderer3D_flush(sm_renderer3D_s *renderer) {
   DEVICE->shader_unbind(renderer->program);
 }
 
-void renderer3D_start_batch(sm_renderer3D_s *renderer) {
+void renderer3D_start_batch(void) {
+
+  sm_renderer3D_s *renderer = RENDERER3D;
 
   SM_ASSERT(renderer);
 
@@ -186,7 +189,9 @@ void renderer3D_start_batch(sm_renderer3D_s *renderer) {
   renderer->__vertex_buffer = (sm_vertex_s *)renderer->vertices;
 }
 
-void renderer3D_begin(sm_renderer3D_s *renderer) {
+void renderer3D_begin(void) {
+
+  sm_renderer3D_s *renderer = RENDERER3D;
 
   SM_ASSERT(renderer);
 
@@ -203,31 +208,27 @@ void renderer3D_begin(sm_renderer3D_s *renderer) {
 
   DEVICE->shader_unbind(renderer->program);
 
-  renderer3D_start_batch(renderer);
+  renderer3D_start_batch();
 }
 
-void renderer3D_end(sm_renderer3D_s *renderer) {
+void renderer3D_end(void) {
 
-  SM_ASSERT(renderer);
-
-  renderer3D_flush(renderer);
+  renderer3D_flush();
 }
 
-void renderer3D_set_clear_color(sm_renderer3D_s *renderer, sm_vec4 color) {
-
-  SM_ASSERT(renderer);
+void renderer3D_set_clear_color(sm_vec4 color) {
 
   DEVICE->clear_color(color.x, color.y, color.z, color.w);
 }
 
-void renderer3D_clear(sm_renderer3D_s *renderer) {
-
-  SM_ASSERT(renderer);
+void renderer3D_clear(void) {
 
   DEVICE->clear(SM_DEPTH_BUFFER_BIT | SM_COLOR_BUFFER_BIT);
 }
 
-void renderer3D_draw_cube_transform(sm_renderer3D_s *renderer, sm_transform_s transform, sm_vec4 color) {
+void renderer3D_draw_cube_transform(sm_transform_s transform, sm_vec4 color) {
+
+  sm_renderer3D_s *renderer = RENDERER3D;
 
   SM_ASSERT(renderer);
 

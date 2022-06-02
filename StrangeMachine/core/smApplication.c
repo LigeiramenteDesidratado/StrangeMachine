@@ -13,6 +13,7 @@
 
 #include "renderer/smDeviceDefs.h"
 #include "renderer/smDevicePub.h"
+#include "renderer/smRenderer3D.h"
 
 #include "scene/smComponents.h"
 
@@ -94,6 +95,8 @@ bool application_ctor(application_s *app, const char *name) {
 
   window_set_callback(app->window, application_on_event, app);
 
+  renderer3D_init();
+
   app->cimgui = cimgui_new();
   if (!cimgui_ctor(app->cimgui, app->window)) {
     SM_CORE_LOG_ERROR("failed to initialize cimgui");
@@ -142,6 +145,8 @@ void application_dtor(application_s *app) {
   /* resource_teardown(); */
 
   input_tear_down();
+
+  renderer3D_teardown();
 
   window_dtor(app->window);
 
@@ -235,6 +240,11 @@ void application_do(application_s *app) {
     if (--f <= 0) {
       app->fps = (1.0 / app->delta);
       f = 12;
+    }
+
+    if (errno) {
+      SM_CORE_LOG_ERROR("errno: %d", errno);
+      errno = 0;
     }
   }
 

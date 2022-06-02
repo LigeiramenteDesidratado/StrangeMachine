@@ -1,16 +1,17 @@
 #include "smpch.h"
 
+#include "core/smCore.h"
+
 #include "renderer/api/smTypes.h"
 #include "renderer/smDeviceDefs.h"
 #include "renderer/smDevicePub.h"
+#include "renderer/smRenderer2D.h"
 
 #include "resource/smResource.h"
 
 #include "util/colors.h"
 
 #include "math/smMath.h"
-
-#include "core/smCore.h"
 
 #include "smCamera.h"
 
@@ -43,7 +44,7 @@ typedef struct vertex_s {
 
 } vertex_s;
 
-typedef struct renderer2D_s {
+typedef struct sm__renderer2D_s {
 
   struct index_buffer_s *EBO;  /* element buffer object */
   struct vertex_buffer_s *VBO; /* vertex buffer object */
@@ -62,33 +63,23 @@ typedef struct renderer2D_s {
   uint8_t texture_size;
   texture_handler_s textures[SM_MAX_TEXTURES];
 
-} renderer2D_s;
+} sm_renderer2D_s;
 
 /* private functions */
 SM_PRIVATE
 vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id);
 SM_PRIVATE
-void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color, float tex_id,
-                                  float deg_angle);
-
-/* public functions */
-void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color);
-void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color, float deg_angle);
-void renderer2D_draw_sprite(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler);
-void renderer2D_draw_sprite_rotated(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler,
-                                    float deg_angle);
-
-renderer2D_s *renderer2D_new(void) {
-
-  renderer2D_s *renderer = SM_CALLOC(1, sizeof(renderer2D_s));
-  SM_ASSERT(renderer);
-
-  return renderer;
-}
+void sm__renderer2D_draw_quad_pro(vec2 position, vec2 size, sm_vec4 color, float tex_id, float deg_angle);
 
 SM_PRIVATE enum { POSITION_LOC = 0, COLOR_LOC = 1, TEX_COORD_LOC = 2, TEX_ID_LOC = 3, MAX_LOCS } sm__rederer2D_loc_e;
 
-bool renderer2D_ctor(renderer2D_s *renderer) {
+sm_renderer2D_s *RENDERER2D = NULL;
+
+void renderer2D_init() {
+
+  SM_ASSERT(RENDERER2D == NULL && "Renderer 2D already initialized");
+  sm_renderer2D_s *renderer = SM_CALLOC(1, sizeof(sm_renderer2D_s));
+  SM_ASSERT(renderer);
 
   size_t max_quads = 1024;             /* TODO: make this configurable */
   size_t max_vertices = max_quads * 4; /* each quad is 4 vertices */
@@ -110,7 +101,7 @@ bool renderer2D_ctor(renderer2D_s *renderer) {
   renderer->program = DEVICE->shader_new();
   if (!DEVICE->shader_ctor(renderer->program, "StrangeMachine/glsl/renderer2D.vs", "StrangeMachine/glsl/renderer2D.fs",
                            attribute_loc, 4)) {
-    return false;
+    return;
   }
   DEVICE->shader_bind(renderer->program);
 
@@ -122,7 +113,7 @@ bool renderer2D_ctor(renderer2D_s *renderer) {
 
   renderer->VBO = DEVICE->vertex_buffer_new();
   if (!DEVICE->vertex_buffer_ctor(renderer->VBO, &vbo_desc))
-    return false;
+    return;
 
   attribute_desc_s attr_desc[4] = {
       {
@@ -197,29 +188,35 @@ bool renderer2D_ctor(renderer2D_s *renderer) {
 
   renderer->EBO = DEVICE->index_buffer_new();
   if (!DEVICE->index_buffer_ctor(renderer->EBO, &ebo_desc))
-    return false;
+    return;
 
   camera_init(sm_vec3_new(0.0f, 0.0f, 3.0f), sm_vec3_new(0.0f, 0.0f, 0.0f), sm_vec3_new(0.0f, 1.0f, 0.0f), THIRD_PERSON,
               ORTHOGONAL);
 
   DEVICE->shader_unbind(renderer->program);
 
-  return true;
+  RENDERER2D = renderer;
+
+  return;
 }
 
-void renderer2D_dtor(renderer2D_s *renderer) {
+void renderer2D_teardown(void) {
+
+  SM_ASSERT(RENDERER2D && "Renderer2D not initialized");
 
   camera_tear_down();
-  DEVICE->index_buffer_dtor(renderer->EBO);
-  DEVICE->vertex_buffer_dtor(renderer->VBO);
-  DEVICE->shader_dtor(renderer->program);
+  DEVICE->index_buffer_dtor(RENDERER2D->EBO);
+  DEVICE->vertex_buffer_dtor(RENDERER2D->VBO);
+  DEVICE->shader_dtor(RENDERER2D->program);
 
-  SM_FREE(renderer->indices);
-  SM_FREE((vertex_s *)renderer->vertices);
-  SM_FREE(renderer);
+  SM_FREE(RENDERER2D->indices);
+  SM_FREE((vertex_s *)RENDERER2D->vertices);
+  SM_FREE(RENDERER2D);
 }
 
-void renderer2D_flush(renderer2D_s *renderer) {
+void renderer2D_flush() {
+
+  sm_renderer2D_s *renderer = RENDERER2D;
 
   SM_ASSERT(renderer);
 
@@ -252,7 +249,9 @@ void renderer2D_flush(renderer2D_s *renderer) {
   __stats.draw_call_count++;
 }
 
-void renderer2D_start_batch(renderer2D_s *renderer) {
+void renderer2D_start_batch() {
+
+  sm_renderer2D_s *renderer = RENDERER2D;
 
   SM_ASSERT(renderer);
 
@@ -261,7 +260,9 @@ void renderer2D_start_batch(renderer2D_s *renderer) {
   renderer->__vertex_buffer = (vertex_s *)renderer->vertices;
 }
 
-void renderer2D_begin(renderer2D_s *renderer) {
+void renderer2D_begin() {
+
+  sm_renderer2D_s *renderer = RENDERER2D;
 
   SM_ASSERT(renderer);
 
@@ -276,14 +277,16 @@ void renderer2D_begin(renderer2D_s *renderer) {
 
   DEVICE->shader_unbind(renderer->program);
 
-  renderer2D_start_batch(renderer);
+  renderer2D_start_batch();
 }
 
-void renderer2D_end(renderer2D_s *renderer) {
+void renderer2D_end() {
+
+  sm_renderer2D_s *renderer = RENDERER2D;
 
   SM_ASSERT(renderer);
 
-  renderer2D_flush(renderer);
+  renderer2D_flush();
 
   __stats.previous_cc = __stats.draw_call_count;
   __stats.previous_qc = __stats.quad_count;
@@ -293,23 +296,24 @@ void renderer2D_end(renderer2D_s *renderer) {
 
 #define QUAD_SIZE 4
 
-void renderer2D_draw_quad(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color) {
+void renderer2D_draw_quad(vec2 position, vec2 size, sm_vec4 color) {
 
-  sm__renderer2D_draw_quad_pro(renderer, position, size, color, SM_DRAW_VERTEX_COLOR, 0.0f);
+  sm__renderer2D_draw_quad_pro(position, size, color, SM_DRAW_VERTEX_COLOR, 0.0f);
 }
 
-void renderer2D_draw_quad_rotated(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color, float deg_angle) {
+void renderer2D_draw_quad_rotated(vec2 position, vec2 size, sm_vec4 color, float deg_angle) {
 
-  sm__renderer2D_draw_quad_pro(renderer, position, size, color, SM_DRAW_VERTEX_COLOR, deg_angle);
+  sm__renderer2D_draw_quad_pro(position, size, color, SM_DRAW_VERTEX_COLOR, deg_angle);
 }
 
-void renderer2D_draw_sprite(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler) {
+void renderer2D_draw_sprite(vec2 position, vec2 size, texture_handler_s handler) {
 
-  renderer2D_draw_sprite_rotated(renderer, position, size, handler, 0.0f);
+  renderer2D_draw_sprite_rotated(position, size, handler, 0.0f);
 }
 
-void renderer2D_draw_sprite_rotated(renderer2D_s *renderer, vec2 position, vec2 size, texture_handler_s handler,
-                                    float deg_angle) {
+void renderer2D_draw_sprite_rotated(vec2 position, vec2 size, texture_handler_s handler, float deg_angle) {
+
+  sm_renderer2D_s *renderer = RENDERER2D;
 
   float tex_id = 0.0f;
 
@@ -326,26 +330,20 @@ void renderer2D_draw_sprite_rotated(renderer2D_s *renderer, vec2 position, vec2 
     tex_id = renderer->texture_size;
   }
 
-  sm__renderer2D_draw_quad_pro(renderer, position, size, SM_RED_COLOR, tex_id, deg_angle);
+  sm__renderer2D_draw_quad_pro(position, size, SM_RED_COLOR, tex_id, deg_angle);
 }
 
-void renderer2D_set_clear_color(renderer2D_s *renderer, sm_vec4 color) {
-
-  SM_ASSERT(renderer);
+void renderer2D_set_clear_color(sm_vec4 color) {
 
   DEVICE->clear_color(color.x, color.y, color.z, color.w);
 }
 
-void renderer2D_clear(renderer2D_s *renderer) {
-
-  SM_ASSERT(renderer);
+void renderer2D_clear() {
 
   DEVICE->clear(SM_COLOR_BUFFER_BIT);
 }
 
-void renderer2D_set_viewport(renderer2D_s *renderer, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-
-  SM_ASSERT(renderer);
+void renderer2D_set_viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
 
   DEVICE->set_viewport(x, y, width, height);
 }
@@ -394,17 +392,18 @@ vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4
 }
 
 SM_PRIVATE
-void sm__renderer2D_draw_quad_pro(renderer2D_s *renderer, vec2 position, vec2 size, sm_vec4 color, float tex_id,
-                                  float deg_angle) {
+void sm__renderer2D_draw_quad_pro(vec2 position, vec2 size, sm_vec4 color, float tex_id, float deg_angle) {
+
+  sm_renderer2D_s *renderer = RENDERER2D;
 
   SM_ASSERT(renderer);
 
   /* check if this new quad will not exceed the vertex buffer */
   if (renderer->index_count + 6 > renderer->max_indices) {
     /* in case of overflow, flush the current batch */
-    renderer2D_flush(renderer);
+    renderer2D_flush();
     /* and start a new batch */
-    renderer2D_start_batch(renderer);
+    renderer2D_start_batch();
   }
 
   if (deg_angle == 0.0f || deg_angle == 360.0f) {

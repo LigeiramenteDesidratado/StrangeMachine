@@ -31,23 +31,33 @@ typedef struct {
 
 } lab_s;
 
+void sm__default_system_renderable(sm_system_iterator_s *iter, float dt) {
+
+  (void)dt;
+
+  while (system_iter_next(iter)) {
+
+    const sm_transform_s *trans = (sm_transform_s *)iter->iter_data[0].data;
+
+    renderer3D_begin();
+    renderer3D_draw_cube_transform(*trans, MAROON);
+    renderer3D_end();
+  }
+}
+
 void on_attach(void *user_data) {
 
   assert(user_data);
 
   lab_s *lab = (lab_s *)user_data;
 
-  lab->renderer3d = renderer3D_new();
-  if (!renderer3D_ctor(lab->renderer3d)) {
-    fprintf(stderr, "Failed to create renderer3d\n");
-    exit(EXIT_FAILURE);
-  }
-
   lab->scene = scene_new();
   if (!scene_ctor(lab->scene, SM_TRANSFORM_COMP)) {
     fprintf(stderr, "Failed to create scene\n");
     exit(EXIT_FAILURE);
   }
+
+  scene_register_system(lab->scene, SM_TRANSFORM_COMP, sm__default_system_renderable, SM_SYSTEM_INCLUSIVE_FLAG);
 
   lab->entity = calloc(16, sizeof(sm_entity_s));
 
@@ -94,8 +104,6 @@ void on_detach(void *user_data) {
 
   scene_dtor(lab->scene);
 
-  renderer3D_dtor(lab->renderer3d);
-
   free(lab->entity);
 }
 
@@ -106,15 +114,16 @@ void on_update(void *user_data, float dt) {
 
   lab_s *lab = (lab_s *)user_data;
 
-  renderer3D_set_clear_color(lab->renderer3d, SM_BACKGROUND_COLOR);
-  renderer3D_clear(lab->renderer3d);
+  renderer3D_set_clear_color(SM_BACKGROUND_COLOR);
+  renderer3D_clear();
+  scene_do(lab->scene, dt);
 
-  for (size_t i = 0; i < 16; ++i) {
-    const sm_transform_s *trans = scene_get_component(lab->scene, lab->entity[i]);
-    renderer3D_begin(lab->renderer3d);
-    renderer3D_draw_cube_transform(lab->renderer3d, *trans, lab->colors[i]);
-    renderer3D_end(lab->renderer3d);
-  }
+  /* for (size_t i = 0; i < 16; ++i) { */
+  /*   const sm_transform_s *trans = scene_get_component(lab->scene, lab->entity[i]); */
+  /*   renderer3D_begin(); */
+  /*   renderer3D_draw_cube_transform(*trans, lab->colors[i]); */
+  /*   renderer3D_end(); */
+  /* } */
 }
 
 bool on_event(event_s *event, void *user_data) {

@@ -2,8 +2,6 @@
 
 #include "core/smCore.h"
 
-#include "core/data/smHashTable.h"
-
 #include "core/util/smBitMask.h"
 
 #include "resource/smResource.h"
@@ -35,8 +33,10 @@ typedef struct {
 
 typedef struct {
 
-  const char *root_folder;
-  resource_m *map;
+  sm_string root_folder;
+
+  sm_hashmap_str_s *map;
+
   sm_mutex *mutex;
 
 } resource_manager_s;
@@ -82,22 +82,20 @@ bool resource_init(const char *root_folder) {
     return false;
   }
 
-  RESOURCE->root_folder = strdup(root_folder);
+  RESOURCE->root_folder = sm_string_from(root_folder);
 
-  SM_SH_STRDUP(RESOURCE->map);
-  resource_s df;
+  RESOURCE->map = sm_hashmap_new_str();
+  if (!sm_hashmap_ctor_str(RESOURCE->map, 16, NULL, NULL)) {
+    SM_LOG_ERROR("failed to create hashmap");
+    return false;
+  }
 
-  df.status = RESOURCE_STATUS_NOT_FOUND;
-  df.type = RESOURCE_TYPE_INVALID;
-
-  SM_SH_DEFAULT(RESOURCE->map, df);
-
-  /* reads the folder and loads all the files */
+  /* Reads the folder and loads the resources */
   /* into the resource manager */
   sm__resource_dir_read(RESOURCE->root_folder);
 
   dmon_init();
-  dmon_watch(RESOURCE->root_folder, sm__watch_cb, DMON_WATCHFLAGS_RECURSIVE, NULL);
+  dmon_watch(sm_string_c_str(RESOURCE->root_folder), sm__watch_cb, DMON_WATCHFLAGS_RECURSIVE, NULL);
 
   texture_res_init(32);
 
@@ -112,9 +110,9 @@ void resource_teardown(void) {
 
   dmon_deinit();
 
-  SM_SH_DTOR(RESOURCE->map);
+  sm_hashmap_dtor_str(RESOURCE->map);
 
-  free((void *)RESOURCE->root_folder); /* TODO: create sm funtion for string duplication and free */
+  sm_string_dtor((sm_string)RESOURCE->root_folder); /* TODO: create sm funtion for string duplication and free */
 
   SM_MUTEX_DTOR(RESOURCE->mutex);
 
@@ -226,7 +224,7 @@ resource_type_e sm__resource_get_file_type(const char *file) {
 
   SM_ASSERT(file);
 
-  if (SM_FILE_HAS_EXT(file, "jpg;jpeg;png;"))
+  if (sm_filesystem_has_ext(file, "jpg;jpeg;png;"))
     return RESOURCE_TYPE_IMAGE;
   if (SM_FILE_HAS_EXT(file, "mp3;ogg"))
     return RESOURCE_TYPE_AUDIO;
@@ -304,7 +302,7 @@ void sm__watch_cb(dmon_watch_id watch_id, dmon_action action, const char *rootdi
 
   /* receive change events. type of event is stored in 'action' variable */
 
-  if (!SM_FILE_HAS_EXT(filepath, expected_ext)) {
+  if (!sm_filesystem_has_ext(filepath, expected_ext)) {
     SM_LOG_WARN("[%s] resource not supported", filepath);
     return;
   }
@@ -331,7 +329,7 @@ void sm__watch_cb(dmon_watch_id watch_id, dmon_action action, const char *rootdi
 }
 
 SM_PRIVATE
-void sm__resource_dir_read(const char *folder) {
+void sm__resource_dir_read(char *folder) {
 
   DIR *dir = opendir(folder);
   if (!dir) {
@@ -352,13 +350,14 @@ void sm__resource_dir_read(const char *folder) {
     if (SM_MASK_CHK(ent->d_type, DT_REG)) {
 
       /* check if it is a supported file type */
-      if (SM_FILE_HAS_EXT(ent->d_name, expected_ext)) {
+      if (sm_filesystem_has_ext_c_str(ent->d_name, expected_ext)) {
 
         /* create the full path */
         strcpy(buf, ent->d_name);
 
         sm__resource_on_found(root);
       }
+
     } else if (SM_MASK_CHK(ent->d_type, DT_DIR)) {
 
       /* check if it is a directory */
