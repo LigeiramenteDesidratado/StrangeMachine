@@ -67,6 +67,6 @@
 
 SM_HASHMAP_DECLARE(u32, uint32_t)
 SM_HASHMAP_DECLARE(u64, uint64_t)
-SM_HASHMAP_DECLARE(str, sm_string *)
+SM_HASHMAP_DECLARE(str, sm_string)
 
 #endif /* SM_CORE_DATA_SMHASHTABLE_C */

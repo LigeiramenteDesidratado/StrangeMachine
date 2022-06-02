@@ -17,8 +17,8 @@ typedef struct {
 
 } shader_s;
 
-static GLuint shader_compile_vert(sm_string *vertex);
-static GLuint shader_compile_frag(sm_string *fragment);
+static GLuint shader_compile_vert(sm_string vertex);
+static GLuint shader_compile_frag(sm_string fragment);
 static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment);
 
 shader_s *GL21shader_new(void) {
@@ -48,7 +48,7 @@ bool GL21shader_ctor(shader_s *shader, const char *vertex_shader, const char *fr
     sm_filesystem_close(&vertex_handle);
     return false;
   }
-  sm_string *vs_source = sm_filesystem_read_all_text(&vertex_handle);
+  sm_string vs_source = sm_filesystem_read_all_text(&vertex_handle);
   if (!vs_source) {
     SM_LOG_ERROR("Failed to read vertex shader file: %s", vertex_shader);
     sm_filesystem_close(&vertex_handle);
@@ -56,7 +56,7 @@ bool GL21shader_ctor(shader_s *shader, const char *vertex_shader, const char *fr
     return false;
   }
 
-  sm_string *fs_source = sm_filesystem_read_all_text(&fragment_handle);
+  sm_string fs_source = sm_filesystem_read_all_text(&fragment_handle);
   if (!fs_source) {
     SM_LOG_ERROR("Failed to read fragment shader file: %s", fragment_shader);
     sm_string_dtor(vs_source);
@@ -259,7 +259,7 @@ void GL21shader_set_uniform_array(shader_s *shader, const char *name, void *valu
 //   return true;
 // }
 
-static GLuint shader_compile_vert(sm_string *vertex) {
+static GLuint shader_compile_vert(sm_string vertex) {
 
   GLuint v = glCreateShader(GL_VERTEX_SHADER);
   const char *v_source = sm_string_c_str(vertex);
@@ -279,7 +279,7 @@ static GLuint shader_compile_vert(sm_string *vertex) {
   return v;
 }
 
-static GLuint shader_compile_frag(sm_string *fragment) {
+static GLuint shader_compile_frag(sm_string fragment) {
 
   GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
   const char *f_source = sm_string_c_str(fragment);

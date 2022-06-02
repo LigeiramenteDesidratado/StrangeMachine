@@ -5,16 +5,17 @@
 #include "core/data/smHashMap.h"
 #include "core/thread/synchronization/smMutex.h"
 
-static int str_hash_fn(sm_string *str) {
+static int str_hash_fn(sm_string str) {
+
   uint32_t hash = 5381;
-  const char *p;
-  for (p = sm_string_c_str(str); p && *p; p++) {
-    hash = ((hash << 5) + hash) + (uint32_t)(*p);
+
+  for (const char *p = sm_string_c_str(str); p && *p; p++) {
+    hash = ((hash << 5) + hash) + (int32_t)(*p);
   }
   return (int)hash;
 }
 /* copied from libcutils/str_parms.c */
-static bool str_eq(sm_string *key_a, sm_string *key_b) {
+static bool str_eq(sm_string key_a, sm_string key_b) {
   return sm_string_eq(key_a, key_b);
 }
 
@@ -268,4 +269,4 @@ static inline size_t sm__calculate_index(size_t bucket_count, int hash) {
 
 SM_HASHMAP_DEFINE(u32, uint32_t, fib_hash_fn, num_eq)
 SM_HASHMAP_DEFINE(u64, uint64_t, fib_hash64_fn, num64_eq)
-SM_HASHMAP_DEFINE(str, sm_string *, str_hash_fn, str_eq)
+SM_HASHMAP_DEFINE(str, sm_string, str_hash_fn, str_eq)
