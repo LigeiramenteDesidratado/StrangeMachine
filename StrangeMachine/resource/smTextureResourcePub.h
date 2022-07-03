@@ -1,31 +1,25 @@
 #ifndef SM_TEXTURE_RESOURCE_PUBLIC_H
 #define SM_TEXTURE_RESOURCE_PUBLIC_H
 
-#include "renderer/smDevicePub.h"
 #include "smpch.h"
 
+#include "core/util/smString.h"
+
 typedef struct {
-  uint32_t handle;
+  u32 handle;
 
-} texture_handler_s;
+} sm_texture_resource_handler_s;
 
-texture_handler_s texture_res_new(const char *file);
-void texture_res_dtor(texture_handler_s handler);
+sm_texture_resource_handler_s sm_texture_resource_new(sm_string file);
+void sm_texture_resource_dtor(sm_texture_resource_handler_s handler);
 
-const char *texture_res_get_name(texture_handler_s handler);
-uint32_t texture_res_get_channels(texture_handler_s handler);
-uint32_t texture_res_get_height(texture_handler_s handler);
-uint32_t texture_res_get_width(texture_handler_s handler);
+sm_string sm_texture_resource_get_name(sm_texture_resource_handler_s handler);
+u32 sm_texture_resource_get_channels(sm_texture_resource_handler_s handler);
+u32 sm_texture_resource_get_height(sm_texture_resource_handler_s handler);
+u32 sm_texture_resource_get_width(sm_texture_resource_handler_s handler);
+const void *sm_texture_resource_get_data(sm_texture_resource_handler_s handler);
 
-void texture_res_unload_cpu_data(texture_handler_s handler);
-void texture_res_unload_gpu_data(texture_handler_s handler);
-bool texture_res_has_cpu_data(texture_handler_s handler);
-bool texture_res_has_gpu_data(texture_handler_s handler);
-bool texture_res_load_gpu_data(texture_handler_s handler);
-void texture_res_load_cpu_data(texture_handler_s handler);
-void texture_res_unload_data(texture_handler_s handler);
-
-void texture_res_bind(texture_handler_s handler, uint32_t tex_index);
-void texture_res_unbind(texture_handler_s handler, uint32_t tex_index);
+b8 sm_texture_resource_load_data(sm_texture_resource_handler_s handler);
+b8 sm_texture_resource_has_data(sm_texture_resource_handler_s handler);
 
 #endif /* SM_TEXTURE_RESOURCE_PUBLIC_H */

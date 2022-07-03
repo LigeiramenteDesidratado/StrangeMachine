@@ -22,8 +22,8 @@ typedef struct {
 
   SDL_Window *raw_window;
   SDL_GLContext raw_context;
-  uint32_t width, height;
-  bool vsync;
+  u32 width, height;
+  b8 vsync;
 
   event_callback_f event_callback;
   void *user_data; // temporary
@@ -38,7 +38,7 @@ window_s *window_new(void) {
   return win;
 }
 
-bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t height) {
+b8 window_ctor(window_s *win, const char *name, u32 width, u32 height) {
 
   SM_CORE_ASSERT(win);
   SM_CORE_ASSERT(name);
@@ -79,10 +79,10 @@ bool window_ctor(window_s *win, const char *name, uint32_t width, uint32_t heigh
       return false;
     }
 
-    GLint n_attrs;
-    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attrs);
     SM_CORE_LOG_DEBUG("GL Renderer: %s", glGetString(GL_RENDERER));
     SM_CORE_LOG_DEBUG("GL Version: %s", glGetString(GL_VERSION));
+    GLint n_attrs;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attrs);
     SM_CORE_LOG_DEBUG("GL MAX_VERTEX_ATTRIBS: %d", n_attrs);
 
     // vsync enable by default
@@ -142,12 +142,13 @@ void window_do(window_s *win) {
     }
     case SDL_WINDOWEVENT:
       switch (event.window.event) {
-      case SDL_WINDOWEVENT_RESIZED:
+      case SDL_WINDOWEVENT_RESIZED: {
         win->width = event.window.data1;
         win->height = event.window.data2;
         event_s e = event_new_window(SM_EVENT_WINDOW_RESIZE, event.window.data1, event.window.data2);
         win->event_callback(&e, win->user_data);
         break;
+      }
       case SDL_WINDOWEVENT_FOCUS_GAINED: {
         event_s e = event_new_window(SM_EVENT_WINDOW_FOCUS, 0, 0);
         win->event_callback(&e, win->user_data);
@@ -204,35 +205,35 @@ void window_set_callback(window_s *win, event_callback_f callback, void *user_da
   win->user_data = user_data;
 }
 
-float window_get_aspect_ratio(window_s *win) {
+f32 window_get_aspect_ratio(window_s *win) {
 
   SM_CORE_ASSERT(win);
 
-  return (float)win->width / (float)win->height;
+  return (f32)win->width / (f32)win->height;
 }
 
-uint32_t window_get_width(window_s *win) {
+u32 window_get_width(window_s *win) {
 
   SM_CORE_ASSERT(win);
 
   return win->width;
 }
 
-uint32_t window_get_height(window_s *win) {
+u32 window_get_height(window_s *win) {
 
   SM_CORE_ASSERT(win);
 
   return win->height;
 }
 
-bool window_is_vsync(window_s *win) {
+b8 window_is_vsync(window_s *win) {
 
   SM_CORE_ASSERT(win);
 
   return win->vsync;
 }
 
-void window_set_vsync(window_s *win, bool vsync) {
+void window_set_vsync(window_s *win, b8 vsync) {
 
   SM_CORE_ASSERT(win);
 

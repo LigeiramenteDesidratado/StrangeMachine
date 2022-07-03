@@ -11,7 +11,7 @@ struct stack_layer_s;
 struct stack_layer_s *stack_layer_new(void);
 
 /* Constructor */
-bool stack_layer_ctor(struct stack_layer_s *stack_layer);
+b8 stack_layer_ctor(struct stack_layer_s *stack_layer);
 
 /* Destructor */
 void stack_layer_dtor(struct stack_layer_s *stack_layer);

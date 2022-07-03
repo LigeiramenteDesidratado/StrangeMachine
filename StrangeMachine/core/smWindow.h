@@ -11,16 +11,16 @@ struct window_s;
 struct window_s *window_new(void);
 
 /* constructor */
-bool window_ctor(struct window_s *win, const char *name, uint32_t width, uint32_t height);
+b8 window_ctor(struct window_s *win, const char *name, u32 width, u32 height);
 
 /* destructor */
 void window_dtor(struct window_s *win);
 
-float window_get_aspect_ratio(struct window_s *win);
-uint32_t window_get_width(struct window_s *win);
-uint32_t window_get_height(struct window_s *win);
-void window_set_vsync(struct window_s *win, bool vsync);
-bool window_is_vsync(struct window_s *win);
+f32 window_get_aspect_ratio(struct window_s *win);
+u32 window_get_width(struct window_s *win);
+u32 window_get_height(struct window_s *win);
+void window_set_vsync(struct window_s *win, b8 vsync);
+b8 window_is_vsync(struct window_s *win);
 void window_set_callback(struct window_s *win, event_callback_f callback, void *user_data);
 void window_do(struct window_s *win);
 void window_swap_buffers(struct window_s *win);

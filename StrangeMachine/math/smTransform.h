@@ -41,7 +41,7 @@ typedef struct sm__transform_s {
 
 sm_transform_s transform_combine(sm_transform_s a, sm_transform_s b);
 void transform_to_mat4(sm_transform_s *t, mat4 out);
-sm_transform_s transform_mat4_to_transform(mat4 m);
+/* sm_transform_s transform_mat4_to_transform(sm_mat4 m); */
 sm_transform_s transform_inverse(sm_transform_s t);
 void transform_point(sm_transform_s a, vec3 b, vec3 out);
 void transform_vec3(sm_transform_s a, vec3 b, vec3 out);

@@ -16,6 +16,7 @@
 #include "core/smHandle.h"
 
 #include "core/util/smUtil.h"
+#include "core/util/smFilesystem.h"
 
 #include "core/smMem.h"
 

@@ -7,7 +7,7 @@
 
 typedef struct {
 
-  bool dynamic;
+  b8 dynamic;
   size_t buffer_size;
   void *data;
 
@@ -15,8 +15,8 @@ typedef struct {
 
 typedef struct {
 
-  uint32_t index;
-  int32_t size;
+  u32 index;
+  i32 size;
   types_e type;
   size_t stride;
   const void *pointer;
@@ -26,7 +26,7 @@ typedef struct {
 typedef struct {
 
   const char *name;
-  uint32_t location;
+  u32 location;
 
 } attribute_loc_desc_s;
 

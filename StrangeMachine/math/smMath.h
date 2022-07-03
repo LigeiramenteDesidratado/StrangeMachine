@@ -1,6 +1,8 @@
 #ifndef SM_MATH_MATH_H
 #define SM_MATH_MATH_H
 
+#include "smpch.h"
+
 #include "cglm/cglm.h"
 
 #define CMP(X, Y) (fabsf((X) - (Y)) <= FLT_EPSILON * fmaxf(1.0f, fmaxf(fabsf(X), fabsf(Y))))
@@ -12,7 +14,7 @@ typedef struct sm__vec2 {
   union {
 
     struct {
-      float x, y;
+      f32 x, y;
     };
 
     vec2 data;
@@ -30,11 +32,11 @@ typedef struct sm__ivec2 {
   union {
 
     struct {
-      int32_t x;
-      int32_t y;
+      i32 x;
+      i32 y;
     };
 
-    int32_t v[2];
+    i32 v[2];
   };
 
 } sm_ivec2;
@@ -44,16 +46,16 @@ typedef struct sm__ivec2 {
 #define sm_ivec2_zero()    ((sm_ivec2){.x = 0, .y = 0})
 #define sm_ivec2_one()     ((sm_ivec2){.x = 1, .y = 1})
 
-/* A vector with 2 uint32_t components */
+/* A vector with 2 u32 components */
 typedef struct sm__uivec2 {
 
   union {
     struct {
-      uint32_t x;
-      uint32_t y;
+      u32 x;
+      u32 y;
     };
 
-    uint32_t data[2];
+    u32 data[2];
   };
 
 } sm_uivec2;
@@ -65,26 +67,26 @@ typedef struct sm__uivec2 {
 
 /* Use the same memory for the anonymous structure and the byte array field `data` */
 
-/* A vector with 3 float components */
+/* A vector with 3 f32 components */
 typedef struct sm__vec3 {
 
   union {
     struct {
-      float x;
-      float y;
-      float z;
+      f32 x;
+      f32 y;
+      f32 z;
     };
 
     struct {
-      float r;
-      float g;
-      float b;
+      f32 r;
+      f32 g;
+      f32 b;
     };
 
     struct {
-      float pitch;
-      float yaw;
-      float roll;
+      f32 pitch;
+      f32 yaw;
+      f32 roll;
     };
 
     vec3 data;
@@ -100,22 +102,22 @@ typedef struct sm__vec3 {
 #define sm_vec3_up()         sm_vec3_new(0.0f, 1.0f, 0.0f)
 #define sm_vec3_forward()    sm_vec3_new(0.0f, 0.0f, 1.0f)
 
-/* A vector with 4 float components */
+/* A vector with 4 f32 components */
 typedef CGLM_ALIGN_IF(16) struct sm__vec4 {
 
   union {
     struct {
-      float x;
-      float y;
-      float z;
-      float w;
+      f32 x;
+      f32 y;
+      f32 z;
+      f32 w;
     };
 
     struct {
-      float r;
-      float g;
-      float b;
-      float a;
+      f32 r;
+      f32 g;
+      f32 b;
+      f32 a;
     };
 
     vec4 data;
@@ -133,13 +135,13 @@ typedef struct sm__ivec4 {
 
   union {
     struct {
-      int32_t x;
-      int32_t y;
-      int32_t z;
-      int32_t w;
+      i32 x;
+      i32 y;
+      i32 z;
+      i32 w;
     };
 
-    int32_t data[4];
+    i32 data[4];
   };
 
 } sm_ivec4;
@@ -149,18 +151,18 @@ typedef struct sm__ivec4 {
 #define sm_ivec4_zero()          ((sm_ivec4){.x = 0, .y = 0, .z = 0, .w = 0})
 #define sm_ivec4_one()           ((sm_ivec4){.x = 1, .y = 1, .z = 1, .w = 1})
 
-/* A vector with 4 uint32_t components */
+/* A vector with 4 u32 components */
 typedef struct sm__uivec4 {
 
   union {
     struct {
-      uint32_t x;
-      uint32_t y;
-      uint32_t z;
-      uint32_t w;
+      u32 x;
+      u32 y;
+      u32 z;
+      u32 w;
     };
 
-    uint32_t data[4];
+    u32 data[4];
   };
 
 } sm_uivec4;
@@ -170,7 +172,7 @@ typedef struct sm__uivec4 {
 #define sm_uivec4_zero()          ((sm_uivec4){.x = 0, .y = 0, .z = 0, .w = 0})
 #define sm_uivec4_one()           ((sm_uivec4){.x = 1, .y = 1, .z = 1, .w = 1})
 
-/* A matrix with 4x4 float components */
+/* A matrix with 4x4 f32 components */
 typedef CGLM_ALIGN_MAT struct sm__mat4 {
 
   union {
@@ -183,43 +185,43 @@ typedef CGLM_ALIGN_MAT struct sm__mat4 {
     } vec4;
 
     struct {
-      sm_vec3 right;         /* first column */
-      float padding_rigth;   /* w value of right */
-      sm_vec3 up;            /* second column */
-      float padding_up;      /* w value of up */
-      sm_vec3 forward;       /* third column */
-      float padding_forward; /* w value of forward */
-      sm_vec3 position;      /* fourth column */
-      float w_position;
+      sm_vec3 right;       /* first column */
+      f32 padding_rigth;   /* w value of right */
+      sm_vec3 up;          /* second column */
+      f32 padding_up;      /* w value of up */
+      sm_vec3 forward;     /* third column */
+      f32 padding_forward; /* w value of forward */
+      sm_vec3 position;    /* fourth column */
+      f32 w_position;
 
     } vec3;
 
     /* basis vector notation */
     struct {
-      /* col 1 */ float xx, xy, xz, xw; /* right */
-      /* col 2 */ float yx, yy, yz, yw; /* up */
-      /* col 3 */ float zx, zy, zz, zw; /* forward */
-      /* col 4 */ float tx, ty, tz, tw; /* position */
+      /* col 1 */ f32 xx, xy, xz, xw; /* right */
+      /* col 2 */ f32 yx, yy, yz, yw; /* up */
+      /* col 3 */ f32 zx, zy, zz, zw; /* forward */
+      /* col 4 */ f32 tx, ty, tz, tw; /* position */
     };
 
     /* column-row notation */
     struct {
-      float c0r0, c0r1, c0r2, c0r3;
-      float c1r0, c1r1, c1r2, c1r3;
-      float c2r0, c2r1, c2r2, c2r3;
-      float c3r0, c3r1, c3r2, c3r3;
+      f32 c0r0, c0r1, c0r2, c0r3;
+      f32 c1r0, c1r1, c1r2, c1r3;
+      f32 c2r0, c2r1, c2r2, c2r3;
+      f32 c3r0, c3r1, c3r2, c3r3;
     };
 
     /* row-column notation */
     struct {
-      float r0c0, r1c0, r2c0, r3c0;
-      float r0c1, r1c1, r2c1, r3c1;
-      float r0c2, r1c2, r2c2, r3c2;
-      float r0c3, r1c3, r2c3, r3c3;
+      f32 r0c0, r1c0, r2c0, r3c0;
+      f32 r0c1, r1c1, r2c1, r3c1;
+      f32 r0c2, r1c2, r2c2, r3c2;
+      f32 r0c3, r1c3, r2c3, r3c3;
     };
 
     mat4 data;
-    float float16[16];
+    f32 float16[16];
   };
 
 } sm_mat4;
@@ -303,20 +305,20 @@ typedef struct sm__transform_s {
 #define sm_transform_new(POSITION, ROTATION, SCALE)                                                                    \
   ((sm_transform_s){.position = POSITION, .rotation = ROTATION, .scale = SCALE})
 
-#define sm_transform_zero() ((sm_transform_s){sm_vec4_zero(), sm_vec4_new(0.0f, 0.0f, 0.0f, 1.0f), sm_vec4_one()})
+#define sm_transform_identity() ((sm_transform_s){sm_vec4_zero(), sm_vec4_new(0.0f, 0.0f, 0.0f, 1.0f), sm_vec4_one()})
 
 #define sm_transform_print(T)                                                                                          \
   printf("%s:\n", #T);                                                                                                 \
-  printf("posit: %f, %f, %f\n", T.position.x, T.position.y, T.position.z);                                             \
-  printf("rotat: %f, %f, %f, %f\n", T.rotation.x, T.rotation.y, T.rotation.z, T.rotation.w);                           \
-  printf("scale: %f, %f, %f\n", T.scale.x, T.scale.y, T.scale.z);
+  printf("posit: %f, %f, %f\n", (T).position.x, (T).position.y, (T).position.z);                                       \
+  printf("rotat: %f, %f, %f, %f\n", (T).rotation.x, (T).rotation.y, (T).rotation.z, (T).rotation.w);                   \
+  printf("scale: %f, %f, %f\n", (T).scale.x, (T).scale.y, (T).scale.z);
 
 sm_transform_s transform_combine(sm_transform_s a, sm_transform_s b);
 void transform_to_mat4(sm_transform_s t, mat4 out);
-sm_transform_s transform_mat4_to_transform(mat4 m);
+sm_transform_s transform_mat4_to_transform(sm_mat4 m);
 sm_transform_s transform_inverse(sm_transform_s t);
 void transform_point(sm_transform_s a, vec3 b, vec3 out);
 void transform_vec3(sm_transform_s a, vec3 b, vec3 out);
-sm_transform_s transform_mix(sm_transform_s a, sm_transform_s b, float t);
+sm_transform_s transform_mix(sm_transform_s a, sm_transform_s b, f32 t);
 
 #endif /* SM_MATH_MATH_H */

@@ -10,7 +10,7 @@
 typedef struct layer_s cimgui_s;
 
 cimgui_s *cimgui_new(void);
-bool cimgui_ctor(cimgui_s *cimgui, struct window_s *window);
+b8 cimgui_ctor(cimgui_s *cimgui, struct window_s *window);
 void cimgui_dtor(cimgui_s *cimgui);
 
 void cimgui_begin(cimgui_s *cimgui);

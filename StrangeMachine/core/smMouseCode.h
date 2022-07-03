@@ -3,7 +3,7 @@
 
 #include "smpch.h"
 
-typedef uint16_t sm_mouse_code;
+typedef u16 sm_mouse_code;
 
 #define sm_button_left   ((sm_mouse_code)1)
 #define sm_button_middle ((sm_mouse_code)2)

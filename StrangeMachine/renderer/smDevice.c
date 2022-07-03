@@ -34,6 +34,8 @@ bool device_init(device_api_e api) {
     DEVICE->shader_bind = GL21shader_bind;
     DEVICE->shader_unbind = GL21shader_unbind;
     DEVICE->shader_set_uniform = GL21shader_set_uniform;
+    DEVICE->shader_get_location = GL21shader_get_location;
+    DEVICE->shader_get_type = GL21shader_get_type;
 
     DEVICE->index_buffer_new = GL21index_buffer_new;
     DEVICE->index_buffer_ctor = GL21index_buffer_ctor;

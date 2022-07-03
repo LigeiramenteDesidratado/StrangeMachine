@@ -11,14 +11,12 @@
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "UTIL_FILE"
 
-bool sm_filesystem_exists(sm_string *file_path) {
+b8 sm_filesystem_exists(sm_string file_path) {
 
-  SM_CORE_ASSERT(file_path);
-
-  return sm_filesystem_exists_c_str(sm_string_c_str(file_path));
+  return sm_filesystem_exists_c_str(file_path.str);
 }
 
-bool sm_filesystem_exists_c_str(const char *file_path) {
+b8 sm_filesystem_exists_c_str(const char *file_path) {
 
   SM_CORE_ASSERT(file_path);
 
@@ -31,14 +29,12 @@ bool sm_filesystem_exists_c_str(const char *file_path) {
 #endif
 }
 
-bool sm_filesystem_open(sm_string *file_path, file_modes_e mode, bool binary, sm_file_handle_s *out_handle) {
+b8 sm_filesystem_open(sm_string file_path, file_modes_e mode, b8 binary, sm_file_handle_s *out_handle) {
 
-  SM_ASSERT(file_path);
-
-  return sm_filesystem_open_c_str(sm_string_c_str(file_path), mode, binary, out_handle);
+  return sm_filesystem_open_c_str(file_path.str, mode, binary, out_handle);
 }
 
-bool sm_filesystem_open_c_str(const char *file_path, file_modes_e mode, bool binary, sm_file_handle_s *out_handle) {
+b8 sm_filesystem_open_c_str(const char *file_path, file_modes_e mode, b8 binary, sm_file_handle_s *out_handle) {
 
   SM_ASSERT(file_path);
   SM_ASSERT(out_handle);
@@ -54,13 +50,13 @@ bool sm_filesystem_open_c_str(const char *file_path, file_modes_e mode, bool bin
   } else if ((mode & SM_FILE_MODE_READ) == 0 && (mode & SM_FILE_MODE_WRITE) != 0) {
     mode_str = binary ? "wb" : "w";
   } else {
-    /* SM_LOG_ERROR("Invalid mode passed while trying to open file: '%s'", file_path); */
+    SM_LOG_ERROR("[%s] invalid mode passed while trying to open file", file_path);
     return false;
   }
 
   FILE *file = fopen(file_path, mode_str);
   if (!file) {
-    /* SM_LOG_ERROR("Error opening file: '%s'", file_path); */
+    SM_LOG_ERROR("[%s] error opening file", file_path);
     return false;
   }
 
@@ -70,18 +66,19 @@ bool sm_filesystem_open_c_str(const char *file_path, file_modes_e mode, bool bin
   return true;
 }
 
-/* wtf, why is this not in the standard library? */
-void sm_filesystem_close(sm_file_handle_s *handle) {
+b8 sm_filesystem_close(sm_file_handle_s *handle) {
 
   SM_CORE_ASSERT(handle);
   SM_CORE_ASSERT(handle->handle);
 
-  fclose((FILE *)handle->handle);
+  int re = fclose((FILE *)handle->handle);
   handle->handle = 0;
   handle->is_valid = false;
+
+  return re == 0;
 }
 
-uint64_t sm_filesystem_size(sm_file_handle_s *handle) {
+u64 sm_filesystem_size(const sm_file_handle_s *handle) {
 
   SM_CORE_ASSERT(handle);
 
@@ -89,8 +86,8 @@ uint64_t sm_filesystem_size(sm_file_handle_s *handle) {
 
     fseek((FILE *)handle->handle, 0, SEEK_END);
 
-    uint64_t size;
-    size = (uint64_t)ftell((FILE *)handle->handle);
+    u64 size;
+    size = (u64)ftell((FILE *)handle->handle);
     rewind((FILE *)handle->handle);
     return size;
   }
@@ -98,43 +95,47 @@ uint64_t sm_filesystem_size(sm_file_handle_s *handle) {
   return 0;
 }
 
-sm_string *sm_filesystem_read_all_text(sm_file_handle_s *handle) {
+sm_string sm_filesystem_read_all_text(const sm_file_handle_s *handle) {
 
   SM_CORE_ASSERT(handle);
   SM_CORE_ASSERT(handle->handle);
 
   // File size
-  uint64_t size = sm_filesystem_size(handle);
+  u64 size = sm_filesystem_size(handle);
   if (!size)
-    return NULL;
+    return (sm_string){NULL};
 
   return sm_string_from_file_handle(handle, size);
 }
 
-const char *sm_filesystem_get_ext(const char *file) {
+const char *sm_filesystem_get_ext_c_str(const char *filename) {
 
   const char *suffix = NULL;
-  const char *dot = strrchr(file, '.');
+  const char *dot = strrchr(filename, '.');
 
-  if (!dot || dot == file)
+  if (!dot || dot == filename)
     return NULL;
 
   return suffix = dot + 1;
 }
 
-bool sm_filesystem_has_ext(sm_string *file_path, sm_string *suffix) {
+sm_string sm_filesystem_get_ext(sm_string filename) {
 
-  SM_CORE_ASSERT(file_path);
-  SM_CORE_ASSERT(suffix);
+  return sm_string_from(sm_filesystem_get_ext_c_str(filename.str));
+}
 
-  bool result = false;
+b8 sm_filesystem_has_ext(sm_string filename, sm_string suffix) {
 
-  sm_string *ext = sm_string_from(sm_filesystem_get_ext(sm_string_c_str(file_path)));
+  SM_CORE_ASSERT(filename.str);
+  SM_CORE_ASSERT(suffix.str);
 
-  if (!ext)
+  sm_string ext = sm_filesystem_get_ext(filename);
+
+  if (!ext.str)
     return false;
 
-  SM_ARRAY(sm_string *) split = sm_string_split(suffix, ';');
+  b8 result = false;
+  SM_ARRAY(sm_string) split = sm_string_split(suffix, ';');
   for (size_t i = 0; i < SM_ARRAY_LEN(split); i++) {
 
     if (!result && sm_string_eq(split[i], ext)) {
@@ -150,107 +151,92 @@ bool sm_filesystem_has_ext(sm_string *file_path, sm_string *suffix) {
   return result;
 }
 
-/* #include "smpch.h" */
-/**/
-/* #include "core/smAssert.h" */
-/* #include "core/smLog.h" */
-/* #include "core/smMem.h" */
-/**/
-/* #include "core/util/smFile.h" */
-/* #include "core/util/smString.h" */
-/**/
-/* #include "core/data/smArray.h" */
-/**/
-/* #undef SM_MODULE_NAME */
-/* #define SM_MODULE_NAME "UTIL_FILE" */
-/**/
-/* bool s__file_has_ext(sm_string *file_path, const char *suffix) { */
-/**/
-/*   SM_CORE_ASSERT(file_path); */
-/*   SM_CORE_ASSERT(suffix); */
-/**/
-/*   bool result = false; */
-/**/
-/*   const char *ext = sm__file_get_ext(file_path); */
-/**/
-/*   if (!ext) */
-/*     return false; */
-/**/
-/*   SM_ARRAY(const char *) split = SM_STRING_SPLIT(suffix, ';'); */
-/*   for (size_t i = 0; i < SM_ARRAY_LEN(split); i++) { */
-/**/
-/*     if (!result && SM_STRING_EQ(split[i], ext)) { */
-/*       result = true; */
-/*     } */
-/**/
-/*     SM_FREE((char *)split[i]); */
-/*   } */
-/**/
-/*   SM_ARRAY_DTOR(split); */
-/**/
-/*   return result; */
-/* } */
-/**/
-/* const char *sm__file_get_ext(const char *file) { */
-/**/
-/*   const char *suffix = NULL; */
-/*   const char *dot = strrchr(file, '.'); */
-/**/
-/*   if (!dot || dot == file) */
-/*     return NULL; */
-/**/
-/*   return suffix = dot + 1; */
-/* } */
-/**/
-/* bool sm__file_exists(const char *file) { */
-/**/
-/*   SM_CORE_ASSERT(file); */
-/* #ifdef _MSC_VER */
-/*   struct _stat sb; */
-/*   return _stat(file, &sb) == 0 && S_ISREG(sb.st_mode); */
-/* #else */
-/*   struct stat sb; */
-/*   return stat(file, &sb) == 0 && S_ISREG(sb.st_mode); */
-/* #endif */
-/* } */
-/**/
-/* const char *sm__file_read(const char *file) { */
-/**/
-/*   SM_CORE_ASSERT(file); */
-/**/
-/*   char *text = NULL; */
-/**/
-/*   FILE *f = fopen(file, "rt"); */
-/*   if (!f) { */
-/*     SM_LOG_ERROR("[%s] failed to open text file", file); */
-/*     return NULL; */
-/*   } */
-/**/
-/*   fseek(f, 0, SEEK_END); */
-/*   uint64_t size = (uint64_t)ftell(f); */
-/*   fseek(f, 0, SEEK_SET); */
-/**/
-/*   if (size > 0) { */
-/*     text = (char *)SM_MALLOC((size + 1) * sizeof(char)); */
-/**/
-/*     uint64_t count = fread(text, sizeof(char), size, f); */
-/*
- * WARNING: \r\n is converted to \n on reading, so,
- * read bytes count gets reduced by the number of lines
- */
-/*     if (count < size) */
-/*       text = SM_REALLOC(text, count + 1); */
-/**/
-/*     text[count] = '\0'; */
-/**/
-/*   } else { */
-/*     SM_LOG_ERROR("[%s] failed to read text file", file); */
-/*   } */
-/**/
-/*   fclose(f); */
-/**/
-/*   SM_LOG_INFO("[%s] text file loaded successfully", file); */
-/*   return text; */
-/* } */
-/**/
-/* #undef SM_MODULE_NAME */
+b8 sm_filesystem_has_ext_c_str(const char *filename, const char *suffix) {
+
+  SM_CORE_ASSERT(filename);
+  SM_CORE_ASSERT(suffix);
+
+  b8 result = false;
+
+  const char *ext = sm_filesystem_get_ext_c_str(filename);
+  if (!ext)
+    return false;
+
+  sm_string ext_str = sm_string_from(ext);
+  sm_string suffix_str = sm_string_from(suffix);
+
+  SM_ARRAY(sm_string) split = sm_string_split(suffix_str, ';');
+  for (size_t i = 0; i < SM_ARRAY_LEN(split); i++) {
+
+    if (!result && sm_string_eq(split[i], ext_str)) {
+      result = true;
+    }
+
+    sm_string_dtor(split[i]);
+  }
+
+  SM_ARRAY_DTOR(split);
+
+  sm_string_dtor(ext_str);
+  sm_string_dtor(suffix_str);
+
+  return result;
+}
+
+b8 sm_filesystem_read_line(const sm_file_handle_s *handle, sm_string string_buf) {
+
+  SM_CORE_ASSERT(handle);
+
+  char *buf = string_buf.str;
+  size_t buf_cap = sm_string_cap(string_buf);
+
+  if (fgets(buf, buf_cap, (FILE *)handle->handle) != NULL) {
+    sm_string_set_len(string_buf, strlen(buf));
+
+    return true;
+  }
+
+  return false;
+}
+
+b8 filesystem_write_line(sm_file_handle_s *handle, sm_string string) {
+
+  SM_CORE_ASSERT(handle);
+
+  i32 result = fputs(string.str, (FILE *)handle->handle);
+
+  if (result != EOF)
+    result = fputc('\n', (FILE *)handle->handle);
+
+  /* Make sure to flush the stream so it is written to the file immediately. */
+  /* This prevents data loss in the event of a crash. */
+  fflush((FILE *)handle->handle);
+
+  return result != EOF;
+}
+
+b8 sm_filesystem_write_bytes(const sm_file_handle_s *handle, const void *data, u64 size) {
+
+  SM_CORE_ASSERT(handle);
+  SM_CORE_ASSERT(data);
+
+  u32 result = fwrite(data, 1, size, (FILE *)handle->handle);
+
+  /* Make sure to flush the stream so it is written to the file immediately. */
+  /* This prevents data loss in the event of a crash. */
+  fflush((FILE *)handle->handle);
+
+  return result != 0;
+}
+
+b8 sm_filesystem_read_bytes(const sm_file_handle_s *handle, void *data, u64 size) {
+
+  SM_CORE_ASSERT(handle);
+  SM_CORE_ASSERT(data);
+
+  u32 result = fread(data, 1, size, (FILE *)handle->handle);
+
+  return result != 0;
+}
+
+#undef SM_MODULE_NAME

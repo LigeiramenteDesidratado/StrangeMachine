@@ -8,12 +8,13 @@
 #include "renderer/smDevicePub.h"
 #include "vendor/gladGL21/glad.h"
 
-bool GL21loader(loadproc_f load);
+b8 GL21loader(loadproc_f load);
 
 #ifdef SM_DEBUG
-bool GL21log_call();
+b8 GL21log_call();
 void GL21clear_error();
-GLint GL21map_sm_to_gl_type(types_e type);
+GLenum GL21map_sm_to_gl_type(types_e type);
+types_e GL21map_gl_to_sm_type(GLenum type);
 
   #define glCall(CALL)                                                                                                 \
     do {                                                                                                               \

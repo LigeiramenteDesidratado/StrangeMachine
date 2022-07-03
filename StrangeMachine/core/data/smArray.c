@@ -64,7 +64,7 @@ size_t *sm__array_push(size_t *array, void *value, size_t size) {
   if (++SM__ARRAY_LEN(array) > SM__ARRAY_CAP(array))
     array = sm__array_set_cap(array, SM__ARRAY_CAP(array) * 2, size);
 
-  memcpy((uint8_t *)array + SM__ARRAY_HEADER_OFFSET + (size * (SM__ARRAY_LEN(array) - 1)), value, size);
+  memcpy((u8 *)array + SM__ARRAY_HEADER_OFFSET + (size * (SM__ARRAY_LEN(array) - 1)), value, size);
 
   return array;
 }

@@ -14,7 +14,7 @@ typedef struct {
   GLuint EBO; /* Element Buffer Object */
 
   size_t buffer_size; /* Size of the buffer */
-  bool is_dynamic;    /* Is the buffer dynamic? */
+  b8 is_dynamic;      /* Is the buffer dynamic? */
 
 } index_buffer_s;
 
@@ -26,7 +26,7 @@ index_buffer_s *GL21index_buffer_new(void) {
   return index_buffer;
 }
 
-bool GL21index_buffer_ctor(index_buffer_s *index_buffer, buffer_desc_s *desc) {
+b8 GL21index_buffer_ctor(index_buffer_s *index_buffer, buffer_desc_s *desc) {
 
   SM_ASSERT(index_buffer);
 
@@ -52,7 +52,7 @@ void GL21index_buffer_dtor(index_buffer_s *index_buffer) {
   SM_FREE(index_buffer);
 }
 
-void GL21index_buffer_set_data(index_buffer_s *index_buffer, uint32_t *data, size_t length) {
+void GL21index_buffer_set_data(index_buffer_s *index_buffer, u32 *data, size_t length) {
 
   SM_ASSERT(index_buffer);
 
@@ -62,7 +62,7 @@ void GL21index_buffer_set_data(index_buffer_s *index_buffer, uint32_t *data, siz
     glCall(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, length, data));
 
   } else {
-    size_t size = length * sizeof(uint32_t);
+    size_t size = length * sizeof(u32);
     glCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
     index_buffer->buffer_size = length;
   }
@@ -84,35 +84,3 @@ void GL21index_buffer_unbind(index_buffer_s *index_buffer) {
   glCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 #undef SM_MODULE_NAME
-
-// Constructor
-// bool index_buffer_ctor(index_buffer_s *index_buffer) {
-//
-//   SM_ASSERT(index_buffer != NULL);
-//
-//   glGenBuffers(1, &index_buffer->ebo);
-//   index_buffer->count = 0;
-//
-//   return true;
-// }
-//
-// // Destructor
-// void index_buffer_dtor(index_buffer_s *index_buffer) {
-//
-//   SM_ASSERT(index_buffer != NULL);
-//
-//   glDeleteBuffers(1, &index_buffer->ebo);
-// }
-//
-// void index_buffer_set(index_buffer_s *index_buffer, uint32_t *input_array, size_t length) {
-//
-//   SM_ASSERT(index_buffer != NULL);
-//
-//   index_buffer->count = length;
-//   size_t size = sizeof(uint32_t);
-//
-//   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer->ebo);
-//   glBufferData(GL_ELEMENT_ARRAY_BUFFER, size * index_buffer->count, input_array, GL_STATIC_DRAW);
-//
-//   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-// }

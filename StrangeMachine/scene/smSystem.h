@@ -17,20 +17,20 @@ typedef struct sm__system_iterator_s {
   size_t length; /* length of the array */
   size_t size;   /* size of each element */
 
-  uint32_t index;
-  SM_ARRAY(sm_component_desc_s) desc;
+  u32 index;
+  SM_ARRAY(sm_component_view_s) desc;
 
-  uint8_t iter_data_count;
+  u8 iter_data_count;
   sm_system_data_desc_s iter_data[32];
 
   void *data;
 
 } sm_system_iterator_s;
 
-typedef void (*system_f)(sm_system_iterator_s *iter, float dt);
-bool system_iter_next(sm_system_iterator_s *iter);
+typedef void (*system_f)(sm_system_iterator_s *iter, f32 dt);
+b8 system_iter_next(sm_system_iterator_s *iter);
 
-typedef uint32_t sm_system_flags_t;
+typedef u32 sm_system_flags_t;
 
 /* matches all archetypes that contains the components designed by the system */
 extern const sm_system_flags_t SM_SYSTEM_INCLUSIVE_FLAG;

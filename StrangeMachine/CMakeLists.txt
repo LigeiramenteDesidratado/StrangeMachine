@@ -35,9 +35,10 @@ list(APPEND SM_SOURCE_FILES
   core/data/smArray.c
   core/data/smHashMap.c
 
-  renderer/smRenderer2D.c
   renderer/smDevice.c
+  renderer/smMaterial.c
 
+  # renderer/smRenderer2D.c
   renderer/smRenderer3D.c
 
   renderer/api/GL21/smVertexBuffer.c
@@ -45,13 +46,17 @@ list(APPEND SM_SOURCE_FILES
   renderer/api/GL21/smShader.c
   renderer/api/GL21/smDraw.c
   renderer/api/GL21/smTexture.c
+  renderer/api/GL21/smGLUtil.c
 
   cimgui/smCimgui.c
 
-  # resource/smResource.c
-  # resource/smTextureResource.c
+  resource/smResource.c
+  resource/smTextureResource.c
+  resource/smShaderResource.c
+  resource/file_format/smSMR.c
 
   scene/smScene.c
+  scene/smSceneGraph.c
   scene/smComponents.c
   scene/smSystem.c
 
@@ -96,7 +101,6 @@ list(APPEND SM_SOURCE_FILES
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
   list(APPEND SM_SOURCE_FILES
     core/smMem.c
-    renderer/api/GL21/smGLUtil.c
     )
 endif()
 

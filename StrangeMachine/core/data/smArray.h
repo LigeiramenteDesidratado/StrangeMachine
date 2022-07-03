@@ -100,7 +100,7 @@ size_t *sm__array_pop(size_t *array);
   do {                                                                                                                 \
     SM_ASSERT(size > 0 && "negative size or non zero");                                                                \
     SM_ASSERT(arr == NULL && "already allocated");                                                                     \
-    size_t *raw = SM_ALIGNED_ALLOC(alignment, SM_HEADER_OFFSET + size * sizeof((*arr)));                               \
+    size_t *raw = SM_ALIGNED_ALLOC(alignment, SM__ARRAY_HEADER_OFFSET + size * sizeof((*arr)));                        \
     if (raw == NULL)                                                                                                   \
       err(EXIT_FAILURE, NULL);                                                                                         \
     raw[0] = size;                                                                                                     \

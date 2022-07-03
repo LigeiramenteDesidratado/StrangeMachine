@@ -19,7 +19,7 @@ typedef enum sm__file_modes_e {
  * @param file_path The path to the file.
  * @return True if the file exists, false otherwise.
  */
-bool sm_filesystem_exists(sm_string *file_path);
+bool sm_filesystem_exists(sm_string file_path);
 
 /*
  * Checks if a file exists. C string version.
@@ -38,7 +38,7 @@ bool sm_filesystem_exists_c_str(const char *file_path);
  * @param out_handle The file handle.
  * @return True if the file was opened successfully, false otherwise.
  */
-bool sm_filesystem_open(sm_string *file_path, file_modes_e mode, bool binary, sm_file_handle_s *out_handle);
+b8 sm_filesystem_open(sm_string file_path, file_modes_e mode, bool binary, sm_file_handle_s *out_handle);
 
 /*
  * Opens a file. C string version.
@@ -49,14 +49,15 @@ bool sm_filesystem_open(sm_string *file_path, file_modes_e mode, bool binary, sm
  * @param out_handle The file handle.
  * @return True if the file was opened successfully, false otherwise.
  */
-bool sm_filesystem_open_c_str(const char *file_path, file_modes_e mode, bool binary, sm_file_handle_s *out_handle);
+b8 sm_filesystem_open_c_str(const char *file_path, file_modes_e mode, bool binary, sm_file_handle_s *out_handle);
 
 /*
  * Closes a file.
  *
  * @param handle The file handle.
+ * @return True if the file was closed successfully, false otherwise.
  */
-void sm_filesystem_close(sm_file_handle_s *handle);
+b8 sm_filesystem_close(sm_file_handle_s *handle);
 
 /*
  * Gets the size of a file.
@@ -64,7 +65,7 @@ void sm_filesystem_close(sm_file_handle_s *handle);
  * @param handle The file handle.
  * @return The size of the file.
  */
-uint64_t sm_filesystem_size(sm_file_handle_s *handle);
+uint64_t sm_filesystem_size(const sm_file_handle_s *handle);
 
 /*
  * Reads data from a file and puts it into a string.
@@ -72,7 +73,7 @@ uint64_t sm_filesystem_size(sm_file_handle_s *handle);
  * @param handle The file handle.
  * @return The string containing the data.
  */
-sm_string *sm_filesystem_read_all_text(sm_file_handle_s *handle);
+sm_string sm_filesystem_read_all_text(const sm_file_handle_s *handle);
 
 /*
  * Checks if the name of a file has a certain extension.
@@ -84,6 +85,24 @@ sm_string *sm_filesystem_read_all_text(sm_file_handle_s *handle);
  * @param suffix The extensions to check.
  * @return True if the file has the extension, false otherwise.
  */
-bool sm_filesystem_has_ext(sm_string *file_path, sm_string *suffix);
+b8 sm_filesystem_has_ext(sm_string filename, sm_string suffix);
+
+/*
+ * Checks if the name of a file has a certain extension.
+ * The extension is not case sensitive.
+ * You can use multiple extensions by separating them with a `;`.
+ * For example, `jpg;png` will match if the file is either a jpg or png.
+ * C string version.
+ *
+ * @param file_name The name of the file.
+ * @param suffix The extensions to check.
+ * @return True if the file has the extension, false otherwise.
+ */
+b8 sm_filesystem_has_ext_c_str(const char *filename, const char *suffix);
+
+b8 sm_filesystem_write_bytes(const sm_file_handle_s *handle, const void *data, u64 size);
+b8 sm_filesystem_read_bytes(const sm_file_handle_s *handle, void *data, u64 size);
+
+b8 sm_filesystem_read_line(const sm_file_handle_s *handle, sm_string string_buf);
 
 #endif /* SM_CORE_UTIL_FILESYSTEM_H */

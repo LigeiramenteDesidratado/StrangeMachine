@@ -7,9 +7,9 @@
 #define SM_MODULE_NAME "MEMORY"
 
 static struct {
-  uint64_t total_allocs;
-  uint64_t allocs;
-  uint64_t frees;
+  u64 total_allocs;
+  u64 allocs;
+  u64 frees;
   size_t total_bytes;
   size_t bytes;
 
@@ -17,7 +17,7 @@ static struct {
 
 #define SM_MEM_HEADER_SIZE sizeof(size_t)
 
-static char *sm__mem_human_readable_size(void);
+static i8 *sm__mem_human_readable_size(void);
 void *sm__mem_malloc(size_t size) {
 
   /*
@@ -25,8 +25,8 @@ void *sm__mem_malloc(size_t size) {
    * item 3: When applied to an operand that has type char, unsigned char, or signed char,
    * (or a qualified version thereof) the result is 1...
    * */
-  char *ptr = NULL;
-  ptr = (char *)malloc(size + SM_MEM_HEADER_SIZE);
+  u8 *ptr = NULL;
+  ptr = malloc(size + SM_MEM_HEADER_SIZE);
   if (ptr == NULL)
     return NULL;
 
@@ -51,11 +51,11 @@ void *sm__mem_calloc(size_t nmemb, size_t size) {
 
   size_t _size = nmemb * size;
 
-  char *ptr = NULL;
-  ptr = (char *)malloc(_size + SM_MEM_HEADER_SIZE);
+  u8 *ptr = NULL;
+  ptr = malloc(_size + SM_MEM_HEADER_SIZE);
   if (ptr == NULL)
     return NULL;
-  memset(ptr + SM_MEM_HEADER_SIZE, 0, _size);
+  memset(ptr + SM_MEM_HEADER_SIZE, 0x0, _size);
 
   *(size_t *)ptr = _size;
 
@@ -72,8 +72,8 @@ void *sm__mem_realloc(void *ptr, size_t size) {
   if (!ptr)
     return sm__mem_malloc(size);
 
-  char *newp = NULL;
-  char *_ptr = (((char *)ptr) - SM_MEM_HEADER_SIZE);
+  u8 *newp = NULL;
+  u8 *_ptr = (((u8 *)ptr) - SM_MEM_HEADER_SIZE);
 
   if ((newp = realloc(_ptr, size + SM_MEM_HEADER_SIZE)) == NULL)
     return NULL;
@@ -94,7 +94,7 @@ void sm__mem_free(void *ptr) {
 
   if (ptr) {
 
-    void *_ptr = ((char *)ptr) - SM_MEM_HEADER_SIZE;
+    u8 *_ptr = ((u8 *)ptr) - SM_MEM_HEADER_SIZE;
     size_t size = *((size_t *)_ptr);
 
     mem_info.bytes -= size;
@@ -118,24 +118,24 @@ void *sm__mem_aligned_alloc(size_t alignment, size_t size) {
 
   if (alignment && size) {
 
-    size_t _size = size + alignment - 1;
+    size_t _size = size + alignment-1;
 
-    void *raw = (void *)malloc(_size + SM_MEM_HEADER_SIZE);
+    u8 *raw = (void *)malloc(_size + SM_MEM_HEADER_SIZE);
     if (!raw)
       return NULL;
 
     /* store the size at the begining of the array */
     *(size_t *)raw = size;
 
-    char *header_address = (char *)((char *)raw + SM_MEM_HEADER_SIZE); /* not the actual address of the header */
+    u8 *header_address = (raw + SM_MEM_HEADER_SIZE); /* not the actual address of the header */
 
-    char *aligned_address = (char *)((((uintptr_t)header_address) + alignment) & ~(alignment - 1));
+    u8 *aligned_address = (u8 *)((((uintptr_t)header_address) + alignment) & ~(alignment - 1));
     /* void *aligned_address = (void *)(((size_t)header_address + alignment) & ~(alignment - 1)); */
 
-    uint8_t offset = (uint8_t)(aligned_address - header_address);
+    u8 offset = (u8)(aligned_address - header_address);
 
     /* store the offset 1 byte before the aligned address */
-    *((uint8_t *)aligned_address - 1) = offset;
+    *((u8 *)aligned_address - 1) = offset;
 
     ptr = aligned_address;
 
@@ -153,10 +153,10 @@ void sm__mem_aligned_free(void *ptr) {
   if (ptr) {
 
     /* get the offset by reading the byte before the aligned address */
-    uint8_t offset = *((uint8_t *)ptr - 1);
+    u8 offset = *((u8 *)ptr - 1);
 
     /* get the original address by subtracting the offset plus the header size from the aligned address */
-    void *_ptr = ((char *)ptr) - (offset + SM_MEM_HEADER_SIZE);
+    u8 *_ptr = ((u8 *)ptr) - (offset + SM_MEM_HEADER_SIZE);
 
     size_t size = *((size_t *)_ptr);
 
@@ -168,9 +168,9 @@ void sm__mem_aligned_free(void *ptr) {
   }
 }
 
-#define BYTES2KB ((double)(1 << 10))
-#define BYTES2MB ((double)(1 << 20))
-#define BYTES2GB ((double)(1 << 30))
+#define BYTES2KB ((f64)(1 << 10))
+#define BYTES2MB ((f64)(1 << 20))
+#define BYTES2GB ((f64)(1 << 30))
 
 void sm__mem_print(void) {
   printf("dangling: %lu\ndangling bytes: %lu %s\ntotal (re)alloctions: %lu\ntotal bytes: %s\nfree calls: %lu\n",
@@ -179,8 +179,8 @@ void sm__mem_print(void) {
 }
 
 // return a string with human readable memory size
-static char *sm__mem_human_readable_size(void) {
-  static char buf[32];
+static i8 *sm__mem_human_readable_size(void) {
+  static i8 buf[32];
   double size = (double)mem_info.total_bytes;
   if (size < BYTES2KB)
     sprintf(buf, "%.2f B", size);

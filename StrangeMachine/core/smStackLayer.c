@@ -24,7 +24,7 @@ stack_layer_s *stack_layer_new(void) {
   return stack_layer;
 }
 
-bool stack_layer_ctor(stack_layer_s *stack_layer) {
+b8 stack_layer_ctor(stack_layer_s *stack_layer) {
 
   SM_CORE_ASSERT(stack_layer);
 

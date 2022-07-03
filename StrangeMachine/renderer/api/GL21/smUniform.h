@@ -15,13 +15,13 @@ void __uniform_array_default(const char *type);
  * To summarise, it wraps glUniform{1|2|3|4}{f|i|ui} GL functions */
 #define uniform_set_value(SLOT, DATA)                                                                                  \
   _Generic((DATA), int                                                                                                 \
-           : glUniform1iv(SLOT, 1, (int32_t *)&DATA[0]), ivec4                                                         \
-           : glUniform4iv(SLOT, 1, (int32_t *)&DATA[0]), ivec2                                                         \
-           : glUniform2iv(SLOT, 1, (int32_t *)&DATA[0]), float                                                         \
-           : glUniform1fv(SLOT, 1, (float *)&DATA[0]), vec2                                                            \
-           : glUniform2fv(SLOT, 1, (float *)&DATA[0]), vec3                                                            \
-           : glUniform3fv(SLOT, 1, (float *)&DATA[0]), vec4        /* versor as well */                                \
-           : glUniform4fv(SLOT, 1, (float *)&DATA[0]), float(*)[4] /* mat4 */                                          \
+           : glUniform1iv(SLOT, 1, (i32 *)&DATA[0]), ivec4                                                             \
+           : glUniform4iv(SLOT, 1, (i32 *)&DATA[0]), ivec2                                                             \
+           : glUniform2iv(SLOT, 1, (i32 *)&DATA[0]), float                                                             \
+           : glUniform1fv(SLOT, 1, (f32 *)&DATA[0]), vec2                                                              \
+           : glUniform2fv(SLOT, 1, (f32 *)&DATA[0]), vec3                                                              \
+           : glUniform3fv(SLOT, 1, (f32 *)&DATA[0]), vec4        /* versor as well */                                  \
+           : glUniform4fv(SLOT, 1, (f32 *)&DATA[0]), float(*)[4] /* mat4 */                                            \
            : glUniformMatrix4fv(SLOT, 1, GL_FALSE, DATA[0]), default                                                   \
            : SM_LOG_WARN("'%s' variable has an invalid type", #DATA))
 
@@ -30,14 +30,14 @@ void __uniform_array_default(const char *type);
  * glUniform{1|2|3|4}{f|i|ui} GL functions see: http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1930.htm */
 #define uniform_set_array(SLOT, DATA, LENGTH)                                                                          \
   _Generic(&((DATA)[0]), int*                                                                                          \
-           : glUniform1iv(SLOT, LENGTH, (int32_t *)&DATA[0]), ivec4*                                                   \
-           : glUniform4iv(SLOT, LENGTH, (int32_t *)&DATA[0]), ivec2*                                                   \
-           : glUniform2iv(SLOT, LENGTH, (int32_t *)&DATA[0]), float*                                                   \
-           : glUniform1fv(SLOT, LENGTH, (float *)&DATA[0]), vec2*                                                      \
-           : glUniform2fv(SLOT, LENGTH, (float *)&DATA[0]), vec3*                                                      \
-           : glUniform3fv(SLOT, LENGTH, (float *)&DATA[0]), vec4*                                                      \
-           : glUniform4fv(SLOT, LENGTH, (float *)&DATA[0]),  mat4*                                                      \
-           : glUniformMatrix4fv(SLOT, LENGTH, GL_FALSE, (float *)&DATA[0]), default                                    \
+           : glUniform1iv(SLOT, LENGTH, (i32 *)&DATA[0]), ivec4*                                                   \
+           : glUniform4iv(SLOT, LENGTH, (i32 *)&DATA[0]), ivec2*                                                   \
+           : glUniform2iv(SLOT, LENGTH, (i32 *)&DATA[0]), float*                                                   \
+           : glUniform1fv(SLOT, LENGTH, (f32 *)&DATA[0]), vec2*                                                      \
+           : glUniform2fv(SLOT, LENGTH, (f32 *)&DATA[0]), vec3*                                                      \
+           : glUniform3fv(SLOT, LENGTH, (f32 *)&DATA[0]), vec4*                                                      \
+           : glUniform4fv(SLOT, LENGTH, (f32 *)&DATA[0]),  mat4*                                                      \
+           : glUniformMatrix4fv(SLOT, LENGTH, GL_FALSE, (f32 *)&DATA[0]), default                                    \
            : SM_LOG_WARN("'%s' variable has an invalid type", #DATA))
 
 #endif /* SM_UNIFORM_H */

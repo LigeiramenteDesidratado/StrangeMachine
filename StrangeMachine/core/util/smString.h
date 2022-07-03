@@ -1,13 +1,27 @@
 #ifndef SM_CORE_UTIL_STRING_H
 #define SM_CORE_UTIL_STRING_H
 
+#include "core/smRc.h"
 #include "smpch.h"
 
 #include "core/data/smArray.h"
 #include "core/util/smFilesystemPub.h"
 
-/* Opaque string type. */
-typedef struct sm__string *sm_string;
+typedef struct sm__string {
+
+  /* LEN, CAPACITY, and STRING are all stored in the same memory block.
+   * LEN is the number of characters in the string, not including the null
+   * terminator. CAPACITY is the number of characters that can be stored in
+   * the string, not including the null terminator. STRING is the pointer to the
+   * first character in the string.
+   */
+  char *str;
+
+  /* rc is used to keep track of the number of references to this string.
+   * When rc reaches 0, the string is freed.
+   */
+
+} sm_string;
 
 /*
  * Creates a new string.
@@ -42,20 +56,21 @@ void *sm_string_dtor(sm_string string);
 size_t sm_string_len(sm_string string);
 
 /*
+ * Sets the length of a string.
+ * If the length is greater than the capacity, the program will abort.
+ *
+ * @param string The string.
+ * @param len The new length of the string.
+ */
+void sm_string_set_len(sm_string string, size_t len);
+
+/*
  * Gets the capacity of a string.
  *
  * @param string The string.
  * @return The capacity of the string.
  */
 size_t sm_string_cap(sm_string string);
-
-/*
- * Gets the C string of a string.
- *
- * @param string The string.
- * @return The C string.
- */
-const char *sm_string_c_str(const sm_string string);
 
 /*
  * Makes a copy of a string.
@@ -98,7 +113,7 @@ sm_string sm_string_to_upper(sm_string string);
  * @return 0 if the strings are equal, > 0 if string1 is greater than string2,
  *        < 0 if string1 is less than string2.
  */
-int32_t sm_string_compare(sm_string str1, sm_string str2);
+i32 sm_string_compare(sm_string str1, sm_string str2);
 
 /*
  * Checks if two strings are equal.
@@ -107,7 +122,11 @@ int32_t sm_string_compare(sm_string str1, sm_string str2);
  * @param string2 The second string.
  * @return true if the strings are equal, false if they are not.
  */
-bool sm_string_eq(sm_string str1, sm_string str2);
+b8 sm_string_eq(sm_string str1, sm_string str2);
+
+b8 sm_string_compare_c_str(sm_string str, const char *c_str);
+
+b8 sm_string_eq_c_str(sm_string str, const char *c_str);
 
 /*
  * Splits a string into an array of strings.
@@ -117,23 +136,32 @@ bool sm_string_eq(sm_string str1, sm_string str2);
  * @return The array of strings or NULL if the string could not be split.
  *        It's up to the caller to free the array and the strings in it.
  */
-SM_ARRAY(sm_string ) sm_string_split(sm_string string, char delim);
+SM_ARRAY(sm_string) sm_string_split(sm_string string, char delim);
 
 /*
  * Appends a string to another string.
- * The modificaiton is done in-place.
  *
  * @param string The string to append to.
  * @param append The string to append.
+ * @return The new string.
  */
-void sm_string_append(sm_string string, sm_string append);
+sm_string sm_string_append(sm_string string, sm_string append);
+
+/*
+ * Appends a C string to a string.
+ *
+ * @param string The string to append to.
+ * @param append The C string to append.
+ * @return The new string.
+ */
+sm_string sm_string_append_c_str(sm_string string, const char *append);
 
 /* Sets string to a new value.
  *
  * @param string The string to set.
  * @param c_string The new value.
  */
-bool sm_string_set(sm_string string, const char *value);
+b8 sm_string_set(sm_string string, const char *value);
 
 /*
  * Reads the contents of a file into a string.
@@ -141,7 +169,7 @@ bool sm_string_set(sm_string string, const char *value);
  * @param file_handle The file to read.
  * @return The new string containing the file contents.
  */
-sm_string sm_string_from_file_handle(sm_file_handle_s *file_handle, uint64_t size);
+sm_string sm_string_from_file_handle(const sm_file_handle_s *file_handle, u64 size);
 
 /*
  * Trims whitespace from the beginning and end of a string.
@@ -151,4 +179,7 @@ sm_string sm_string_from_file_handle(sm_file_handle_s *file_handle, uint64_t siz
  */
 void sm_string_trim(sm_string string);
 
+b8 sm_string_contains(sm_string string, sm_string substring);
+
+b8 sm_string_contains_c_str(sm_string string, const char *substring);
 #endif /* SM_CORE_UTIL_STRING_H */

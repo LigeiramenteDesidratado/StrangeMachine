@@ -17,7 +17,7 @@ typedef struct {
   GLuint VBO; /* Vertex Buffer Object */
 
   size_t buffer_size; /* Size of the buffer */
-  bool is_dynamic;    /* Is the buffer dynamic? */
+  b8 is_dynamic;      /* Is the buffer dynamic? */
 
 } vertex_buffer_s;
 
@@ -28,7 +28,7 @@ vertex_buffer_s *GL21vertex_buffer_new(void) {
   return vertex_buffer;
 }
 
-bool GL21vertex_buffer_ctor(vertex_buffer_s *vertex_buffer, buffer_desc_s *desc) {
+b8 GL21vertex_buffer_ctor(vertex_buffer_s *vertex_buffer, buffer_desc_s *desc) {
 
   SM_ASSERT(vertex_buffer != NULL);
   SM_ASSERT(desc != NULL);
@@ -73,8 +73,8 @@ void GL21vertex_buffer_set_pointer(vertex_buffer_s *vertex_buffer, attribute_des
   /* } */
 
   for (size_t i = 0; i < length; ++i) {
-    glCall(glVertexAttribPointer(attributes[i].index, attributes[i].size, GL21map_sm_to_gl_type(attributes[i].type), GL_FALSE,
-                                 attributes[i].stride, attributes[i].pointer));
+    glCall(glVertexAttribPointer(attributes[i].index, attributes[i].size, GL21map_sm_to_gl_type(attributes[i].type),
+                                 GL_FALSE, attributes[i].stride, attributes[i].pointer));
   }
 
   /* Disable vertex attributes in reverse order */
@@ -107,23 +107,23 @@ void GL21vertex_buffer_set_data(vertex_buffer_s *vertex_buffer, const void *data
   glCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
-void GL21vertex_buffer_bind(vertex_buffer_s *vertex_buffer, uint32_t *locations, size_t length) {
+void GL21vertex_buffer_bind(vertex_buffer_s *vertex_buffer, u32 *locations, size_t length) {
 
   SM_ASSERT(vertex_buffer != NULL);
 
   glCall(glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer->VBO));
 
-  for (uint8_t i = 0; i < length; ++i) {
+  for (u8 i = 0; i < length; ++i) {
 
     glCall(glEnableVertexAttribArray(locations[i]));
   }
 }
 
-void GL21vertex_buffer_unbind(vertex_buffer_s *vertex_buffer, uint32_t *locations, size_t length) {
+void GL21vertex_buffer_unbind(vertex_buffer_s *vertex_buffer, u32 *locations, size_t length) {
 
   SM_ASSERT(vertex_buffer != NULL);
 
-  for (uint8_t i = length; i > 0; --i) {
+  for (u8 i = length; i > 0; --i) {
 
     glCall(glDisableVertexAttribArray(locations[i - 1]));
   }

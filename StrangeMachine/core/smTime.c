@@ -1,11 +1,12 @@
 #include <SDL2/SDL.h>
+#include "smpch.h"
 
-uint32_t sm__get_ticks(void) {
+u32 sm__get_ticks(void) {
 
   return SDL_GetTicks();
 }
 
-void sm__delay(uint32_t ms) {
+void sm__delay(u32 ms) {
 
   SDL_Delay(ms);
 }

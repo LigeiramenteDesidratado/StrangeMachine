@@ -6,15 +6,15 @@
 
 typedef struct {
 
-  int32_t lock;
-  bool keyboard[MAX_KEYBOARD_KEYS];
+  i32 lock;
+  b8 keyboard[MAX_KEYBOARD_KEYS];
 
   // mouse
-  int32_t x, y;           // x y mouse position
-  int32_t x_last, y_last; // last x y mouse position
-  int32_t x_rel, y_rel;   // relative x y mouse position
+  i32 x, y;           // x y mouse position
+  i32 x_last, y_last; // last x y mouse position
+  i32 x_rel, y_rel;   // relative x y mouse position
 
-  float scroll;
+  f32 scroll;
 
 } input_s;
 
@@ -26,17 +26,17 @@ void input_init(void) {
   SM_ASSERT(GINPUT != NULL);
 }
 
-bool input_scan_key(sm_key_code key) {
+b8 input_scan_key(sm_key_code key) {
   SM_ASSERT(GINPUT != NULL);
   SM_ASSERT(key < MAX_KEYBOARD_KEYS);
 
   return GINPUT->keyboard[key];
 }
 
-bool input_scan_key_lock(sm_key_code key) {
+b8 input_scan_key_lock(sm_key_code key) {
   SM_ASSERT(GINPUT != NULL);
 
-  bool val = false;
+  b8 val = false;
 
   if (GINPUT->lock == 0 && key < MAX_KEYBOARD_KEYS) {
     val = GINPUT->keyboard[key];
@@ -48,37 +48,37 @@ bool input_scan_key_lock(sm_key_code key) {
   return val;
 }
 
-float input_get_mouse_scroll() {
+f32 input_get_mouse_scroll() {
   SM_ASSERT(GINPUT != NULL);
   return GINPUT->scroll;
 }
 
-float input_get_x_rel_mouse() {
+f32 input_get_x_rel_mouse() {
   SM_ASSERT(GINPUT != NULL);
   return GINPUT->x_rel;
 }
 
-float input_get_y_rel_mouse() {
+f32 input_get_y_rel_mouse() {
   SM_ASSERT(GINPUT != NULL);
   return GINPUT->y_rel;
 }
 
-float input_get_x_mouse() {
+f32 input_get_x_mouse() {
   SM_ASSERT(GINPUT != NULL);
   return GINPUT->x;
 }
 
-float input_get_y_mouse() {
+f32 input_get_y_mouse() {
   SM_ASSERT(GINPUT != NULL);
   return GINPUT->y;
 }
 
-float input_get_x_last_mouse() {
+f32 input_get_x_last_mouse() {
   SM_ASSERT(GINPUT != NULL);
   return GINPUT->x_last;
 }
 
-float input_get_y_last_mouse() {
+f32 input_get_y_last_mouse() {
   SM_ASSERT(GINPUT != NULL);
   return GINPUT->y_last;
 }
@@ -98,7 +98,7 @@ void input_do() {
     GINPUT->lock = 0;
 }
 
-bool input_on_event(event_s *event, void *user_data) {
+b8 input_on_event(event_s *event, void *user_data) {
 
   SM_ASSERT(GINPUT != NULL);
   SM_UNUSED(user_data);

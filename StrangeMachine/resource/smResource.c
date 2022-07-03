@@ -5,11 +5,11 @@
 #include "core/util/smBitMask.h"
 
 #include "resource/smResource.h"
+#include "resource/smShaderResource.h"
 #include "resource/smTextureResourcePriv.h"
-#include "resource/smTextureResourcePub.h"
 
 #undef SM_MODULE_NAME
-#define SM_MODULE_NAME "RESOURCE"
+#define SM_MODULE_NAME "RESOURCE MANAGER"
 
 #define DMON_IMPL
 
@@ -26,127 +26,114 @@
 #include "vendor/dmon/dmon.h"
 
 typedef struct {
-  char *key;
-  resource_s value;
-
-} resource_m;
-
-typedef struct {
 
   sm_string root_folder;
 
-  sm_hashmap_str_s *map;
-
-  sm_mutex *mutex;
+  sm_hashmap_str_m *map;
 
 } resource_manager_s;
 
 /* globals */
-SM_PRIVATE
-resource_manager_s *RESOURCE = NULL;
 
-SM_PRIVATE
-char *expected_ext = "jpeg;jpg;png;gltf;glb;obj;mtl;mp3;ogg;glsl;vert;frag;fs;vs;"; /* supported resource types */
+resource_manager_s *RESOURCE_MANAGER = NULL;
+
+char *expected_ext = "jpeg;jpg;png;gltf;glb;obj;mtl;mp3;ogg;shader"; /* supported resource types */
 
 /* private functions */
-SM_PRIVATE
-resource_type_e sm__resource_get_file_type(const char *file);
+resource_manager_type_e sm__resource_manager_get_file_type(const char *file);
+void sm__resource_manager_on_found(sm_string path);
+void sm__resource_manager_on_delete(sm_string path);
+void sm__resource_manager_on_reload(sm_string path);
+void sm__resource_manager_watch_cb(dmon_watch_id watch_id, dmon_action action, const char *rootdir,
+                                   const char *filepath, const char *oldfilepath, void *user);
+void sm__resource_manager_dir_read(const char *folder);
 
-SM_PRIVATE
-void sm__resource_on_found(const char *path);
+bool sm_resource_manager_init(const char *root_folder) {
 
-SM_PRIVATE
-void sm__resource_on_delete(const char *path);
-
-SM_PRIVATE
-void sm__resource_on_reload(const char *path);
-
-SM_PRIVATE
-void sm__watch_cb(dmon_watch_id watch_id, dmon_action action, const char *rootdir, const char *filepath,
-                  const char *oldfilepath, void *user);
-
-SM_PRIVATE
-void sm__resource_dir_read(const char *folder);
-
-bool resource_init(const char *root_folder) {
-
-  SM_ASSERT(RESOURCE == NULL && "resource already initialized");
+  SM_ASSERT(RESOURCE_MANAGER == NULL && "resource already initialized");
   SM_ASSERT(root_folder);
 
-  RESOURCE = SM_CALLOC(1, sizeof(resource_manager_s));
-  SM_ASSERT(RESOURCE);
+  RESOURCE_MANAGER = SM_CALLOC(1, sizeof(resource_manager_s));
+  SM_ASSERT(RESOURCE_MANAGER);
 
-  RESOURCE->mutex = SM_MUTEX_CTOR();
-  if (!RESOURCE->mutex) {
-    SM_LOG_ERROR("failed to create mutex");
-    return false;
-  }
+  RESOURCE_MANAGER->root_folder = sm_string_from(root_folder);
 
-  RESOURCE->root_folder = sm_string_from(root_folder);
-
-  RESOURCE->map = sm_hashmap_new_str();
-  if (!sm_hashmap_ctor_str(RESOURCE->map, 16, NULL, NULL)) {
+  RESOURCE_MANAGER->map = sm_hashmap_new_str();
+  if (!sm_hashmap_ctor_str(RESOURCE_MANAGER->map, 16, NULL, NULL)) {
     SM_LOG_ERROR("failed to create hashmap");
     return false;
   }
 
   /* Reads the folder and loads the resources */
   /* into the resource manager */
-  sm__resource_dir_read(RESOURCE->root_folder);
+  sm__resource_manager_dir_read(RESOURCE_MANAGER->root_folder.str);
 
   dmon_init();
-  dmon_watch(sm_string_c_str(RESOURCE->root_folder), sm__watch_cb, DMON_WATCHFLAGS_RECURSIVE, NULL);
+  dmon_watch(RESOURCE_MANAGER->root_folder.str, sm__resource_manager_watch_cb, DMON_WATCHFLAGS_RECURSIVE, NULL);
 
-  texture_res_init(32);
+  sm_texture_resource_init(32);
+  sm_shader_resource_init(32);
 
   return true;
 }
 
-void resource_teardown(void) {
+b8 sm__reource_manager_dtor_cb(sm_string key, void *value, void *user) {
 
-  SM_ASSERT(RESOURCE);
+  sm_resource_s *res = (sm_resource_s *)value;
+  SM_FREE(res);
+  sm_string_dtor(key);
 
-  texture_res_teardown();
+  return true;
+}
+
+void sm_resource_manager_teardown(void) {
+
+  SM_ASSERT(RESOURCE_MANAGER);
+
+  sm_shader_resource_teardown();
+  sm_texture_resource_teardown();
 
   dmon_deinit();
 
-  sm_hashmap_dtor_str(RESOURCE->map);
+  sm_hashmap_for_each_str(RESOURCE_MANAGER->map, sm__reource_manager_dtor_cb, NULL);
+  sm_hashmap_dtor_str(RESOURCE_MANAGER->map);
 
-  sm_string_dtor((sm_string)RESOURCE->root_folder); /* TODO: create sm funtion for string duplication and free */
+  sm_string_dtor(RESOURCE_MANAGER->root_folder); /* TODO: create sm funtion for string duplication and free */
 
-  SM_MUTEX_DTOR(RESOURCE->mutex);
-
-  SM_FREE(RESOURCE);
+  SM_FREE(RESOURCE_MANAGER);
 }
 
-resource_s *resource_get(const char *key) {
+sm_resource_s *sm_resource_manager_get(sm_string key) {
 
-  SM_ASSERT(key);
+  SM_ASSERT(key.str);
 
-  SM_MUTEX_LOCK(RESOURCE->mutex);
+  sm_resource_s *res = NULL;
+  sm_string res_name;
 
-  resource_s *res = NULL;
-  if (strcmp(key, RESOURCE->root_folder) == 1) {
-    res = &SM_SH_GET(RESOURCE->map, key);
+  if (!sm_string_contains(key, RESOURCE_MANAGER->root_folder)) {
+    res_name = sm_string_append(RESOURCE_MANAGER->root_folder, key);
   } else {
-    char path[260];
-    snprintf(path, sizeof(path), "%s%s", RESOURCE->root_folder, key);
-    res = &SM_SH_GET(RESOURCE->map, key);
+    res_name = sm_string_reference(key);
   }
 
-  if (SM_MASK_CHK(res->status, RESOURCE_STATUS_NOT_FOUND) && SM_MASK_CHK(res->type, RESOURCE_TYPE_INVALID)) {
-    SM_LOG_WARN("[%s] resource not found (NOT_FOUND)", key);
+  sm_hashmap_lock_str(RESOURCE_MANAGER->map);
+  res = sm_hashmap_get_str(RESOURCE_MANAGER->map, res_name);
+  sm_hashmap_unlock_str(RESOURCE_MANAGER->map);
+
+  sm_string_dtor(res_name);
+
+  if (res == NULL) {
+    SM_LOG_WARN("[%s] resource not found", res_name.str);
     return NULL;
   }
-
-  SM_MUTEX_UNLOCK(RESOURCE->mutex);
 
   return res;
 }
 
-resource_iter_s resource_iter_new(resource_type_e type, resource_status_e status) {
+sm_resource_manager_iter_s sm_resource_manager_iter_new(resource_manager_type_e type,
+                                                        resource_manager_status_e status) {
 
-  resource_iter_s iter;
+  sm_resource_manager_iter_s iter;
   iter.type = type;
   iter.status = status;
   iter.index = 0;
@@ -154,143 +141,88 @@ resource_iter_s resource_iter_new(resource_type_e type, resource_status_e status
   return iter;
 }
 
-const char *resource_iter_next(resource_iter_s *iter) {
-
-  SM_ASSERT(iter);
-
-  while (iter->index < SM_SH_LENGTH(RESOURCE->map)) {
-
-    resource_m res = RESOURCE->map[iter->index++];
-
-    if (SM_MASK_CHK(res.value.type, iter->type) && SM_MASK_CHK(res.value.status, iter->status)) {
-      return res.key;
-    }
-  }
-
-  return NULL;
-}
-
-texture_handler_s resource_load_texture(const char *resource) {
-
-  SM_ASSERT(resource);
-
-  resource_s *res = resource_get(resource);
-  if (!res) {
-    SM_LOG_WARN("[%s] resource not found (NOT_FOUND)", resource);
-    return (texture_handler_s){SM_INVALID_HANDLE};
-  }
-
-  SM_ASSERT(SM_MASK_CHK(res->type, RESOURCE_TYPE_IMAGE) && "resource is not a texture");
-
-  if (res->handler.handle != SM_INVALID_HANDLE) {
-    return (texture_handler_s){res->handler.handle};
-  }
-
-  char buf[512];
-  const char *root = "";
-  if ((SM_STRING_COMPARE(resource, RESOURCE->root_folder) == 1))
-    root = RESOURCE->root_folder;
-
-  snprintf(buf, sizeof(buf), "%s%s", root, resource);
-
-  SM_LOG_TRACE("[%s] resource found", buf);
-  texture_handler_s hdlr = texture_res_new(buf);
-
-  res->handler.handle = hdlr.handle;
-
-  return hdlr;
-}
-
-void resource_bind_texture(texture_handler_s handler, uint32_t tex_index) {
-
-  SM_ASSERT(handler.handle != SM_INVALID_HANDLE);
-
-  SM_MUTEX_LOCK(RESOURCE->mutex);
-  texture_res_bind(handler, tex_index);
-  SM_MUTEX_UNLOCK(RESOURCE->mutex);
-}
-
-void resource_unbind_texture(texture_handler_s handler, uint32_t tex_index) {
-
-  SM_ASSERT(handler.handle != SM_INVALID_HANDLE);
-
-  SM_MUTEX_LOCK(RESOURCE->mutex);
-  texture_res_unbind(handler, tex_index);
-  SM_MUTEX_UNLOCK(RESOURCE->mutex);
-}
-
-SM_PRIVATE
-resource_type_e sm__resource_get_file_type(const char *file) {
+resource_manager_type_e sm__resource_manager_get_file_type(const char *file) {
 
   SM_ASSERT(file);
 
-  if (sm_filesystem_has_ext(file, "jpg;jpeg;png;"))
-    return RESOURCE_TYPE_IMAGE;
-  if (SM_FILE_HAS_EXT(file, "mp3;ogg"))
+  if (sm_filesystem_has_ext_c_str(file, "jpg;jpeg;png"))
+    return RESOURCE_TYPE_TEXTURE;
+  if (sm_filesystem_has_ext_c_str(file, "mp3;ogg"))
     return RESOURCE_TYPE_AUDIO;
-  if (SM_FILE_HAS_EXT(file, "glsl;vert;frag;fs;vs;"))
+  if (sm_filesystem_has_ext_c_str(file, "shader"))
     return RESOURCE_TYPE_SHADER;
-  if (SM_FILE_HAS_EXT(file, "fbx;obj;gltf;glb"))
+  if (sm_filesystem_has_ext_c_str(file, "fbx;obj;gltf;glb"))
     return RESOURCE_TYPE_MODEL;
 
   return RESOURCE_TYPE_INVALID;
 }
 
-SM_PRIVATE
-void sm__resource_on_found(const char *path) {
+void sm__resource_manager_on_found(sm_string path) {
 
-  SM_ASSERT(path);
+  SM_ASSERT(path.str);
 
-  if (!SM_FILE_EXISTS(path)) {
-    SM_LOG_WARN("[%s] resource does not exist (NOT_FOUNT)", path);
+  if (!sm_filesystem_exists(path)) {
+    SM_LOG_WARN("[%s] resource does not exist", path.str);
     return;
   }
 
-  SM_LOG_TRACE("[%s] resource found (FOUND)", path);
+  SM_LOG_TRACE("[%s] resource found", path.str);
 
-  resource_type_e ft = sm__resource_get_file_type(path);
+  resource_manager_type_e ft = sm__resource_manager_get_file_type(path.str);
   if (ft == RESOURCE_TYPE_INVALID) {
-    SM_LOG_WARN("[%s] resource not supported", path);
+    SM_LOG_WARN("[%s] resource not supported", path.str);
     return;
   }
 
-  resource_s res;
-  res.type = ft;
-  res.status = RESOURCE_STATUS_FOUND;
-  res.handler.handle = SM_INVALID_HANDLE;
+  sm_resource_s *res = SM_MALLOC(sizeof(sm_resource_s));
+  res->type = ft;
+  res->status = RESOURCE_STATUS_FOUND;
+  res->handle = SM_INVALID_HANDLE;
 
-  SM_SH_INSERT(RESOURCE->map, path, res);
+  sm_resource_s *r = sm_hashmap_put_str(RESOURCE_MANAGER->map, sm_string_reference(path), res);
+  if (r) {
+    SM_FREE(r);
+    SM_LOG_WARN("[%s] resource already exists. Replacing it", path.str);
+  }
 }
 
-SM_PRIVATE
-void sm__resource_on_delete(const char *path) {
+void sm__resource_manager_on_delete(sm_string path) {
 
-  SM_ASSERT(path);
+  SM_ASSERT(path.str);
 
-  if (!SM_SH_DELETE(RESOURCE->map, path))
-    SM_LOG_WARN("[%s] resource does not exist", path);
-  else
-    SM_LOG_TRACE("[%s] resource deleted", path);
-}
+  /* TODO: reclaim the key memory */
+  /* if (!sm_hashmap_remove_str(RESOURCE->map, path)) */
+  /*   SM_LOG_WARN("[%s] resource does not exist", path.str); */
+  /* else */
+  /*   SM_LOG_TRACE("[%s] resource deleted", path.str); */
 
-SM_PRIVATE
-void sm__resource_on_reload(const char *path) {
-
-  SM_ASSERT(path);
-
-  resource_s *res = &SM_SH_GET(RESOURCE->map, path);
+  sm_resource_s *res = sm_hashmap_get_str(RESOURCE_MANAGER->map, path);
   if (!res) {
-    SM_LOG_WARN("[%s] resource not found in the map (NOT_FOUND)", path);
+    SM_LOG_WARN("[%s] resource not found in the map (NOT_FOUND)", path.str);
     return;
   }
 
-  SM_LOG_TRACE("[%s] resource reloaded", path);
+  SM_LOG_TRACE("[%s] resource removed", path.str);
+  res->status = RESOURCE_STATUS_INVALID;
+  res->type = RESOURCE_TYPE_INVALID;
+}
+
+void sm__resource_manager_on_reload(sm_string path) {
+
+  SM_ASSERT(path.str);
+
+  sm_resource_s *res = sm_hashmap_get_str(RESOURCE_MANAGER->map, path);
+  if (!res) {
+    SM_LOG_WARN("[%s] resource not found in the map (NOT_FOUND)", path.str);
+    return;
+  }
+
+  SM_LOG_TRACE("[%s] resource reloaded", path.str);
   res->status |= RESOURCE_STATUS_RELOADED;
 }
 
-SM_PRIVATE
-void sm__watch_cb(dmon_watch_id watch_id, dmon_action action, const char *rootdir, const char *filepath,
-                  const char *oldfilepath, void *user) {
+void sm__resource_manager_watch_cb(dmon_watch_id watch_id, dmon_action action, const char *rootdir,
+                                   const char *filepath, const char *oldfilepath, void *user) {
 
   SM_ASSERT(rootdir);
   SM_ASSERT(filepath);
@@ -302,34 +234,37 @@ void sm__watch_cb(dmon_watch_id watch_id, dmon_action action, const char *rootdi
 
   /* receive change events. type of event is stored in 'action' variable */
 
-  if (!sm_filesystem_has_ext(filepath, expected_ext)) {
+  if (!sm_filesystem_has_ext_c_str(filepath, expected_ext)) {
     SM_LOG_WARN("[%s] resource not supported", filepath);
     return;
   }
 
-  SM_PRIVATE void (*handler[5])(const char *key) = {
+  void (*handler[5])(sm_string key) = {
 
-      [DMON_ACTION_CREATE] = sm__resource_on_found,
-      [DMON_ACTION_DELETE] = sm__resource_on_delete,
-      [DMON_ACTION_MODIFY] = sm__resource_on_reload,
-      [DMON_ACTION_MOVE] = sm__resource_on_reload,
+      [DMON_ACTION_CREATE] = sm__resource_manager_on_found,
+      [DMON_ACTION_DELETE] = sm__resource_manager_on_delete,
+      [DMON_ACTION_MODIFY] = sm__resource_manager_on_reload,
+      [DMON_ACTION_MOVE] = sm__resource_manager_on_reload,
   };
 
-  char *key = SM_MALLOC(strlen(rootdir) + strlen(filepath) + 1);
-  strcpy(key, rootdir);
-  strcat(key, filepath);
+  /* char *key = SM_MALLOC(strlen(rootdir) + strlen(filepath) + 1); */
+  sm_string key = sm_string_from(rootdir);
+  sm_string fpath = sm_string_from(filepath);
+  sm_string_append(key, fpath);
+  /* strcpy(key, rootdir); */
+  /* strcat(key, filepath); */
 
-  SM_MUTEX_LOCK(RESOURCE->mutex);
+  sm_hashmap_lock_str(RESOURCE_MANAGER->map);
 
   handler[action](key);
 
-  SM_MUTEX_UNLOCK(RESOURCE->mutex);
+  sm_hashmap_unlock_str(RESOURCE_MANAGER->map);
 
-  SM_FREE(key);
+  sm_string_dtor(key);
+  sm_string_dtor(fpath);
 }
 
-SM_PRIVATE
-void sm__resource_dir_read(char *folder) {
+void sm__resource_manager_dir_read(const char *folder) {
 
   DIR *dir = opendir(folder);
   if (!dir) {
@@ -355,7 +290,9 @@ void sm__resource_dir_read(char *folder) {
         /* create the full path */
         strcpy(buf, ent->d_name);
 
-        sm__resource_on_found(root);
+        sm_string str_root = sm_string_from(root);
+        sm__resource_manager_on_found(str_root);
+        sm_string_dtor(str_root);
       }
 
     } else if (SM_MASK_CHK(ent->d_type, DT_DIR)) {
@@ -370,7 +307,7 @@ void sm__resource_dir_read(char *folder) {
       strcat(buf, "/");
 
       /* recurse */
-      sm__resource_dir_read(root);
+      sm__resource_manager_dir_read(root);
     }
   }
 

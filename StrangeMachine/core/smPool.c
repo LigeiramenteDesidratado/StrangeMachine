@@ -9,25 +9,25 @@
 
 #define sm_align_mask(VALUE, MASK) (((VALUE) + (MASK)) & ((~0) & (~(MASK))))
 
-typedef struct {
+typedef struct sm__handle_pool_s {
 
-  SM_ARRAY(sm_handle) dense;
-  SM_ARRAY(uint32_t) sparse;
+  SM_ARRAY(sm_handle_t) dense;
+  SM_ARRAY(u32) sparse;
 
-} handle_pool_s;
+} sm_handle_pool_s;
 
-handle_pool_s *pool_new(void) {
+sm_handle_pool_s *sm_handle_pool_new(void) {
 
-  handle_pool_s *pool = SM_CALLOC(1, sizeof(handle_pool_s));
+  sm_handle_pool_s *pool = SM_CALLOC(1, sizeof(sm_handle_pool_s));
   SM_ASSERT(pool);
 
   return pool;
 }
 
-bool pool_ctor(handle_pool_s *pool, uint32_t capacity) {
+b8 sm_handle_pool_ctor(sm_handle_pool_s *pool, u32 capacity) {
 
   /* Align count to 16, for a better aligned internal memory */
-  uint32_t size = sm_align_mask(capacity, 15);
+  u32 size = sm_align_mask(capacity, 15);
 
   SM_ARRAY_CTOR(pool->dense, size);
   SM_ARRAY_CTOR(pool->sparse, size);
@@ -39,7 +39,7 @@ bool pool_ctor(handle_pool_s *pool, uint32_t capacity) {
   return true;
 }
 
-void pool_dtor(handle_pool_s *pool) {
+void sm_handle_pool_dtor(sm_handle_pool_s *pool) {
 
   SM_ARRAY_DTOR(pool->sparse);
   SM_ARRAY_DTOR(pool->dense);
@@ -47,16 +47,16 @@ void pool_dtor(handle_pool_s *pool) {
   SM_FREE(pool);
 }
 
-sm_handle handle_new(handle_pool_s *pool) {
+sm_handle_t sm_handle_new(sm_handle_pool_s *pool) {
 
   if (SM_ARRAY_LEN(pool->dense) < SM_ARRAY_CAP(pool->dense)) {
 
-    uint32_t index = (uint32_t)SM_ARRAY_LEN(pool->dense);
-    sm_handle handle = pool->dense[index];
+    u32 index = (u32)SM_ARRAY_LEN(pool->dense);
+    sm_handle_t handle = pool->dense[index];
 
-    uint32_t gen = sm_handle_gen(handle);
-    int _index = sm_handle_index(handle);
-    sm_handle new_handle = sm__handle_make(++gen, _index);
+    u32 gen = sm_handle_gen(handle);
+    u32 _index = sm_handle_index(handle);
+    sm_handle_t new_handle = sm__handle_make(++gen, _index);
 
     pool->dense[index] = new_handle;
     pool->sparse[_index] = index;
@@ -70,24 +70,24 @@ sm_handle handle_new(handle_pool_s *pool) {
   return SM_INVALID_HANDLE;
 }
 
-bool handle_valid(const handle_pool_s *pool, sm_handle handle) {
+b8 sm_handle_valid(const sm_handle_pool_s *pool, sm_handle_t handle) {
 
   SM_ASSERT(handle);
 
-  uint32_t index = pool->sparse[sm_handle_index(handle)];
+  u32 index = pool->sparse[sm_handle_index(handle)];
   return index < SM_ARRAY_LEN(pool->dense) && pool->dense[index] == handle;
 }
 
-bool handle_full(const handle_pool_s *pool) {
+b8 sm_handle_full(const sm_handle_pool_s *pool) {
   return SM_ARRAY_LEN(pool->dense) == SM_ARRAY_CAP(pool->dense);
 }
 
-void handle_del(handle_pool_s *pool, sm_handle handle) {
+void sm_handle_del(sm_handle_pool_s *pool, sm_handle_t handle) {
   SM_ASSERT(SM_ARRAY_LEN(pool->dense) > 0);
-  SM_CORE_ASSERT(handle_valid(pool, handle));
+  SM_CORE_ASSERT(sm_handle_valid(pool, handle));
 
-  uint32_t index = pool->sparse[sm_handle_index(handle)];
-  sm_handle last_handle = pool->dense[SM_ARRAY_LEN(pool->dense) - 1];
+  u32 index = pool->sparse[sm_handle_index(handle)];
+  sm_handle_t last_handle = pool->dense[SM_ARRAY_LEN(pool->dense) - 1];
 
   SM_ARRAY_POP(pool->dense);
   SM_ARRAY_POP(pool->sparse);

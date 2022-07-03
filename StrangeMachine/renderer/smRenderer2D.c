@@ -5,6 +5,7 @@
 #include "renderer/api/smTypes.h"
 #include "renderer/smDeviceDefs.h"
 #include "renderer/smDevicePub.h"
+#include "renderer/smMaterial.h"
 #include "renderer/smRenderer2D.h"
 
 #include "resource/smResource.h"
@@ -31,8 +32,8 @@
 
 struct sm__stats {
 
-  uint32_t draw_call_count, previous_cc;
-  uint32_t quad_count, previous_qc;
+  u32 draw_call_count, previous_cc;
+  u32 quad_count, previous_qc;
 
 } __stats = {0, 0, 0, 0};
 
@@ -40,7 +41,7 @@ typedef struct vertex_s {
   vec3 position;
   vec4 color;
   vec2 tex_coord;
-  float tex_id;
+  f32 tex_id;
 
 } vertex_s;
 
@@ -58,18 +59,20 @@ typedef struct sm__renderer2D_s {
   vertex_s *__vertex_buffer;
 
   size_t index_count;
-  uint32_t *indices;
+  u32 *indices;
 
   uint8_t texture_size;
-  texture_handler_s textures[SM_MAX_TEXTURES];
+  sm_texture_resource_handler_s textures[SM_MAX_TEXTURES];
+
+  sm_material_s *material;
 
 } sm_renderer2D_s;
 
 /* private functions */
 SM_PRIVATE
-vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id);
+vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, f32 tex_id);
 SM_PRIVATE
-void sm__renderer2D_draw_quad_pro(vec2 position, vec2 size, sm_vec4 color, float tex_id, float deg_angle);
+void sm__renderer2D_draw_quad_pro(vec2 position, vec2 size, sm_vec4 color, f32 tex_id, f32 deg_angle);
 
 SM_PRIVATE enum { POSITION_LOC = 0, COLOR_LOC = 1, TEX_COORD_LOC = 2, TEX_ID_LOC = 3, MAX_LOCS } sm__rederer2D_loc_e;
 
@@ -91,18 +94,37 @@ void renderer2D_init() {
 
   renderer->vertices = SM_CALLOC(1, sizeof(vertex_s) * renderer->max_vertices);
 
-  attribute_loc_desc_s attribute_loc[4] = {
-      {.name = "position", .location = POSITION_LOC},
-      {.name = "color", .location = COLOR_LOC},
-      {.name = "tex_coord", .location = TEX_COORD_LOC},
-      {.name = "tex_id", .location = TEX_ID_LOC},
-  };
+  /* attribute_loc_desc_s attribute_loc[4] = { */
+  /*     {.name = "position", .location = POSITION_LOC}, */
+  /*     {.name = "color", .location = COLOR_LOC}, */
+  /*     {.name = "tex_coord", .location = TEX_COORD_LOC}, */
+  /*     {.name = "tex_id", .location = TEX_ID_LOC}, */
+  /* }; */
+
+  sm_string shader_path = sm_string_from("assets/shaders/renderer2D.shader");
+  sm_shader_resource_handler_s shader = sm_shader_resource_new(shader_path);
+  sm_string_dtor(shader_path);
 
   renderer->program = DEVICE->shader_new();
-  if (!DEVICE->shader_ctor(renderer->program, "StrangeMachine/glsl/renderer2D.vs", "StrangeMachine/glsl/renderer2D.fs",
-                           attribute_loc, 4)) {
+  if (!DEVICE->shader_ctor(renderer->program, shader)) {
     return;
   }
+
+  sm_string mat_name = sm_string_from("default_diffuse");
+  renderer->material = sm_material_new();
+  if (!sm_material_ctor(renderer->material, mat_name, renderer->program)) {
+    return;
+  }
+
+  sm_string zpng = sm_string_from("assets/z.png");
+  sm_texture_resource_handler_s texture = sm_texture_resource_new(zpng);
+  sm_string_dtor(zpng);
+  if (!sm_material_set_diffuse_map(renderer->material, (sm_string){0}, texture)) {
+    SM_LOG_ERROR("Failed to set diffuse map");
+    return;
+  }
+  sm_texture_resource_dtor(texture);
+
   DEVICE->shader_bind(renderer->program);
 
   buffer_desc_s vbo_desc = {
@@ -118,29 +140,29 @@ void renderer2D_init() {
   attribute_desc_s attr_desc[4] = {
       {
           .index = POSITION_LOC,
-          .size = sizeof(vec3) / sizeof(float),
-          .type = SM_FLOAT,
+          .size = sizeof(vec3) / sizeof(f32),
+          .type = SM_F32,
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, position),
       },
       {
           .index = COLOR_LOC,
-          .size = sizeof(vec4) / sizeof(float),
-          .type = SM_FLOAT,
+          .size = sizeof(vec4) / sizeof(f32),
+          .type = SM_F32,
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, color),
       },
       {
           .index = TEX_COORD_LOC,
-          .size = sizeof(vec2) / sizeof(float),
-          .type = SM_FLOAT,
+          .size = sizeof(vec2) / sizeof(f32),
+          .type = SM_F32,
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, tex_coord),
       },
       {
           .index = TEX_ID_LOC,
-          .size = sizeof(float) / sizeof(float),
-          .type = SM_FLOAT,
+          .size = sizeof(f32) / sizeof(f32),
+          .type = SM_F32,
           .stride = sizeof(vertex_s),
           .pointer = (const void *)offsetof(vertex_s, tex_id),
       },
@@ -148,25 +170,35 @@ void renderer2D_init() {
 
   DEVICE->vertex_buffer_set_pointer(renderer->VBO, attr_desc, 4);
 
+  sm_string u_tex = sm_string_from("u_tex0");
   int32_t val = 0;
-  DEVICE->shader_set_uniform(renderer->program, "u_tex0", &val, SM_INT);
+  DEVICE->shader_set_uniform(renderer->program, u_tex, &val, SM_SAMPLER2D);
   val++;
-  DEVICE->shader_set_uniform(renderer->program, "u_tex1", &val, SM_INT);
+  sm_string_set(u_tex, "u_tex1");
+  DEVICE->shader_set_uniform(renderer->program, u_tex, &val, SM_SAMPLER2D);
   val++;
-  DEVICE->shader_set_uniform(renderer->program, "u_tex2", &val, SM_INT);
+  sm_string_set(u_tex, "u_tex2");
+  DEVICE->shader_set_uniform(renderer->program, u_tex, &val, SM_SAMPLER2D);
   val++;
-  DEVICE->shader_set_uniform(renderer->program, "u_tex3", &val, SM_INT);
+  sm_string_set(u_tex, "u_tex3");
+  DEVICE->shader_set_uniform(renderer->program, u_tex, &val, SM_SAMPLER2D);
   val++;
-  DEVICE->shader_set_uniform(renderer->program, "u_tex4", &val, SM_INT);
+  sm_string_set(u_tex, "u_tex4");
+  DEVICE->shader_set_uniform(renderer->program, u_tex, &val, SM_SAMPLER2D);
   val++;
-  DEVICE->shader_set_uniform(renderer->program, "u_tex5", &val, SM_INT);
+  sm_string_set(u_tex, "u_tex5");
+  DEVICE->shader_set_uniform(renderer->program, u_tex, &val, SM_SAMPLER2D);
   val++;
-  DEVICE->shader_set_uniform(renderer->program, "u_tex6", &val, SM_INT);
+  sm_string_set(u_tex, "u_tex6");
+  DEVICE->shader_set_uniform(renderer->program, u_tex, &val, SM_SAMPLER2D);
   val++;
-  DEVICE->shader_set_uniform(renderer->program, "u_tex7", &val, SM_INT);
+  sm_string_set(u_tex, "u_tex7");
+  DEVICE->shader_set_uniform(renderer->program, u_tex, &val, SM_SAMPLER2D);
 
-  uint32_t indices[renderer->max_indices];
-  uint32_t offset = 0;
+  sm_string_dtor(u_tex);
+
+  u32 indices[renderer->max_indices];
+  u32 offset = 0;
   SM_ASSERT(renderer->max_indices % 6 == 0);
   for (size_t i = 0; i < renderer->max_indices; i += 6) {
     indices[i + 0] = 0 + offset;
@@ -182,7 +214,7 @@ void renderer2D_init() {
 
   buffer_desc_s ebo_desc = {
       .dynamic = false,
-      .buffer_size = sizeof(uint32_t) * renderer->max_indices,
+      .buffer_size = sizeof(u32) * renderer->max_indices,
       .data = indices,
   };
 
@@ -208,6 +240,7 @@ void renderer2D_teardown(void) {
   DEVICE->index_buffer_dtor(RENDERER2D->EBO);
   DEVICE->vertex_buffer_dtor(RENDERER2D->VBO);
   DEVICE->shader_dtor(RENDERER2D->program);
+  sm_material_dtor(RENDERER2D->material);
 
   SM_FREE(RENDERER2D->indices);
   SM_FREE((vertex_s *)RENDERER2D->vertices);
@@ -223,15 +256,16 @@ void renderer2D_flush() {
   if (renderer->index_count == 0)
     return;
 
-  uint32_t data_size = (uint32_t)((uint8_t *)renderer->__vertex_buffer - (uint8_t *)renderer->vertices);
+  u32 data_size = (u32)((uint8_t *)renderer->__vertex_buffer - (uint8_t *)renderer->vertices);
   DEVICE->vertex_buffer_set_data(renderer->VBO, renderer->vertices, data_size);
 
-  DEVICE->shader_bind(renderer->program);
+  /* DEVICE->shader_bind(renderer->program); */
+  sm_material_bind(renderer->material);
 
-  for (uint8_t i = 0; i < renderer->texture_size; ++i)
-    texture_res_bind(renderer->textures[i], i);
+  /* for (uint8_t i = 0; i < renderer->texture_size; ++i) */
+  /*   texture_resource_bind(renderer->textures[i], i); */
 
-  SM_PRIVATE uint32_t locations[MAX_LOCS] = {POSITION_LOC, COLOR_LOC, TEX_COORD_LOC, TEX_ID_LOC};
+  SM_PRIVATE u32 locations[MAX_LOCS] = {POSITION_LOC, COLOR_LOC, TEX_COORD_LOC, TEX_ID_LOC};
 
   DEVICE->vertex_buffer_bind(renderer->VBO, locations, MAX_LOCS);
   DEVICE->index_buffer_bind(renderer->EBO);
@@ -241,10 +275,11 @@ void renderer2D_flush() {
   DEVICE->index_buffer_unbind(renderer->EBO);
   DEVICE->vertex_buffer_unbind(renderer->VBO, locations, MAX_LOCS);
 
-  for (uint8_t i = 0; i < renderer->texture_size; ++i)
-    texture_res_unbind(renderer->textures[i], i);
+  /* for (uint8_t i = 0; i < renderer->texture_size; ++i) */
+  /*   texture_resource_unbind(renderer->textures[i], i); */
 
-  DEVICE->shader_unbind(renderer->program);
+  sm_material_unbind(renderer->material);
+  /* DEVICE->shader_unbind(renderer->program); */
 
   __stats.draw_call_count++;
 }
@@ -272,10 +307,15 @@ void renderer2D_begin() {
 
   DEVICE->shader_bind(renderer->program);
 
-  DEVICE->shader_set_uniform(renderer->program, "u_view", view, SM_MAT4);
-  DEVICE->shader_set_uniform(renderer->program, "u_projection", proj, SM_MAT4);
+  sm_string view_loc = sm_string_from("u_view");
+  sm_string proj_loc = sm_string_from("u_projection");
+  DEVICE->shader_set_uniform(renderer->program, view_loc, view, SM_MAT4);
+  DEVICE->shader_set_uniform(renderer->program, proj_loc, proj, SM_MAT4);
 
   DEVICE->shader_unbind(renderer->program);
+
+  sm_string_dtor(view_loc);
+  sm_string_dtor(proj_loc);
 
   renderer2D_start_batch();
 }
@@ -301,25 +341,25 @@ void renderer2D_draw_quad(vec2 position, vec2 size, sm_vec4 color) {
   sm__renderer2D_draw_quad_pro(position, size, color, SM_DRAW_VERTEX_COLOR, 0.0f);
 }
 
-void renderer2D_draw_quad_rotated(vec2 position, vec2 size, sm_vec4 color, float deg_angle) {
+void renderer2D_draw_quad_rotated(vec2 position, vec2 size, sm_vec4 color, f32 deg_angle) {
 
   sm__renderer2D_draw_quad_pro(position, size, color, SM_DRAW_VERTEX_COLOR, deg_angle);
 }
 
-void renderer2D_draw_sprite(vec2 position, vec2 size, texture_handler_s handler) {
+void renderer2D_draw_sprite(vec2 position, vec2 size, sm_texture_resource_handler_s handler) {
 
   renderer2D_draw_sprite_rotated(position, size, handler, 0.0f);
 }
 
-void renderer2D_draw_sprite_rotated(vec2 position, vec2 size, texture_handler_s handler, float deg_angle) {
+void renderer2D_draw_sprite_rotated(vec2 position, vec2 size, sm_texture_resource_handler_s handler, f32 deg_angle) {
 
   sm_renderer2D_s *renderer = RENDERER2D;
 
-  float tex_id = 0.0f;
+  f32 tex_id = 0.0f;
 
   for (uint8_t i = 0; i < renderer->texture_size; ++i) {
     if (handler.handle == renderer->textures[i].handle) {
-      tex_id = (float)i + 1;
+      tex_id = (f32)i + 1;
       break;
     }
   }
@@ -343,13 +383,13 @@ void renderer2D_clear() {
   DEVICE->clear(SM_COLOR_BUFFER_BIT);
 }
 
-void renderer2D_set_viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+void renderer2D_set_viewport(u32 x, u32 y, u32 width, u32 height) {
 
   DEVICE->set_viewport(x, y, width, height);
 }
 
 SM_PRIVATE
-vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, float tex_id) {
+vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4 color, f32 tex_id) {
 
   sm_vec3 pos_data[QUAD_SIZE] = {sm_vec3_new(position[0], position[1], 0.0f),
                                  sm_vec3_new(size[0] + position[0], position[1], 0.0f),
@@ -392,7 +432,7 @@ vertex_s *sm__renderer2D_new_quad(vertex_s *quad, vec2 position, vec2 size, vec4
 }
 
 SM_PRIVATE
-void sm__renderer2D_draw_quad_pro(vec2 position, vec2 size, sm_vec4 color, float tex_id, float deg_angle) {
+void sm__renderer2D_draw_quad_pro(vec2 position, vec2 size, sm_vec4 color, f32 tex_id, f32 deg_angle) {
 
   sm_renderer2D_s *renderer = RENDERER2D;
 
@@ -453,11 +493,11 @@ increment:
   __stats.quad_count++;
 }
 
-uint32_t renderer2D_stats_get_draw_call_count(void) {
+u32 renderer2D_stats_get_draw_call_count(void) {
   return __stats.previous_cc;
 }
 
-uint32_t renderer2D_stats_get_quad_count(void) {
+u32 renderer2D_stats_get_quad_count(void) {
   return __stats.previous_qc;
 }
 

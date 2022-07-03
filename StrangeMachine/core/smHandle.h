@@ -3,19 +3,18 @@
 
 #include "smpch.h"
 
-typedef uint32_t sm_handle;
+typedef u32 sm_handle_t;
 
 #define SM_CONFIG_HANDLE_GEN_BITS 14
 #define SM_INVALID_HANDLE         0
 
-extern const uint32_t sm__handle_index_mask;
-extern const uint32_t sm__handle_gen_mask;
-extern const uint32_t sm__handle_gen_shift;
+extern const u32 sm__handle_index_mask;
+extern const u32 sm__handle_gen_mask;
+extern const u32 sm__handle_gen_shift;
 
-#define sm_handle_index(HANDLE) (uint32_t)((HANDLE)&sm__handle_index_mask)
-#define sm_handle_gen(HANDLE)   (uint32_t)(((HANDLE) >> sm__handle_gen_shift) & sm__handle_gen_mask)
+#define sm_handle_index(HANDLE) (u32)((HANDLE)&sm__handle_index_mask)
+#define sm_handle_gen(HANDLE)   (u32)(((HANDLE) >> sm__handle_gen_shift) & sm__handle_gen_mask)
 #define sm__handle_make(GEN, INDEX)                                                                                    \
-  (uint32_t)((((uint32_t)(GEN)&sm__handle_gen_mask) << sm__handle_gen_shift) |                                         \
-             ((uint32_t)(INDEX)&sm__handle_index_mask))
+  (u32)((((u32)(GEN)&sm__handle_gen_mask) << sm__handle_gen_shift) | ((u32)(INDEX)&sm__handle_index_mask))
 
 #endif /* SM_CORE_HANDLE_H */

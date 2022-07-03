@@ -17,12 +17,12 @@ void GL21enable(enable_flags_e flags) {
 
 void GL21clear_color(float r, float g, float b, float a) {
 
+  glCall(glClearDepth(1.0f));
   glCall(glClearColor(r, g, b, a));
 }
 
 void GL21clear(buffer_bit_e mask) {
 
-  /* Depois de 4 dias de debugging, finalmente posso morrer em paz. */
   glCall(glClear(mask));
 }
 

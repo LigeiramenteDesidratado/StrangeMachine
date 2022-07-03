@@ -5,7 +5,7 @@
 
 typedef struct sm__entity_s {
 
-  uint32_t handle;
+  u32 handle;
   sm_component_t archetype_index;
 
 } sm_entity_s;

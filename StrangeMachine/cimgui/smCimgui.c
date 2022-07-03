@@ -10,7 +10,7 @@
 
 static void sm__cimgui_on_attach(void *user_data);
 static void sm__cimgui_on_detach(void *user_data);
-static bool sm__cimgui_on_event(event_s *event, void *user_data);
+static b8 sm__cimgui_on_event(event_s *event, void *user_data);
 static void sm__set_dark_theme_colors();
 
 cimgui_s *cimgui_new(void) {
@@ -18,7 +18,7 @@ cimgui_s *cimgui_new(void) {
   return layer_new();
 }
 
-bool cimgui_ctor(cimgui_s *cimgui, struct window_s *window) {
+b8 cimgui_ctor(cimgui_s *cimgui, struct window_s *window) {
 
   SM_ASSERT(cimgui);
 
@@ -73,7 +73,7 @@ static void sm__cimgui_on_detach(void *user_data) {
   igDestroyContext(im_ctx);
 }
 
-static bool sm__cimgui_on_event(event_s *event, void *user_data) {
+static b8 sm__cimgui_on_event(event_s *event, void *user_data) {
 
   SM_ASSERT(user_data);
   SM_ASSERT(event);
@@ -82,6 +82,7 @@ static bool sm__cimgui_on_event(event_s *event, void *user_data) {
 
   event->handled |= (SM_MASK_CHK(event->category, SM_CATEGORY_MOUSE) != 0) & io->WantCaptureMouse;
   event->handled |= (SM_MASK_CHK(event->category, SM_CATEGORY_KEYBOARD) != 0) & io->WantCaptureKeyboard;
+  event->handled |= io->WantCaptureKeyboard;
 
   return event->handled;
 }

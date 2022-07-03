@@ -12,8 +12,10 @@ endif()
 
 message(STATUS "Release flags: ${CMAKE_C_FLAGS_RELEASE}")
 
-set(SM_FLAGS_DEBUG_FLAGS "-g3 -fPIC -Wall -flto -pipe -fvisibility=hidden -fcf-protection=full -Werror=format-security  -Werror=implicit-function-declaration -Wbad-function-cast")
+set(SM_FLAGS_DEBUG_FLAGS "-g3 -fPIC -Wall -flto -pipe -fvisibility=hidden -fcf-protection=full -fno-common -Werror=format-security -Werror=implicit-function-declaration -Wbad-function-cast -Wshadow -Wformat=2 -Wundef")
+#  -Wsuggest-attribute=const  -Wconversion -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wnull-dereference -Wjump-misses-init -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wsuggest-attribute=noreturn -Wmissing-noreturn -Wsuggest-attribute=malloc -Wrestrict
 set(SM_FLAGS_RELEASE_FLAGS "-O3 -DNDEBUG -fPIC -Wall")
+
 
 if(NOT WIN32)
   list(APPEND SM_FLAGS_DEBUG_FLAGS "-Wextra -Wpedantic")
@@ -31,7 +33,11 @@ add_subdirectory(StrangeMachine)
 if (BUILD_EXAMPLES)
   #  add_subdirectory(examples/terror-em-sl)
   # add_subdirectory(examples/lab)
-  add_subdirectory(TestSites/debug)
+  # add_subdirectory(TestSites/debug)
   # add_subdirectory(TestSites/entity)
   add_subdirectory(TestSites/world3D)
+endif()
+
+if (BUILD_TOOLS)
+  add_subdirectory(EngineRoom/Conversor)
 endif()

@@ -4,6 +4,8 @@
 #include "renderer/api/smDescriptor.h"
 #include "renderer/api/smTypes.h"
 
+#include "resource/smShaderResource.h"
+
 #include "vendor/gladGL21/glad.h"
 
 #include "core/smCore.h"
@@ -11,9 +13,17 @@
 #undef SM_MODULE_NAME
 #define SM_MODULE_NAME "GL21"
 
-typedef struct {
+typedef struct sm__shader_active_s {
+  GLint size;
+  GLenum type;
+  GLint location;
 
+} sm_shader_active_s;
+
+typedef struct {
   GLuint program;
+
+  sm_hashmap_str_m *actives;
 
 } shader_s;
 
@@ -29,42 +39,22 @@ shader_s *GL21shader_new(void) {
   return shader;
 }
 
-bool GL21shader_ctor(shader_s *shader, const char *vertex_shader, const char *fragment_shader,
-                     attribute_loc_desc_s *desc, size_t size) {
+b8 hashmap_dtor_cb(sm_string key, void *value, void *user_data) {
+  SM_UNUSED(user_data);
+  sm_shader_active_s *active = (sm_shader_active_s *)value;
+
+  sm_string_dtor(key);
+  SM_FREE(active);
+
+  return true;
+}
+
+b8 GL21shader_ctor(shader_s *shader, sm_shader_resource_handler_s handler) {
 
   SM_ASSERT(shader);
-  SM_ASSERT(desc);
 
-  sm_file_handle_s vertex_handle = {0};
-  sm_file_handle_s fragment_handle = {0};
-
-  if (!sm_filesystem_open_c_str(vertex_shader, SM_FILE_MODE_READ, false, &vertex_handle)) {
-    SM_LOG_ERROR("Failed to open vertex shader file: %s", vertex_shader);
-    return false;
-  }
-
-  if (!sm_filesystem_open_c_str(fragment_shader, SM_FILE_MODE_READ, false, &fragment_handle)) {
-    SM_LOG_ERROR("Failed to open fragment shader file: %s", fragment_shader);
-    sm_filesystem_close(&vertex_handle);
-    return false;
-  }
-  sm_string vs_source = sm_filesystem_read_all_text(&vertex_handle);
-  if (!vs_source) {
-    SM_LOG_ERROR("Failed to read vertex shader file: %s", vertex_shader);
-    sm_filesystem_close(&vertex_handle);
-    sm_filesystem_close(&fragment_handle);
-    return false;
-  }
-
-  sm_string fs_source = sm_filesystem_read_all_text(&fragment_handle);
-  if (!fs_source) {
-    SM_LOG_ERROR("Failed to read fragment shader file: %s", fragment_shader);
-    sm_string_dtor(vs_source);
-    sm_filesystem_close(&vertex_handle);
-    sm_filesystem_close(&fragment_handle);
-
-    return false;
-  }
+  sm_string vs_source = sm_shader_resource_get_vertex_data(handler);
+  sm_string fs_source = sm_shader_resource_get_fragment_data(handler);
 
   GLuint vert = shader_compile_vert(vs_source);
   GLuint frag = shader_compile_frag(fs_source);
@@ -77,14 +67,65 @@ bool GL21shader_ctor(shader_s *shader, const char *vertex_shader, const char *fr
 
   shader->program = glCreateProgram();
 
-  for (uint8_t i = 0; i < size; ++i) {
-    glCall(glBindAttribLocation(shader->program, desc[i].location, desc[i].name));
-  }
-
   if (!shader_link(shader->program, vert, frag)) {
     SM_LOG_ERROR("Failed to link shader program");
     glCall(glDeleteProgram(shader->program));
     return false;
+  }
+
+  shader->actives = sm_hashmap_new_str();
+  if (!sm_hashmap_ctor_str(shader->actives, 16, NULL, NULL)) {
+    SM_LOG_ERROR("Failed to create shader actives map");
+    glCall(glDeleteProgram(shader->program));
+    return false;
+  }
+
+  GLint num_uniforms;
+  glGetProgramiv(shader->program, GL_ACTIVE_UNIFORMS, &num_uniforms);
+  GLchar uniform_name[256];
+  GLsizei uniform_length;
+  GLint uniform_size;
+  GLenum uniform_type;
+  GLint uniform_location;
+  for (int i = 0; i < num_uniforms; i++) {
+    glGetActiveUniform(shader->program, i, sizeof(uniform_name), &uniform_length, &uniform_size, &uniform_type,
+                       uniform_name);
+
+    glCall(uniform_location = glGetUniformLocation(shader->program, uniform_name));
+    /* SM_LOG_INFO("Uniform: %s, size: %d, type: %X, location: %d", uniform_name, uniform_size, uniform_type, */
+    /*             uniform_location); */
+
+    sm_shader_active_s *active = SM_CALLOC(1, sizeof(sm_shader_active_s));
+    active->size = uniform_size;
+    active->type = uniform_type;
+    active->location = uniform_location;
+
+    sm_hashmap_put_str(shader->actives, sm_string_from(uniform_name), active);
+  }
+
+  GLint num_attributes;
+  glGetProgramiv(shader->program, GL_ACTIVE_ATTRIBUTES, &num_attributes);
+  GLchar attribute_name[256];
+  GLsizei attribute_length;
+  GLint attribute_size;
+  GLenum attribute_type;
+  GLint attribute_location;
+
+  for (int i = 0; i < num_attributes; i++) {
+    glGetActiveAttrib(shader->program, i, sizeof(attribute_name), &attribute_length, &attribute_size, &attribute_type,
+                      attribute_name);
+    glCall(attribute_location = glGetAttribLocation(shader->program, attribute_name));
+    /* SM_LOG_INFO("Attribute: %s, size: %d, type: %X, location: %d", attribute_name, attribute_size, attribute_type, */
+    /*             attribute_location); */
+
+    sm_shader_active_s *active = SM_MALLOC(sizeof(sm_shader_active_s));
+    SM_ASSERT(active);
+
+    active->size = attribute_size;
+    active->type = attribute_type;
+    active->location = attribute_location;
+
+    sm_hashmap_put_str(shader->actives, sm_string_from(attribute_name), active);
   }
 
   return true;
@@ -95,6 +136,10 @@ void GL21shader_dtor(shader_s *shader) {
   SM_ASSERT(shader);
 
   glCall(glDeleteProgram(shader->program));
+
+  sm_hashmap_for_each_str(shader->actives, hashmap_dtor_cb, NULL);
+  sm_hashmap_dtor_str(shader->actives);
+
   SM_FREE(shader);
 }
 
@@ -112,35 +157,51 @@ void GL21shader_unbind(shader_s *shader) {
   glCall(glUseProgram(0));
 }
 
-void GL21shader_set_uniform(shader_s *shader, const char *name, void *value, types_e type) {
+void GL21shader_set_uniform(shader_s *shader, sm_string name, void *value, types_e type) {
 
   SM_ASSERT(shader);
-  SM_ASSERT(name);
   SM_ASSERT(value);
 
-  GLint location;
-  glCall(location = glGetUniformLocation(shader->program, name));
+  /* GLint location; */
+  /* glCall(location = glGetUniformLocation(shader->program, name)); */
+  /* glGetUniformLocation */
 
-  SM_ASSERT(location != -1);
+  sm_shader_active_s *active = sm_hashmap_get_str(shader->actives, name);
+  if (!active) {
+    SM_LOG_ERROR("Failed to find uniform %s", name.str);
+    return;
+  }
+
+  /* SM_LOG_INFO("Uniform: %s, size: %d, type: 0x%X, location: %d", name, active->size, active->type, active->location);
+   */
+  /* SM_LOG_INFO("Type: %d, toGL: 0x%X", type, GL21map_sm_to_gl_type(type)); */
+
+  if (active->type != GL21map_sm_to_gl_type(type)) {
+    SM_LOG_ERROR("Uniform %s type mismatch", name.str);
+    return;
+  }
 
   switch (type) {
-  case SM_INT:
-    glCall(glUniform1i(location, *(int *)value));
+
+  case SM_SAMPLER2D:
+    /* fallthrough */
+  case SM_I32:
+    glCall(glUniform1i(active->location, *(int *)value));
     break;
-  case SM_FLOAT:
-    glCall(glUniform1f(location, *(float *)value));
+  case SM_F32:
+    glCall(glUniform1f(active->location, *(f32 *)value));
     break;
   case SM_VEC2:
-    glCall(glUniform2fv(location, 1, (float *)value));
+    glCall(glUniform2fv(active->location, 1, (f32 *)value));
     break;
   case SM_VEC3:
-    glCall(glUniform3fv(location, 1, (float *)value));
+    glCall(glUniform3fv(active->location, 1, (f32 *)value));
     break;
   case SM_VEC4:
-    glCall(glUniform4fv(location, 1, (float *)value));
+    glCall(glUniform4fv(active->location, 1, (f32 *)value));
     break;
   case SM_MAT4:
-    glCall(glUniformMatrix4fv(location, 1, GL_FALSE, (float *)value));
+    glCall(glUniformMatrix4fv(active->location, 1, GL_FALSE, (f32 *)value));
     break;
   default:
     SM_LOG_ERROR("Unsupported type (%d) %s", type, SM_TYPE_TO_STR(type));
@@ -148,7 +209,7 @@ void GL21shader_set_uniform(shader_s *shader, const char *name, void *value, typ
   }
 }
 
-void GL21shader_set_uniform_array(shader_s *shader, const char *name, void *value, uint32_t size, types_e type) {
+void GL21shader_set_uniform_array(shader_s *shader, const char *name, void *value, u32 size, types_e type) {
 
   SM_ASSERT(shader);
   SM_ASSERT(name);
@@ -158,23 +219,23 @@ void GL21shader_set_uniform_array(shader_s *shader, const char *name, void *valu
   glCall(location = glGetUniformLocation(shader->program, name));
 
   switch (type) {
-  case SM_INT:
+  case SM_I32:
     glCall(glUniform1iv(location, (GLsizei)size, (int *)value));
     break;
-  case SM_FLOAT:
-    glCall(glUniform1fv(location, (GLsizei)size, (float *)value));
+  case SM_F32:
+    glCall(glUniform1fv(location, (GLsizei)size, (f32 *)value));
     break;
   case SM_VEC2:
-    glCall(glUniform2fv(location, (GLsizei)size, (float *)value));
+    glCall(glUniform2fv(location, (GLsizei)size, (f32 *)value));
     break;
   case SM_VEC3:
-    glCall(glUniform3fv(location, (GLsizei)size, (float *)value));
+    glCall(glUniform3fv(location, (GLsizei)size, (f32 *)value));
     break;
   case SM_VEC4:
-    glCall(glUniform4fv(location, (GLsizei)size, (float *)value));
+    glCall(glUniform4fv(location, (GLsizei)size, (f32 *)value));
     break;
   case SM_MAT4:
-    glCall(glUniformMatrix4fv(location, (GLsizei)size, GL_FALSE, (float *)value));
+    glCall(glUniformMatrix4fv(location, (GLsizei)size, GL_FALSE, (f32 *)value));
     break;
   default:
     SM_LOG_WARN("Unsupported type (%d) %s", type, SM_TYPE_TO_STR(type));
@@ -182,87 +243,36 @@ void GL21shader_set_uniform_array(shader_s *shader, const char *name, void *valu
   }
 }
 
-// // private helper functions
-// static GLuint shader_compile_vert(char *vertex);
-// static GLuint shader_compile_frag(char *fragment);
-// static bool shader_link(GLuint shader, GLuint vertex, GLuint fragment);
-//
-// // Constructor
-// bool shader_ctor(GLuint *shader, const char *vs, const char *fs) {
-//
-//   SM_ASSERT(shader != NULL);
-//   SM_ASSERT(vs != NULL);
-//   SM_ASSERT(fs != NULL);
-//
-//   char *v_source = read_file(vs);
-//   if (!v_source)
-//     return false;
-//
-//   char *f_source = read_file(fs);
-//   if (!f_source) {
-//     SM_FREE(v_source);
-//     return false;
-//   }
-//
-//   GLuint vert = shader_compile_vert(v_source);
-//   GLuint frag = shader_compile_frag(f_source);
-//
-//   SM_FREE(v_source);
-//   SM_FREE(f_source);
-//
-//   if (!vert || !frag)
-//     return false;
-//
-//   *shader = glCreateProgram();
-//
-//   if (!shader_link(*shader, vert, frag)) {
-//     glDeleteProgram(*shader);
-//     return false;
-//   }
-//
-//   return true;
-// }
-//
-// // Destructor
-// void shader_dtor(GLuint shader) {
-//   glDeleteProgram(shader);
-// }
-//
-// void shader_bind(GLuint shader) {
-//   glUseProgram(shader);
-// }
-//
-// void shader_unbind() {
-//   glUseProgram(0);
-// }
-//
-// void shader_bind_attrib_loc(GLuint shader, uint32_t loc, const char *name) {
-//   glBindAttribLocation(shader, loc, name);
-// }
-//
+types_e GL21shader_get_type(shader_s *shader, sm_string name) {
 
-// bool shader_relink_program(GLuint shader) {
-//
-//   glLinkProgram(shader);
-//
-//   GLint success = 0;
-//   glGetProgramiv(shader, GL_LINK_STATUS, &success);
-//   if (!success) {
-//     char info_log[2 * 512];
-//     glGetShaderInfoLog(shader, 2 * 512, NULL, info_log);
-//     SM_LOG_ERROR("shader relinking failed.\n\t%s", info_log);
-//
-//     return false;
-//   }
-//
-//   SM_LOG_INFO("relinked shaders successfully");
-//   return true;
-// }
+  SM_ASSERT(shader);
+
+  sm_shader_active_s *active = sm_hashmap_get_str(shader->actives, name);
+  if (!active) {
+    SM_LOG_ERROR("Failed to find uniform %s", name.str);
+    return SM_F32;
+  }
+
+  return active->type;
+}
+
+i32 GL21shader_get_location(shader_s *shader, sm_string name) {
+
+  SM_ASSERT(shader);
+
+  sm_shader_active_s *active = sm_hashmap_get_str(shader->actives, name);
+  if (!active) {
+    SM_LOG_ERROR("Failed to find uniform %s", name.str);
+    return -1;
+  }
+
+  return active->location;
+}
 
 static GLuint shader_compile_vert(sm_string vertex) {
 
   GLuint v = glCreateShader(GL_VERTEX_SHADER);
-  const char *v_source = sm_string_c_str(vertex);
+  const char *v_source = vertex.str;
   glCall(glShaderSource(v, 1, &v_source, NULL));
   glCall(glCompileShader(v));
 
@@ -282,7 +292,7 @@ static GLuint shader_compile_vert(sm_string vertex) {
 static GLuint shader_compile_frag(sm_string fragment) {
 
   GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
-  const char *f_source = sm_string_c_str(fragment);
+  const char *f_source = fragment.str;
   glCall(glShaderSource(f, 1, &f_source, NULL));
   glCall(glCompileShader(f));
 

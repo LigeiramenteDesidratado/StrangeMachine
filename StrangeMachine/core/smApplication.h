@@ -11,7 +11,7 @@ struct application_s;
 struct application_s *application_new(void);
 
 /* Constructor */
-bool application_ctor(struct application_s *app, const char *name);
+b8 application_ctor(struct application_s *app, const char *name);
 
 /* Destructor */
 void application_dtor(struct application_s *app);

@@ -8,17 +8,17 @@
 struct handle_pool_s;
 
 /* Allocate Memory */
-struct handle_pool_s *pool_new(void);
+struct handle_pool_s *sm_handle_pool_new(void);
 
 /* Constructor */
-bool pool_ctor(struct handle_pool_s *pool, uint32_t capacity);
+b8 sm_handle_pool_ctor(struct handle_pool_s *pool, u32 capacity);
 
 /* Destructor */
-void pool_dtor(struct handle_pool_s *pool);
+void sm_handle_pool_dtor(struct handle_pool_s *pool);
 
-sm_handle handle_new(struct handle_pool_s *pool);
-bool handle_valid(const struct handle_pool_s *pool, sm_handle handle);
-bool handle_full(const struct handle_pool_s *pool);
-void handle_del(struct handle_pool_s *pool, sm_handle handle);
+sm_handle_t sm_handle_new(struct handle_pool_s *pool);
+b8 sm_handle_valid(const struct handle_pool_s *pool, sm_handle_t handle);
+b8 sm_handle_full(const struct handle_pool_s *pool);
+void sm_handle_del(struct handle_pool_s *pool, sm_handle_t handle);
 
 #endif /* SM_CORE_POOL_H */
